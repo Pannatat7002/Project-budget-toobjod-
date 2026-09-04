@@ -1,0 +1,600 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../config/theme/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../shared/widgets/category_icon_badge.dart';
+import '../../domain/entities/transaction_entity.dart';
+import '../state/transaction_cubit.dart';
+
+class AddTransactionSheet extends StatefulWidget {
+  final TransactionEntity? existingTransaction;
+  final TransactionType initialType;
+
+  const AddTransactionSheet({
+    super.key,
+    this.existingTransaction,
+    this.initialType = TransactionType.expense,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    TransactionEntity? existingTransaction,
+    TransactionType initialType = TransactionType.expense,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<TransactionCubit>(),
+        child: AddTransactionSheet(
+          existingTransaction: existingTransaction,
+          initialType: initialType,
+        ),
+      ),
+    );
+  }
+
+  @override
+  State<AddTransactionSheet> createState() => _AddTransactionSheetState();
+}
+
+class _AddTransactionSheetState extends State<AddTransactionSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _titleController;
+  late TextEditingController _amountController;
+  late TextEditingController _noteController;
+
+  late TransactionType _selectedType;
+  late CategoryItem _selectedCategory;
+  late DateTime _selectedDate;
+  bool _showMoreOptions = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existingTransaction;
+
+    _selectedType = existing?.type ?? widget.initialType;
+    _selectedDate = existing?.date ?? DateTime.now();
+
+    _titleController = TextEditingController(text: existing?.title ?? '');
+    _amountController = TextEditingController(
+      text: existing != null ? existing.amount.toStringAsFixed(0) : '',
+    );
+    _noteController = TextEditingController(text: existing?.note ?? '');
+    _showMoreOptions = existing != null && (existing.note != null && existing.note!.isNotEmpty);
+
+    final initialList = _selectedType == TransactionType.expense
+        ? AppConstants.defaultExpenseCategories
+        : AppConstants.defaultIncomeCategories;
+
+    if (existing != null) {
+      _selectedCategory = initialList.firstWhere(
+        (c) => c.id == existing.categoryId,
+        orElse: () => initialList.first,
+      );
+    } else {
+      _selectedCategory = initialList.first;
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  void _onTypeChanged(TransactionType type) {
+    setState(() {
+      _selectedType = type;
+      final categories = type == TransactionType.expense
+          ? AppConstants.defaultExpenseCategories
+          : AppConstants.defaultIncomeCategories;
+      _selectedCategory = categories.first;
+      if (widget.existingTransaction == null) {
+        _titleController.clear();
+      }
+    });
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          DateTime.now().hour,
+          DateTime.now().minute,
+        );
+      });
+    }
+  }
+
+  void _onSubmit() {
+    if (_formKey.currentState!.validate()) {
+      final amount = double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0.0;
+      final id = widget.existingTransaction?.id ?? const Uuid().v4();
+
+      final enteredTitle = _titleController.text.trim();
+      final finalTitle = enteredTitle.isNotEmpty ? enteredTitle : _selectedCategory.name;
+
+      final transaction = TransactionEntity(
+        id: id,
+        title: finalTitle,
+        amount: amount,
+        type: _selectedType,
+        categoryId: _selectedCategory.id,
+        categoryName: _selectedCategory.name,
+        categoryIconCode: _selectedCategory.iconCode,
+        categoryColorValue: _selectedCategory.colorValue,
+        date: _selectedDate,
+        note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      );
+
+      final cubit = context.read<TransactionCubit>();
+      if (widget.existingTransaction != null) {
+        cubit.updateTransaction(transaction);
+      } else {
+        cubit.addTransaction(transaction);
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categories = _selectedType == TransactionType.expense
+        ? AppConstants.defaultExpenseCategories
+        : AppConstants.defaultIncomeCategories;
+    final primaryThemeColor = _selectedType == TransactionType.income ? AppColors.income : AppColors.expense;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      padding: EdgeInsets.only(
+        bottom: bottomInset > 0 ? bottomInset + 8 : 20,
+        left: 16,
+        right: 16,
+        top: 10,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: isDark ? Border.all(color: AppColors.darkBorderSubtle, width: 1) : null,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle Bar & Close
+            Center(
+              child: Container(
+                width: 32,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBorder : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Header with Type Switcher Pills
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.existingTransaction != null
+                      ? 'แก้ไขรายการ'
+                      : (_selectedType == TransactionType.income ? 'รับเงินเข้า (+)' : 'จ่ายเงินออก (-)'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        letterSpacing: -0.3,
+                      ),
+                ),
+
+                // Compact Type Toggle Pill
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+                      width: 1,
+                    ),
+                    boxShadow: isDark
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Row(
+                    children: [
+                      _buildTypePill(
+                        type: TransactionType.expense,
+                        label: 'จ่ายเงินออก',
+                        imageAsset: 'assets/images/action_expense.png',
+                        icon: Icons.arrow_upward,
+                        color: AppColors.expense,
+                        isDark: isDark,
+                      ),
+                      _buildTypePill(
+                        type: TransactionType.income,
+                        label: 'รับเงินเข้า',
+                        imageAsset: 'assets/images/action_income.png',
+                        icon: Icons.arrow_downward,
+                        color: AppColors.income,
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Scrollable Content Area (Compact)
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Amount Input (Hero Display)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+                          width: 1.5,
+                        ),
+                        boxShadow: isDark
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '฿',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: primaryThemeColor,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _amountController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                              autofocus: widget.existingTransaction == null,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _onSubmit(),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                letterSpacing: -0.5,
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: '0.00',
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
+                              validator: (val) {
+                                if (val == null || val.trim().isEmpty) return 'กรุณาระบุจำนวนเงิน';
+                                final numVal = double.tryParse(val);
+                                if (numVal == null || numVal <= 0) return 'จำนวนเงินต้องมากกว่า 0';
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Category Grid (Compact 4-columns)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'หมวดหมู่: ${_selectedCategory.name}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _selectedCategory.color,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _pickDate,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today_outlined, size: 12, color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormatter.formatRelative(_selectedDate),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        mainAxisExtent: 84,
+                      ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final cat = categories[index];
+                        final isSelected = cat.id == _selectedCategory.id;
+
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedCategory = cat),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 140),
+                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? cat.color.withValues(alpha: isDark ? 0.25 : 0.14)
+                                  : (isDark ? const Color(0xFF1E293B).withValues(alpha: 0.5) : Colors.white),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected ? cat.color : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                                width: isSelected ? 2.0 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: cat.color.withValues(alpha: isDark ? 0.35 : 0.20),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: isDark ? 0 : 0.03),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: Image.asset(
+                                      cat.imageAsset,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => CategoryIconBadge(
+                                        icon: cat.icon,
+                                        color: cat.color,
+                                        size: 36,
+                                        iconSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  cat.name,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSelected
+                                        ? cat.color
+                                        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Title Input (Compact Field)
+                    TextFormField(
+                      controller: _titleController,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: 'ชื่อรายการ (เว้นว่างจะใช้: ${_selectedCategory.name})',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: const Icon(Icons.edit_note_rounded, size: 18),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Toggle More Options (Note)
+                    if (!_showMoreOptions)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () => setState(() => _showMoreOptions = true),
+                          icon: const Icon(Icons.add, size: 14),
+                          label: const Text('เพิ่มโน้ตช่วยจำ'),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                        ),
+                      )
+                    else ...[
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        controller: _noteController,
+                        maxLines: 2,
+                        style: const TextStyle(fontSize: 12),
+                        decoration: InputDecoration(
+                          hintText: 'บันทึกช่วยจำ (ไม่บังคับ)...',
+                          hintStyle: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                          ),
+                          prefixIcon: const Icon(Icons.notes_rounded, size: 16),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          isDense: true,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Sticky Bottom Prominent Save Button (Always in Thumb Reach!)
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _onSubmit,
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: Text(
+                  widget.existingTransaction != null ? 'บันทึกการแก้ไข' : 'บันทึกรายการ',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryThemeColor,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypePill({
+    required TransactionType type,
+    required String label,
+    required String imageAsset,
+    required IconData icon,
+    required Color color,
+    required bool isDark,
+  }) {
+    final isSelected = _selectedType == type;
+
+    return GestureDetector(
+      onTap: () => _onTypeChanged(type),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color
+              : (isDark ? AppColors.darkSurface : Colors.white),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              imageAsset,
+              width: 22,
+              height: 22,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(
+                icon,
+                size: 14,
+                color: isSelected ? Colors.white : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: isSelected ? Colors.white : (isDark ? AppColors.darkTextSecondary : const Color(0xFF334155)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
