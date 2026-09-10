@@ -126,18 +126,22 @@ class TransactionTile extends StatelessWidget {
                         Row(
                           children: [
                             // Category Tag
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: categoryColor.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                isTransfer ? 'โอนข้ามบัญชี' : transaction.categoryName,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: categoryColor,
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: categoryColor.withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  isTransfer ? 'โอนข้ามบัญชี' : transaction.categoryName,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: categoryColor,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
@@ -161,6 +165,8 @@ class TransactionTile extends StatelessWidget {
                                     fontWeight: FontWeight.w700,
                                     color: bankColor,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -238,7 +244,6 @@ class TransactionTile extends StatelessWidget {
     if (bankId == 'truemoney' || (bankBadge?.contains('True') ?? false)) return const Color(0xFFFF5B00);
     if (bankId == 'ttb') return const Color(0xFF0056B3);
     if (bankId == 'kma') return const Color(0xFFFDB913);
-    if (bankId == 'cash') return const Color(0xFF10B981);
     return const Color(0xFF2563EB);
   }
 

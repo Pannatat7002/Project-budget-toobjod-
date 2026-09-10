@@ -27,7 +27,6 @@ class BankAccountEntity extends Equatable {
   });
 
   String get shortName {
-    if (bankId == 'cash') return 'เงินสด';
     final profile = BankProfile.findById(bankId);
     return profile?.shortName ?? bankName;
   }

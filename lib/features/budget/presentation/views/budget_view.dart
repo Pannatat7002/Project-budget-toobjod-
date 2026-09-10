@@ -210,6 +210,7 @@ class BudgetView extends StatelessWidget {
                         );
                       },
                     ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),

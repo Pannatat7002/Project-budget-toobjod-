@@ -140,11 +140,15 @@ class _TransactionsViewState extends State<TransactionsView> {
                                   ? 'ลองเปลี่ยนคำค้นหา หรือเคลียร์ตัวกรองดูนะครับ'
                                   : 'คุณยังไม่มีรายการในช่วงนี้ แตะปุ่มด้านล่างเพื่อบันทึกรายการแรกได้เลย!',
                               actionText: 'จดรายการใหม่',
-                              onAction: () => AddTransactionSheet.show(context),
+                              onAction: () => AddTransactionSheet.show(
+                                context,
+                                initialBankId: state.selectedBankId,
+                              ),
                             )
                           : RefreshIndicator(
                               onRefresh: () => context.read<TransactionCubit>().loadTransactions(),
                               child: ListView.builder(
+                                padding: const EdgeInsets.only(bottom: 64),
                                 itemCount: groupedTransactions.length,
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 itemBuilder: (context, groupIndex) {

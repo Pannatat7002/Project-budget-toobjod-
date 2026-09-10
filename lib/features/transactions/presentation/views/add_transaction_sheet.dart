@@ -112,12 +112,22 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       }
 
       if (_selectedAccountId == null && accState.accounts.isNotEmpty) {
-        if (accState.selectedBankId != null) {
+        // Priority 1: explicitly passed initialBankAccountId
+        if (widget.initialBankAccountId != null && accState.accounts.any((a) => a.id == widget.initialBankAccountId)) {
+          _selectedAccountId = widget.initialBankAccountId;
+        }
+        // Priority 2: explicitly passed initialBankId (e.g. from current bank card on dashboard)
+        else if (widget.initialBankId != null && accState.accounts.any((a) => a.bankId == widget.initialBankId)) {
+          _selectedAccountId = accState.accounts.firstWhere((a) => a.bankId == widget.initialBankId).id;
+        }
+        // Priority 3: currently selected bank in AccountCubit
+        else if (accState.selectedBankId != null) {
           final matched = accState.accounts.where((a) => a.bankId == accState.selectedBankId).toList();
           if (matched.isNotEmpty) {
             _selectedAccountId = matched.first.id;
           }
         }
+        // Priority 4: fallback to first account
         _selectedAccountId ??= accState.accounts.first.id;
       }
     }
@@ -223,7 +233,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       padding: EdgeInsets.only(
-        bottom: bottomInset > 0 ? bottomInset + 8 : 20,
+        bottom: bottomInset > 0
+            ? bottomInset + 8
+            : (18 + MediaQuery.of(context).padding.bottom),
         left: 16,
         right: 16,
         top: 10,
@@ -256,16 +268,21 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.existingTransaction != null
-                      ? 'แก้ไขรายการ'
-                      : (_selectedType == TransactionType.income ? 'รับเงินเข้า (+)' : 'จ่ายเงินออก (-)'),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        letterSpacing: -0.3,
-                      ),
+                Flexible(
+                  child: Text(
+                    widget.existingTransaction != null
+                        ? 'แก้ไขรายการ'
+                        : (_selectedType == TransactionType.income ? 'รับเงินเข้า (+)' : 'จ่ายเงินออก (-)'),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          letterSpacing: -0.3,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
 
                 // Compact Type Toggle Pill
                 Container(
@@ -716,19 +733,17 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               color: brandCol,
                               shape: BoxShape.circle,
                             ),
-                            child: acc.bankId == 'cash'
-                                ? const Icon(Icons.payments_rounded, color: Colors.white, size: 12)
-                                : ClipOval(
-                                    child: Image.asset(
-                                      acc.logoAsset,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => const Icon(
-                                        Icons.account_balance,
-                                        color: Colors.white,
-                                        size: 12,
-                                      ),
-                                    ),
-                                  ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                acc.logoAsset,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.account_balance,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 6),
                           Text(

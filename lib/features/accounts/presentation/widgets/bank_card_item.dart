@@ -54,19 +54,12 @@ class BankCardItem extends StatelessWidget {
             ],
           );
 
-    final title = isAllWallets ? 'รวมทุกบัญชี (Net Worth)' : account!.bankName;
-    final subtitle = isAllWallets
-        ? 'สินทรัพย์รวมทั้งหมด'
-        : (account!.accountMask != null
-              ? '${account!.accountName} • ${account!.accountMask}'
-              : account!.accountName);
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
         // 1. Bank Card Container
         Container(
-          margin: const EdgeInsets.fromLTRB(3, 24, 3, 4),
+          margin: const EdgeInsets.fromLTRB(1, 22, 1, 4),
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: BorderRadius.circular(22),
@@ -102,59 +95,37 @@ class BankCardItem extends StatelessWidget {
 
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+                  horizontal: 12,
+                  vertical: 12,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Header: Bank Logo + Title + Mask Badge (Top Row)
+                    // Header: Brand Badge (Big Logo + Title inside) + Account Mask
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildBankLogo(isAllWallets, account),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                subtitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                        Flexible(
+                          child: _buildBrandPill(
+                            isAllWallets: isAllWallets,
+                            account: account,
                           ),
                         ),
                         // Account Mask Pill (•••• 1234) if available
                         if (account?.accountMask != null) ...[
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
-                              vertical: 3,
+                              vertical: 3.5,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withValues(alpha: 0.22),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: Colors.white.withValues(alpha: 0.22),
                                 width: 0.8,
                               ),
                             ),
@@ -168,10 +139,8 @@ class BankCardItem extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
                         ],
-                        // Breathing space so bank text does not collide with the dog's paws on the right
-                        const SizedBox(width: 48),
+                        const SizedBox(width: 6),
                       ],
                     ),
 
@@ -275,58 +244,68 @@ class BankCardItem extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Inflow / Outflow Summary
-                          Row(
-                            children: [
-                              // Monthly Income (Masked if eye view hidden!)
-                              Row(
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    Icons.arrow_downward_rounded,
-                                    color: Color(0xFF34D399),
-                                    size: 13,
+                                  // Monthly Income (Masked if eye view hidden!)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.arrow_downward_rounded,
+                                        color: Color(0xFF34D399),
+                                        size: 13,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        isEyeViewHidden
+                                            ? 'เข้า: ฿ •••••'
+                                            : 'เข้า: +${CurrencyFormatter.format(monthlyIncome)}',
+                                        style: const TextStyle(
+                                          color: Color(0xFF34D399),
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    isEyeViewHidden
-                                        ? 'เข้า: ฿ •••••'
-                                        : 'เข้า: +${CurrencyFormatter.format(monthlyIncome)}',
-                                    style: const TextStyle(
-                                      color: Color(0xFF34D399),
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                  const SizedBox(width: 5),
+                                  // Divider
+                                  Container(
+                                    width: 1,
+                                    height: 11,
+                                    color: Colors.white.withValues(alpha: 0.25),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  // Monthly Expense
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.arrow_upward_rounded,
+                                        color: Color(0xFFF87171),
+                                        size: 13,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        'ออก: -${CurrencyFormatter.format(monthlyExpense)}',
+                                        style: const TextStyle(
+                                          color: Color(0xFFF87171),
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(width: 6),
-                              // Divider
-                              Container(
-                                width: 1,
-                                height: 11,
-                                color: Colors.white.withValues(alpha: 0.25),
-                              ),
-                              const SizedBox(width: 6),
-                              // Monthly Expense
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.arrow_upward_rounded,
-                                    color: Color(0xFFF87171),
-                                    size: 13,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    'ออก: -${CurrencyFormatter.format(monthlyExpense)}',
-                                    style: const TextStyle(
-                                      color: Color(0xFFF87171),
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
+                          const SizedBox(width: 4),
                           // Live Sync Status Badge (🟢 ตรวจจับสดเปิด)
                           _buildStatusBadge(isAllWallets, account),
                         ],
@@ -386,29 +365,6 @@ class BankCardItem extends StatelessWidget {
     }
 
     final isAutoSync = account?.isAutoSyncActive ?? false;
-    final isCash = account?.bankId == 'cash';
-
-    if (isCash) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 0.6,
-          ),
-        ),
-        child: const Text(
-          '⚪ บันทึกมือ',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 9.5,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
@@ -449,70 +405,103 @@ class BankCardItem extends StatelessWidget {
     );
   }
 
+  Widget _buildBrandPill({
+    required bool isAllWallets,
+    required BankAccountEntity? account,
+  }) {
+    final displayName = isAllWallets ? 'รวมทุกบัญชี' : (account?.shortName ?? 'ธนาคาร');
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(4, 3, 14, 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.28),
+          width: 0.9,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildBankLogo(isAllWallets, account),
+          const SizedBox(width: 9),
+          Flexible(
+            child: Text(
+              displayName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBankLogo(bool isAllWallets, BankAccountEntity? acc) {
-    if (isAllWallets) {
+    if (isAllWallets || acc == null) {
       return Container(
-        width: 38,
-        height: 38,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
             colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
           ),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 1,
+            color: Colors.white.withValues(alpha: 0.5),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 5,
+              offset: const Offset(0, 1.5),
+            ),
+          ],
         ),
         child: const Icon(
           Icons.account_balance_wallet_rounded,
           color: Colors.white,
-          size: 20,
-        ),
-      );
-    }
-
-    if (acc!.bankId == 'cash') {
-      return Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFF10B981),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        child: const Icon(
-          Icons.payments_rounded,
-          color: Colors.white,
-          size: 20,
+          size: 22,
         ),
       );
     }
 
     return Container(
-      width: 38,
-      height: 38,
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.4),
+          color: Colors.white.withValues(alpha: 0.7),
           width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 5,
+            offset: const Offset(0, 1.5),
+          ),
+        ],
       ),
       child: ClipOval(
         child: Padding(
-          padding: const EdgeInsets.all(4.0),
+          padding: const EdgeInsets.all(3.0),
           child: Image.asset(
             acc.logoAsset,
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => const Icon(
               Icons.account_balance,
               color: Colors.blueGrey,
-              size: 18,
+              size: 20,
             ),
           ),
         ),
@@ -532,7 +521,7 @@ class BankCardItem extends StatelessWidget {
         : const Color(0xFF64748B);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(3, 24, 3, 4),
+      margin: const EdgeInsets.fromLTRB(1, 22, 1, 4),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(22),

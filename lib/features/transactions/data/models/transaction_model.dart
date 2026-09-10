@@ -27,10 +27,10 @@ class TransactionModel extends TransactionEntity {
             ? TransactionType.transfer
             : TransactionType.expense;
 
-    // Backward compatibility: detect bankId from note or title if missing
+    // Backward compatibility: detect bankId from note or title if missing or cash
     String? bankId = json['bankId'] as String?;
     String? bankShortName = json['bankShortName'] as String?;
-    if (bankId == null) {
+    if (bankId == null || bankId == 'cash') {
       final text = '${json['title'] ?? ''} ${json['note'] ?? ''}'.toLowerCase();
       if (text.contains('k plus') || text.contains('kbank') || text.contains('กสิกร')) {
         bankId = 'kbank';
@@ -51,8 +51,8 @@ class TransactionModel extends TransactionEntity {
         bankId = 'kma';
         bankShortName = 'KMA Krungsri';
       } else {
-        bankId = 'cash';
-        bankShortName = 'เงินสด';
+        bankId = 'kbank';
+        bankShortName = 'K PLUS';
       }
     }
 

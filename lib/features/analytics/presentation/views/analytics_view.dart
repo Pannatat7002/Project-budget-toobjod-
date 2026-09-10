@@ -210,7 +210,7 @@ class AnalyticsView extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 60),
               ],
             ),
           );

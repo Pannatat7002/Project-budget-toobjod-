@@ -20,13 +20,14 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
 
   static final List<BankAccountModel> _defaultAccounts = [
     BankAccountModel(
-      id: 'acc_cash',
-      bankId: 'cash',
-      bankName: 'เงินสด (Cash)',
-      accountName: 'กระเป๋าเงินสด',
+      id: 'acc_kbank',
+      bankId: 'kbank',
+      bankName: 'ธนาคารกสิกรไทย (K PLUS)',
+      accountName: 'บัญชีหลัก K PLUS',
+      accountMask: '4521',
       currentBalance: 0.0,
-      brandColor: 0xFF10B981, // Emerald
-      isAutoSyncActive: false,
+      brandColor: 0xFF138F2D,
+      isAutoSyncActive: true,
       createdAt: DateTime.now(),
       isDefault: true,
     ),
@@ -40,7 +41,12 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
         final List<dynamic> jsonList = jsonDecode(jsonString);
         final list = jsonList
             .map((item) => BankAccountModel.fromJson(item as Map<String, dynamic>))
+            .where((acc) => acc.bankId != 'cash')
             .toList();
+        if (list.isEmpty) {
+          await saveAccounts(_defaultAccounts);
+          return _defaultAccounts;
+        }
         return list;
       } else {
         // Save initial default accounts

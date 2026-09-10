@@ -52,7 +52,7 @@ class BankQuickJumpBar extends StatelessWidget {
               label: acc.shortName,
               icon: Icons.account_balance_rounded,
               color: Color(acc.brandColor),
-              logoAsset: acc.bankId != 'cash' ? acc.logoAsset : null,
+              logoAsset: acc.logoAsset,
               isSelected: isSelected,
               isDark: isDark,
               onTap: () => onSelectBank(acc.bankId),
