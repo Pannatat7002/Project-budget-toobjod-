@@ -101,6 +101,9 @@ class AutoSyncRepositoryImpl implements AutoSyncRepository {
 
   @override
   Stream<DetectedTransaction> get notificationStream {
+    if (kIsWeb) {
+      return const Stream.empty();
+    }
     _stream ??= _eventChannel
         .receiveBroadcastStream()
         .where((event) => event is Map)

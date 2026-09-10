@@ -10,6 +10,8 @@ class AppConstants {
   static const String budgetsStorageKey = 'bp_budgets_live_v1';
   static const String spendingPlanStorageKey = 'bp_spending_plan_live_v1';
   static const String userPreferencesStorageKey = 'bp_user_prefs_live_v1';
+  static const String accountsStorageKey = 'bp_bank_accounts_live_v1';
+  static const String accountEyeViewKey = 'bp_account_eye_view_live_v1';
 
   // Unified Default Categories for Expense (Rich & Vibrant Semantic Palette)
   static const List<CategoryItem> defaultExpenseCategories = [

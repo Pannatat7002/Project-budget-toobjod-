@@ -1,13 +1,15 @@
 import 'package:equatable/equatable.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
-// import '../../transactions/domain/entities/transaction_entity.dart';
 
 class DetectedTransaction extends Equatable {
   final String id;
   final String packageName;
+  final String bankId;
   final String bankName;
   final String bankShortName;
   final int bankColorValue;
+  final String? bankAccountId;
+  final String? accountMask;
   final double amount;
   final TransactionType type;
   final String title;
@@ -25,9 +27,12 @@ class DetectedTransaction extends Equatable {
   const DetectedTransaction({
     required this.id,
     required this.packageName,
+    this.bankId = 'kbank',
     required this.bankName,
     required this.bankShortName,
     required this.bankColorValue,
+    this.bankAccountId,
+    this.accountMask,
     required this.amount,
     required this.type,
     required this.title,
@@ -49,9 +54,12 @@ class DetectedTransaction extends Equatable {
   DetectedTransaction copyWith({
     String? id,
     String? packageName,
+    String? bankId,
     String? bankName,
     String? bankShortName,
     int? bankColorValue,
+    String? bankAccountId,
+    String? accountMask,
     double? amount,
     TransactionType? type,
     String? title,
@@ -69,9 +77,12 @@ class DetectedTransaction extends Equatable {
     return DetectedTransaction(
       id: id ?? this.id,
       packageName: packageName ?? this.packageName,
+      bankId: bankId ?? this.bankId,
       bankName: bankName ?? this.bankName,
       bankShortName: bankShortName ?? this.bankShortName,
       bankColorValue: bankColorValue ?? this.bankColorValue,
+      bankAccountId: bankAccountId ?? this.bankAccountId,
+      accountMask: accountMask ?? this.accountMask,
       amount: amount ?? this.amount,
       type: type ?? this.type,
       title: title ?? this.title,
@@ -92,9 +103,12 @@ class DetectedTransaction extends Equatable {
     return {
       'id': id,
       'packageName': packageName,
+      'bankId': bankId,
       'bankName': bankName,
       'bankShortName': bankShortName,
       'bankColorValue': bankColorValue,
+      'bankAccountId': bankAccountId,
+      'accountMask': accountMask,
       'amount': amount,
       'type': type == TransactionType.income ? 'income' : 'expense',
       'title': title,
@@ -115,9 +129,12 @@ class DetectedTransaction extends Equatable {
     return DetectedTransaction(
       id: json['id'] as String,
       packageName: json['packageName'] as String,
+      bankId: json['bankId'] as String? ?? 'kbank',
       bankName: json['bankName'] as String,
       bankShortName: json['bankShortName'] as String,
       bankColorValue: json['bankColorValue'] as int,
+      bankAccountId: json['bankAccountId'] as String?,
+      accountMask: json['accountMask'] as String?,
       amount: (json['amount'] as num).toDouble(),
       type: (json['type'] as String) == 'income'
           ? TransactionType.income
@@ -150,6 +167,10 @@ class DetectedTransaction extends Equatable {
       note: (rawText != null && rawText!.isNotEmpty)
           ? rawText
           : 'ตรวจจับอัตโนมัติจาก $bankShortName${merchantOrSender != null ? ' ($merchantOrSender)' : ''}',
+      bankId: bankId,
+      bankAccountId: bankAccountId,
+      bankShortName: bankShortName,
+      accountMask: accountMask,
     );
   }
 
@@ -157,9 +178,12 @@ class DetectedTransaction extends Equatable {
   List<Object?> get props => [
         id,
         packageName,
+        bankId,
         bankName,
         bankShortName,
         bankColorValue,
+        bankAccountId,
+        accountMask,
         amount,
         type,
         title,

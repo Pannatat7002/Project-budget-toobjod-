@@ -251,6 +251,17 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
               ),
               const SizedBox(height: 14),
 
+              // 5.5 ทดสอบตรวจจับแจ้งเตือนรายธนาคาร (Test Per-Bank Notifications)
+              _buildPerBankTestSection(
+                context: context,
+                isDark: isDark,
+                cardColor: cardColor,
+                textColor: textColor,
+                subtextColor: subtextColor,
+                borderColor: borderColor,
+              ),
+              const SizedBox(height: 14),
+
               // 6. ปุ่ม: คำแนะนำและวิธีแก้ปัญหาการตรวจจับแต่ละรุ่นมือถือ (Troubleshooting Guide)
               _buildMenuItem(
                 isDark: isDark,
@@ -625,6 +636,216 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
               onChanged: onChanged,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPerBankTestSection({
+    required BuildContext context,
+    required bool isDark,
+    required Color cardColor,
+    required Color textColor,
+    required Color subtextColor,
+    required Color borderColor,
+  }) {
+    final cubit = context.read<AutoSyncCubit>();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(isDark ? 25 : 6),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withAlpha(25),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.science_rounded, color: Color(0xFF10B981), size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ทดสอบตรวจจับแจ้งเตือนรายธนาคาร',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    Text(
+                      'แตะเพื่อจำลองแจ้งเตือนทดสอบระบบแยกบัญชี',
+                      style: TextStyle(fontSize: 11.5, color: subtextColor),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              // K PLUS Income
+              _buildTestButton(
+                label: '🟢 K PLUS (เงินเข้า ฿1,500)',
+                color: const Color(0xFF138F2D),
+                isDark: isDark,
+                onTap: () async {
+                  await cubit.sendTestNotification(
+                    packageName: 'com.kasikorn.retail.mbanking.wap',
+                    title: 'K PLUS',
+                    text: 'เงินเข้า 1,500.00 บ. โอนจาก x-9999 เข้า บช. x-4521',
+                  );
+                  await cubit.syncNativeBuffer();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('⚡ จำลองแจ้งเตือน K PLUS เงินเข้า ฿1,500 แล้ว!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+              // K PLUS Expense
+              _buildTestButton(
+                label: '🟢 K PLUS (โอนเงิน ฿500)',
+                color: const Color(0xFF138F2D),
+                isDark: isDark,
+                onTap: () async {
+                  await cubit.sendTestNotification(
+                    packageName: 'com.kasikorn.retail.mbanking.wap',
+                    title: 'K PLUS',
+                    text: 'รายการโอน/ถอนเงิน 500.00 บ. จาก บช. x-4521 เข้า บช. นายสมชาย',
+                  );
+                  await cubit.syncNativeBuffer();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('⚡ จำลองแจ้งเตือน K PLUS โอนเงิน ฿500 แล้ว!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+              // SCB EASY Merchant
+              _buildTestButton(
+                label: '🟣 SCB (ซื้อ 7-Eleven ฿125)',
+                color: const Color(0xFF4E2A84),
+                isDark: isDark,
+                onTap: () async {
+                  await cubit.sendTestNotification(
+                    packageName: 'com.scb.phone',
+                    title: 'SCB EASY',
+                    text: 'ท่านได้ชำระเงิน 125.00 บ. ให้กับ 7-Eleven ผ่าน SCB EASY',
+                  );
+                  await cubit.syncNativeBuffer();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('⚡ จำลองแจ้งเตือน SCB ชำระเงิน ฿125 แล้ว!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+              // Krungthai Income
+              _buildTestButton(
+                label: '🔵 Krungthai (เงินเดือน ฿45,000)',
+                color: const Color(0xFF00A3E0),
+                isDark: isDark,
+                onTap: () async {
+                  await cubit.sendTestNotification(
+                    packageName: 'ktbcs.netbank',
+                    title: 'Krungthai NEXT',
+                    text: 'คุณได้รับเงินโอน 45,000.00 บาท จาก บจก. เทคโนโลยี จำกัด เข้า Krungthai NEXT',
+                  );
+                  await cubit.syncNativeBuffer();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('⚡ จำลองแจ้งเตือน Krungthai เงินเดือนเข้าแล้ว!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+              // TrueMoney
+              _buildTestButton(
+                label: '🟠 TrueMoney (ชำระ ฿89)',
+                color: const Color(0xFFFF5B00),
+                isDark: isDark,
+                onTap: () async {
+                  await cubit.sendTestNotification(
+                    packageName: 'th.co.truemoney.wallet',
+                    title: 'TrueMoney',
+                    text: 'คุณได้ชำระเงิน 89.00 บาท ให้ 7-Eleven สำเร็จ',
+                  );
+                  await cubit.syncNativeBuffer();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('⚡ จำลองแจ้งเตือน TrueMoney ชำระเงิน ฿89 แล้ว!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestButton({
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: color.withAlpha(isDark ? 35 : 20),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withAlpha(80)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : color,
+          ),
         ),
       ),
     );

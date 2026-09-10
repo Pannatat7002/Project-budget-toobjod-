@@ -28,6 +28,12 @@ import 'features/spending_plan/domain/usecases/get_spending_plan.dart';
 import 'features/spending_plan/domain/usecases/save_spending_plan.dart';
 import 'features/spending_plan/presentation/state/spending_plan_cubit.dart';
 
+// Features - Accounts (Multi-Bank & Privacy)
+import 'features/accounts/data/datasources/account_local_data_source.dart';
+import 'features/accounts/data/repositories/account_repository_impl.dart';
+import 'features/accounts/domain/repositories/account_repository.dart';
+import 'features/accounts/presentation/state/account_cubit.dart';
+
 // Features - Auto Sync (NotificationListenerService)
 import 'features/auto_sync/data/datasources/auto_sync_local_data_source.dart';
 import 'features/auto_sync/data/repositories/auto_sync_repository_impl.dart';
@@ -112,12 +118,24 @@ Future<void> init() async {
     () => SpendingPlanLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
+  //! Features - Accounts (Multi-Bank & Privacy)
+  sl.registerLazySingleton(
+    () => AccountCubit(repository: sl()),
+  );
+  sl.registerLazySingleton<AccountRepository>(
+    () => AccountRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<AccountLocalDataSource>(
+    () => AccountLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
   //! Features - Auto Sync (NotificationListenerService)
   // Cubit
   sl.registerLazySingleton(
     () => AutoSyncCubit(
       repository: sl(),
       transactionCubit: sl(),
+      accountCubit: sl(),
     ),
   );
 

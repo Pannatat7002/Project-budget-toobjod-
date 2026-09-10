@@ -3,6 +3,8 @@ import '../../transactions/domain/entities/transaction_entity.dart';
 import '../domain/entities/bank_profile.dart';
 import '../domain/entities/detected_transaction.dart';
 
+import 'parsers/bank_parser_registry.dart';
+
 class ThaiBankParser {
   /// Parse a notification into a DetectedTransaction
   static DetectedTransaction? parse({
@@ -13,6 +15,20 @@ class ThaiBankParser {
     String? subText,
     DateTime? timestamp,
   }) {
+    // 1. Primary: Use dedicated bank parser strategies
+    final strategyResult = BankParserRegistry.parse(
+      id: id,
+      packageName: packageName,
+      title: title,
+      text: text,
+      subText: subText,
+      timestamp: timestamp,
+    );
+    if (strategyResult != null) {
+      return strategyResult;
+    }
+
+    // 2. Fallback to generic parsing logic
     var bank = BankProfile.findByPackage(packageName);
     if (bank == null) {
       final lower = '$title $text'.toLowerCase();

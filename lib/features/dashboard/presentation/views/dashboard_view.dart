@@ -5,6 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
+import '../../../accounts/presentation/state/account_cubit.dart';
+import '../../../accounts/presentation/state/account_state.dart';
+import '../../../accounts/presentation/widgets/bank_cards_carousel.dart';
+import '../../../accounts/presentation/widgets/bank_quick_jump_bar.dart';
 import '../../../auto_sync/presentation/state/auto_sync_cubit.dart';
 import '../../../auto_sync/presentation/widgets/auto_sync_banner.dart';
 import '../../../budget/presentation/state/budget_cubit.dart';
@@ -16,7 +20,6 @@ import '../../../transactions/presentation/state/transaction_state.dart';
 import '../../../transactions/presentation/views/add_transaction_sheet.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
 import '../widgets/quick_actions_bar.dart';
-import '../widgets/toob_jod_hero_card.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -142,122 +145,195 @@ class DashboardView extends StatelessWidget {
           const SizedBox(width: 4),
         ],
       ),
-      body: BlocConsumer<TransactionCubit, TransactionState>(
-        listener: (context, txState) {
-          context.read<BudgetCubit>().updateWithTransactions(txState.transactions);
-        },
-        builder: (context, txState) {
-          if (txState.status == TransactionStatus.loading && txState.transactions.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final recentTransactions = txState.transactions.take(5).toList();
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              final txCubit = context.read<TransactionCubit>();
-              final budgetCubit = context.read<BudgetCubit>();
-              final autoSyncCubit = context.read<AutoSyncCubit>();
-              await txCubit.loadTransactions();
-              await budgetCubit.loadBudgets();
-              await autoSyncCubit.syncNativeBuffer();
+      body: BlocBuilder<AccountCubit, AccountState>(
+        builder: (context, accountState) {
+          return BlocConsumer<TransactionCubit, TransactionState>(
+            listener: (context, txState) {
+              context.read<BudgetCubit>().updateWithTransactions(txState.transactions);
+              context.read<AccountCubit>().refreshBalancesFromTransactions(txState.transactions);
             },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10),
+            builder: (context, txState) {
+              if (txState.status == TransactionStatus.loading && txState.transactions.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                  // Auto-Sync Detected Transaction / Setup Banner
-                  const AutoSyncBanner(),
+              final selectedBankId = accountState.selectedBankId;
+              final recentTransactions = (selectedBankId == null
+                      ? txState.transactions
+                      : txState.getTransactionsForBank(selectedBankId))
+                  .take(6)
+                  .toList();
 
-                  // 1. MeowJod-Style Yellow Hero Summary Card with Big Overhanging Mascot Dog (PNG)
-                  ToobJodHeroCard(
-                    totalExpense: txState.totalExpense,
-                    totalIncome: txState.totalIncome,
-                    totalBalance: txState.totalBalance,
-                    onViewSummary: () => context.go('/spending-plan'),
-                  ),
-                  const SizedBox(height: 16),
+              final recentHeaderTitle = selectedBankId == null
+                  ? 'รายการล่าสุด (ทุกบัญชี)'
+                  : 'รายการล่าสุด (${accountState.selectedAccount?.shortName ?? 'บัญชีที่เลือก'})';
 
-                  // 2. Mascot Speech Bubble Banner
-                  _buildMascotGreetingCard(context, txState.transactions.length, isDark),
-                  const SizedBox(height: 16),
-
-                  // 3. Quick Actions Bar
-                  QuickActionsBar(
-                    onAddIncome: () => AddTransactionSheet.show(context, initialType: TransactionType.income),
-                    onAddExpense: () => AddTransactionSheet.show(context, initialType: TransactionType.expense),
-                    onSetBudget: () => context.go('/spending-plan'),
-                  ),
-                  const SizedBox(height: 18),
-
-                  // 4. Budget Health Preview Widget
-                  _buildBudgetHealthPreview(context, isDark),
-                  const SizedBox(height: 20),
-
-                  // 5. Recent Transactions Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final txCubit = context.read<TransactionCubit>();
+                  final budgetCubit = context.read<BudgetCubit>();
+                  final autoSyncCubit = context.read<AutoSyncCubit>();
+                  final accCubit = context.read<AccountCubit>();
+                  await txCubit.loadTransactions();
+                  await budgetCubit.loadBudgets();
+                  await accCubit.loadAccounts();
+                  await autoSyncCubit.syncNativeBuffer();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'รายการล่าสุด',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 17,
-                              letterSpacing: -0.3,
+                      const SizedBox(height: 8),
+
+                      // Auto-Sync Detected Transaction / Setup Banner
+                      const AutoSyncBanner(),
+
+                      // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
+                      BankCardsCarousel(
+                        accounts: accountState.accounts,
+                        selectedBankId: accountState.selectedBankId,
+                        totalBalance: txState.totalBalance,
+                        totalMonthlyIncome: txState.totalIncome,
+                        totalMonthlyExpense: txState.totalExpense,
+                        getBankBalance: (bankId) => txState.getBankBalance(bankId),
+                        getBankIncome: (bankId) => txState.getBankIncome(bankId),
+                        getBankExpense: (bankId) => txState.getBankExpense(bankId),
+                        isEyeViewHidden: accountState.isEyeViewHidden,
+                        onToggleEyeView: () => context.read<AccountCubit>().toggleEyeView(),
+                        onBankSelected: (bankId) => context.read<AccountCubit>().selectBank(bankId),
+                        onAddBankTap: () => context.push('/bank-selection'),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // 2. Bank Quick Jump Bar (Pill buttons under cards)
+                      BankQuickJumpBar(
+                        accounts: accountState.accounts,
+                        selectedBankId: accountState.selectedBankId,
+                        onSelectBank: (bankId) => context.read<AccountCubit>().selectBank(bankId),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 3. Mascot Speech Bubble Banner
+                      _buildMascotGreetingCard(context, txState.transactions.length, isDark),
+                      const SizedBox(height: 16),
+
+                      // 4. Quick Actions Bar
+                      QuickActionsBar(
+                        onAddIncome: () => AddTransactionSheet.show(context, initialType: TransactionType.income),
+                        onAddExpense: () => AddTransactionSheet.show(context, initialType: TransactionType.expense),
+                        onSetBudget: () => context.go('/spending-plan'),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // 5. Budget Health Preview Widget
+                      _buildBudgetHealthPreview(context, isDark),
+                      const SizedBox(height: 20),
+
+                      // 6. Recent Transactions Header (Dynamic by selected bank)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                recentHeaderTitle,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16,
+                                      letterSpacing: -0.3,
+                                    ),
+                              ),
+                              if (selectedBankId != null) ...[
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: () => context.read<AccountCubit>().selectBank(null),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('ล้าง', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                        SizedBox(width: 2),
+                                        Icon(Icons.close, size: 10),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              context.read<TransactionCubit>().setSelectedBankId(selectedBankId);
+                              context.go('/transactions');
+                            },
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              foregroundColor: AppColors.primary,
                             ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('ดูทั้งหมด', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                SizedBox(width: 4),
+                                Icon(Icons.arrow_forward_ios, size: 12),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/transactions'),
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          foregroundColor: AppColors.primary,
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('ดูทั้งหมด', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                            SizedBox(width: 4),
-                            Icon(Icons.arrow_forward_ios, size: 12),
-                          ],
+                      const SizedBox(height: 8),
+
+                      // 7. Recent Transactions List (Smooth AnimatedSwitcher transition when changing bank)
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: KeyedSubtree(
+                          key: ValueKey('recent_${selectedBankId ?? 'all'}'),
+                          child: recentTransactions.isEmpty
+                              ? EmptyStateWidget(
+                                  imageAsset: 'assets/images/mascot_dog_writing.png',
+                                  title: selectedBankId != null
+                                      ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
+                                      : 'ยังไม่มีรายการเลยนะโฮ่ง!',
+                                  message: selectedBankId != null
+                                      ? 'เมื่อมีรายการเข้าหรือจ่ายออกจากธนาคารนี้ จะปรากฏที่นี่ครับ'
+                                      : 'เริ่มจดบันทึกรายรับหรือรายจ่าย ให้เจ้าตูบช่วยคำนวณงบให้นะครับ',
+                                  actionText: 'จดรายการใหม่',
+                                  onAction: () => AddTransactionSheet.show(context),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: recentTransactions.length,
+                                  itemBuilder: (context, index) {
+                                    final item = recentTransactions[index];
+                                    return TransactionTile(
+                                      transaction: item,
+                                      isEyeViewHidden: accountState.isEyeViewHidden,
+                                      onTap: () => AddTransactionSheet.show(context, existingTransaction: item),
+                                      onDelete: () {
+                                        context.read<TransactionCubit>().deleteTransaction(item.id);
+                                      },
+                                    );
+                                  },
+                                ),
                         ),
                       ),
+                      const SizedBox(height: 24),
                     ],
                   ),
-                  const SizedBox(height: 8),
-
-                  // 6. Recent Transactions List
-                  if (recentTransactions.isEmpty)
-                    EmptyStateWidget(
-                      imageAsset: 'assets/images/mascot_dog_writing.png',
-                      title: 'ยังไม่มีรายการเลยนะโฮ่ง!',
-                      message: 'เริ่มจดบันทึกรายรับหรือรายจ่าย ให้เจ้าตูบช่วยคำนวณงบให้นะครับ',
-                      actionText: 'จดรายการแรก',
-                      onAction: () => AddTransactionSheet.show(context),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: recentTransactions.length,
-                      itemBuilder: (context, index) {
-                        final item = recentTransactions[index];
-                        return TransactionTile(
-                          transaction: item,
-                          onTap: () => AddTransactionSheet.show(context, existingTransaction: item),
-                          onDelete: () {
-                            context.read<TransactionCubit>().deleteTransaction(item.id);
-                          },
-                        );
-                      },
-                    ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           );
         },
       ),

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum TransactionType { income, expense }
+enum TransactionType { income, expense, transfer }
 
 class TransactionEntity extends Equatable {
   final String id;
@@ -13,6 +13,11 @@ class TransactionEntity extends Equatable {
   final int categoryColorValue;
   final DateTime date;
   final String? note;
+  final String? bankId;
+  final String? bankAccountId;
+  final String? bankShortName;
+  final String? accountMask;
+  final String? targetAccountId;
 
   const TransactionEntity({
     required this.id,
@@ -25,10 +30,16 @@ class TransactionEntity extends Equatable {
     required this.categoryColorValue,
     required this.date,
     this.note,
+    this.bankId,
+    this.bankAccountId,
+    this.bankShortName,
+    this.accountMask,
+    this.targetAccountId,
   });
 
   bool get isIncome => type == TransactionType.income;
   bool get isExpense => type == TransactionType.expense;
+  bool get isTransfer => type == TransactionType.transfer;
 
   TransactionEntity copyWith({
     String? id,
@@ -41,6 +52,11 @@ class TransactionEntity extends Equatable {
     int? categoryColorValue,
     DateTime? date,
     String? note,
+    String? bankId,
+    String? bankAccountId,
+    String? bankShortName,
+    String? accountMask,
+    String? targetAccountId,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -53,6 +69,11 @@ class TransactionEntity extends Equatable {
       categoryColorValue: categoryColorValue ?? this.categoryColorValue,
       date: date ?? this.date,
       note: note ?? this.note,
+      bankId: bankId ?? this.bankId,
+      bankAccountId: bankAccountId ?? this.bankAccountId,
+      bankShortName: bankShortName ?? this.bankShortName,
+      accountMask: accountMask ?? this.accountMask,
+      targetAccountId: targetAccountId ?? this.targetAccountId,
     );
   }
 
@@ -68,5 +89,10 @@ class TransactionEntity extends Equatable {
         categoryColorValue,
         date,
         note,
+        bankId,
+        bankAccountId,
+        bankShortName,
+        accountMask,
+        targetAccountId,
       ];
 }

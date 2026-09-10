@@ -12,20 +12,66 @@ class TransactionModel extends TransactionEntity {
     required super.categoryColorValue,
     required super.date,
     super.note,
+    super.bankId,
+    super.bankAccountId,
+    super.bankShortName,
+    super.accountMask,
+    super.targetAccountId,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    final typeStr = json['type'] as String? ?? 'expense';
+    final type = typeStr == 'income'
+        ? TransactionType.income
+        : typeStr == 'transfer'
+            ? TransactionType.transfer
+            : TransactionType.expense;
+
+    // Backward compatibility: detect bankId from note or title if missing
+    String? bankId = json['bankId'] as String?;
+    String? bankShortName = json['bankShortName'] as String?;
+    if (bankId == null) {
+      final text = '${json['title'] ?? ''} ${json['note'] ?? ''}'.toLowerCase();
+      if (text.contains('k plus') || text.contains('kbank') || text.contains('กสิกร')) {
+        bankId = 'kbank';
+        bankShortName = 'K PLUS';
+      } else if (text.contains('scb') || text.contains('ไทยพาณิชย์')) {
+        bankId = 'scb';
+        bankShortName = 'SCB EASY';
+      } else if (text.contains('next') || text.contains('กรุงไทย') || text.contains('ktb')) {
+        bankId = 'ktb';
+        bankShortName = 'Krungthai NEXT';
+      } else if (text.contains('truemoney') || text.contains('ทรูมันนี่')) {
+        bankId = 'truemoney';
+        bankShortName = 'TrueMoney';
+      } else if (text.contains('ttb') || text.contains('ทีทีบี')) {
+        bankId = 'ttb';
+        bankShortName = 'ttb touch';
+      } else if (text.contains('kma') || text.contains('กรุงศรี')) {
+        bankId = 'kma';
+        bankShortName = 'KMA Krungsri';
+      } else {
+        bankId = 'cash';
+        bankShortName = 'เงินสด';
+      }
+    }
+
     return TransactionModel(
       id: json['id'] as String,
       title: json['title'] as String,
       amount: (json['amount'] as num).toDouble(),
-      type: (json['type'] as String) == 'income' ? TransactionType.income : TransactionType.expense,
+      type: type,
       categoryId: json['categoryId'] as String,
       categoryName: json['categoryName'] as String,
       categoryIconCode: json['categoryIconCode'] as int,
       categoryColorValue: json['categoryColorValue'] as int,
       date: DateTime.parse(json['date'] as String),
       note: json['note'] as String?,
+      bankId: bankId,
+      bankAccountId: json['bankAccountId'] as String?,
+      bankShortName: bankShortName,
+      accountMask: json['accountMask'] as String?,
+      targetAccountId: json['targetAccountId'] as String?,
     );
   }
 
@@ -34,13 +80,22 @@ class TransactionModel extends TransactionEntity {
       'id': id,
       'title': title,
       'amount': amount,
-      'type': type == TransactionType.income ? 'income' : 'expense',
+      'type': type == TransactionType.income
+          ? 'income'
+          : type == TransactionType.transfer
+              ? 'transfer'
+              : 'expense',
       'categoryId': categoryId,
       'categoryName': categoryName,
       'categoryIconCode': categoryIconCode,
       'categoryColorValue': categoryColorValue,
       'date': date.toIso8601String(),
       'note': note,
+      'bankId': bankId,
+      'bankAccountId': bankAccountId,
+      'bankShortName': bankShortName,
+      'accountMask': accountMask,
+      'targetAccountId': targetAccountId,
     };
   }
 
@@ -56,6 +111,11 @@ class TransactionModel extends TransactionEntity {
       categoryColorValue: entity.categoryColorValue,
       date: entity.date,
       note: entity.note,
+      bankId: entity.bankId,
+      bankAccountId: entity.bankAccountId,
+      bankShortName: entity.bankShortName,
+      accountMask: entity.accountMask,
+      targetAccountId: entity.targetAccountId,
     );
   }
 }

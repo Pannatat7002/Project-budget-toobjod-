@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../../transactions/presentation/state/transaction_cubit.dart';
 import '../../../transactions/presentation/state/transaction_state.dart';
+import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
 import '../../domain/repositories/auto_sync_repository.dart';
@@ -13,12 +14,14 @@ import 'auto_sync_state.dart';
 class AutoSyncCubit extends Cubit<AutoSyncState> {
   final AutoSyncRepository repository;
   final TransactionCubit transactionCubit;
+  final AccountCubit accountCubit;
   StreamSubscription<DetectedTransaction>? _streamSubscription;
   StreamSubscription<TransactionState>? _transactionSubscription;
 
   AutoSyncCubit({
     required this.repository,
     required this.transactionCubit,
+    required this.accountCubit,
   }) : super(const AutoSyncState()) {
     _startTransactionListener();
   }
@@ -174,61 +177,80 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       }
     }
 
-    // Prevent duplicate processing if already in pending list
+    // Prevent duplicate processing if already in pending list (per bank & per amount)
     final isAlreadyPending = state.pendingTransactions.any((t) =>
         t.id == detected.id ||
-        (t.packageName == detected.packageName &&
+        (t.bankId == detected.bankId &&
             t.amount == detected.amount &&
             t.type == detected.type &&
-            t.timestamp.difference(detected.timestamp).abs().inSeconds < 10));
+            t.timestamp.difference(detected.timestamp).abs().inSeconds < 15));
 
     if (isAlreadyPending) {
       debugPrint('[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream: ${detected.title} ${detected.amount} THB');
       return;
     }
 
-    // 🔁 Smart Internal Transfer Detection (โอนเงินข้ามบัญชีตัวเองในเครื่องเดียวกัน & ในธนาคารเดียวกัน)
+    // Auto-discover / ensure account exists for this bank
+    final account = await accountCubit.ensureAccountForBank(
+      detected.bankId,
+      accountMask: detected.accountMask,
+      bankName: detected.bankName,
+      brandColor: detected.bankColorValue,
+    );
+
+    final enrichedDetected = detected.copyWith(
+      bankAccountId: account.id,
+      bankId: account.bankId,
+    );
+
+    // 🔁 Smart Internal Transfer Detection (โอนเงินข้ามบัญชีตัวเอง)
     if (state.isTransferDetectionEnabled) {
-      final matchedPending = _findMatchingInternalTransferInPending(detected);
-      final matchedEntity = matchedPending != null ? null : _findMatchingInternalTransferInCubit(detected);
+      final matchedPending = _findMatchingInternalTransferInPending(enrichedDetected);
+      final matchedEntity = matchedPending != null ? null : _findMatchingInternalTransferInCubit(enrichedDetected);
 
       if (matchedPending != null || matchedEntity != null) {
-        final matchedId = matchedPending?.id ?? matchedEntity!.id;
         final counterpartName = matchedPending?.bankShortName ?? matchedEntity!.title;
-        debugPrint('[AutoSyncCubit] 🔁 Transfer Detected: ${detected.bankShortName} & $counterpartName (${detected.amount} THB). Auto-cancelling both.');
+        debugPrint('[AutoSyncCubit] 🔁 Transfer Detected: ${enrichedDetected.bankShortName} ➔ $counterpartName (${enrichedDetected.amount} THB). Marking as paired transfer.');
 
-        // 1. Delete the first saved transaction from database
-        await transactionCubit.deleteTransaction(matchedId);
+        // Save as transfer item linked to target account
+        final transferTx = enrichedDetected.toTransactionEntity().copyWith(
+          type: TransactionType.transfer,
+          targetAccountId: matchedPending?.bankAccountId ?? matchedEntity?.bankAccountId,
+          note: 'โอนข้ามบัญชีระหว่าง ${enrichedDetected.bankShortName} และ $counterpartName',
+        );
+        await transactionCubit.addTransaction(transferTx);
 
-        // 2. Remove counterpart from pending & mark discarded
-        if (matchedPending != null) {
-          await repository.removePendingTransaction(matchedId);
-          await repository.markAsDiscarded(matchedPending);
+        // Update counterpart in database if needed
+        if (matchedEntity != null) {
+          final updatedCounterpart = matchedEntity.copyWith(
+            type: TransactionType.transfer,
+            targetAccountId: account.id,
+          );
+          await transactionCubit.updateTransaction(updatedCounterpart);
         }
 
-        // 3. Mark the incoming transfer as discarded
-        await repository.markAsDiscarded(detected);
+        accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
 
-        final updatedPending = await repository.getPendingTransactions();
         emit(state.copyWith(
-          pendingTransactions: updatedPending,
-          clearLatestDetected: true,
-          lastTransferNotice: 'ตรวจพบการโอนข้ามบัญชี ฿${detected.amount.toStringAsFixed(2)} ระบบไม่นับเป็นรายรับ-รายจ่าย',
+          lastTransferNotice: 'ตรวจพบการโอนข้ามบัญชี ฿${enrichedDetected.amount.toStringAsFixed(2)} ระบบจัดเป็นโอนเงินข้ามบัญชี',
         ));
         return;
       }
     }
 
     // ⚡ Always auto-save transaction to database immediately
-    debugPrint('[AutoSyncCubit] ⚡ Auto-saved transaction immediately: ${detected.bankShortName} ${detected.amount} THB');
-    await transactionCubit.addTransaction(detected.toTransactionEntity());
+    debugPrint('[AutoSyncCubit] ⚡ Auto-saved transaction: ${enrichedDetected.bankShortName} ${enrichedDetected.amount} THB (Account: ${account.accountName})');
+    await transactionCubit.addTransaction(enrichedDetected.toTransactionEntity());
+
+    // Refresh bank balances
+    accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
 
     // Add to pending review queue
-    await repository.addPendingTransaction(detected);
+    await repository.addPendingTransaction(enrichedDetected);
     final updatedPending = await repository.getPendingTransactions();
     emit(state.copyWith(
       pendingTransactions: updatedPending,
-      latestDetected: detected,
+      latestDetected: enrichedDetected,
     ));
   }
 

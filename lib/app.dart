@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
+import 'features/accounts/presentation/state/account_cubit.dart';
 import 'features/auto_sync/presentation/state/auto_sync_cubit.dart';
 import 'features/budget/presentation/state/budget_cubit.dart';
 import 'features/spending_plan/presentation/state/spending_plan_cubit.dart';
@@ -16,6 +17,7 @@ class BudgetPlannerApp extends StatefulWidget {
 }
 
 class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBindingObserver {
+  late final AccountCubit _accountCubit;
   late final AutoSyncCubit _autoSyncCubit;
   late final TransactionCubit _transactionCubit;
   late final BudgetCubit _budgetCubit;
@@ -25,6 +27,7 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _accountCubit = di.sl<AccountCubit>()..loadAccounts();
     _transactionCubit = di.sl<TransactionCubit>()..loadTransactions();
     _budgetCubit = di.sl<BudgetCubit>()..loadBudgets();
     _spendingPlanCubit = di.sl<SpendingPlanCubit>()..loadPlan();
@@ -49,6 +52,7 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<AccountCubit>.value(value: _accountCubit),
         BlocProvider<TransactionCubit>.value(value: _transactionCubit),
         BlocProvider<BudgetCubit>.value(value: _budgetCubit),
         BlocProvider<SpendingPlanCubit>.value(value: _spendingPlanCubit),

@@ -84,6 +84,14 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
   }
 
+  void setSelectedBankId(String? bankId) {
+    if (bankId == null) {
+      emit(state.copyWith(clearBank: true));
+    } else {
+      emit(state.copyWith(selectedBankId: bankId));
+    }
+  }
+
   void setSearchQuery(String query) {
     emit(state.copyWith(searchQuery: query));
   }
