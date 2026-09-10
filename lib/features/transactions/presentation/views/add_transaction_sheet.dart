@@ -8,31 +8,44 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
+import '../../../accounts/presentation/state/account_cubit.dart';
+import '../../../accounts/presentation/state/account_state.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final TransactionEntity? existingTransaction;
   final TransactionType initialType;
+  final String? initialBankId;
+  final String? initialBankAccountId;
 
   const AddTransactionSheet({
     super.key,
     this.existingTransaction,
     this.initialType = TransactionType.expense,
+    this.initialBankId,
+    this.initialBankAccountId,
   });
 
   static Future<void> show(
     BuildContext context, {
     TransactionEntity? existingTransaction,
     TransactionType initialType = TransactionType.expense,
+    String? initialBankId,
+    String? initialBankAccountId,
   }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => BlocProvider.value(
-        value: context.read<TransactionCubit>(),
+      builder: (ctx) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<TransactionCubit>()),
+          BlocProvider.value(value: context.read<AccountCubit>()),
+        ],
         child: AddTransactionSheet(
           existingTransaction: existingTransaction,
           initialType: initialType,
+          initialBankId: initialBankId,
+          initialBankAccountId: initialBankAccountId,
         ),
       ),
     );
@@ -52,6 +65,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   late CategoryItem _selectedCategory;
   late DateTime _selectedDate;
   bool _showMoreOptions = false;
+  String? _selectedAccountId;
 
   @override
   void initState() {
@@ -79,6 +93,33 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       );
     } else {
       _selectedCategory = initialList.first;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_selectedAccountId == null) {
+      final accState = context.read<AccountCubit>().state;
+      final existing = widget.existingTransaction;
+
+      if (existing != null) {
+        if (existing.bankAccountId != null && accState.accounts.any((a) => a.id == existing.bankAccountId)) {
+          _selectedAccountId = existing.bankAccountId;
+        } else if (existing.bankId != null && accState.accounts.any((a) => a.bankId == existing.bankId)) {
+          _selectedAccountId = accState.accounts.firstWhere((a) => a.bankId == existing.bankId).id;
+        }
+      }
+
+      if (_selectedAccountId == null && accState.accounts.isNotEmpty) {
+        if (accState.selectedBankId != null) {
+          final matched = accState.accounts.where((a) => a.bankId == accState.selectedBankId).toList();
+          if (matched.isNotEmpty) {
+            _selectedAccountId = matched.first.id;
+          }
+        }
+        _selectedAccountId ??= accState.accounts.first.id;
+      }
     }
   }
 
@@ -131,6 +172,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       final enteredTitle = _titleController.text.trim();
       final finalTitle = enteredTitle.isNotEmpty ? enteredTitle : _selectedCategory.name;
 
+      final accState = context.read<AccountCubit>().state;
+      final matchedAcc = accState.accounts.where((a) => a.id == _selectedAccountId).toList();
+      final selectedAcc = matchedAcc.isNotEmpty ? matchedAcc.first : null;
+
       final transaction = TransactionEntity(
         id: id,
         title: finalTitle,
@@ -142,6 +187,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         categoryColorValue: _selectedCategory.colorValue,
         date: _selectedDate,
         note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        bankId: selectedAcc?.bankId ?? widget.existingTransaction?.bankId,
+        bankAccountId: selectedAcc?.id ?? widget.existingTransaction?.bankAccountId,
+        bankShortName: selectedAcc?.shortName ?? widget.existingTransaction?.bankShortName,
+        accountMask: selectedAcc?.accountMask ?? widget.existingTransaction?.accountMask,
+        targetAccountId: widget.existingTransaction?.targetAccountId,
       );
 
       final cubit = context.read<TransactionCubit>();
@@ -150,6 +200,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       } else {
         cubit.addTransaction(transaction);
       }
+
+      context.read<AccountCubit>().refreshBalancesFromTransactions(cubit.state.transactions);
 
       if (mounted) {
         Navigator.pop(context);
@@ -330,6 +382,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 12),
+
+                    // Account / Bank Selector (Unified Multi-Bank Architecture)
+                    _buildAccountSelector(isDark),
                     const SizedBox(height: 12),
 
                     // Category Grid (Compact 4-columns)
@@ -595,6 +651,106 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAccountSelector(bool isDark) {
+    return BlocBuilder<AccountCubit, AccountState>(
+      builder: (context, accState) {
+        if (accState.accounts.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 6),
+              child: Text(
+                'บัญชี / กระเป๋า:',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: accState.accounts.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, idx) {
+                  final acc = accState.accounts[idx];
+                  final isAccSelected = _selectedAccountId == acc.id;
+                  final brandCol = Color(acc.brandColor);
+
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedAccountId = acc.id;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isAccSelected
+                            ? brandCol.withValues(alpha: 0.18)
+                            : (isDark ? AppColors.darkCard : const Color(0xFFF1F5F9)),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isAccSelected
+                              ? brandCol
+                              : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                          width: isAccSelected ? 1.6 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: brandCol,
+                              shape: BoxShape.circle,
+                            ),
+                            child: acc.bankId == 'cash'
+                                ? const Icon(Icons.payments_rounded, color: Colors.white, size: 12)
+                                : ClipOval(
+                                    child: Image.asset(
+                                      acc.logoAsset,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.account_balance,
+                                        color: Colors.white,
+                                        size: 12,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            acc.accountMask != null ? '${acc.shortName} • ${acc.accountMask}' : acc.shortName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isAccSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isAccSelected
+                                  ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                  : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475569)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

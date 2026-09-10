@@ -158,6 +158,10 @@ class _DetectedTransactionSheetState extends State<DetectedTransactionSheet> {
       categoryColorValue: _categoryColorValue,
       date: currentTx.timestamp,
       note: currentTx.rawText,
+      bankId: currentTx.bankId,
+      bankAccountId: currentTx.bankAccountId,
+      bankShortName: currentTx.bankShortName,
+      accountMask: currentTx.accountMask,
     );
 
     context.read<AutoSyncCubit>().confirmTransaction(

@@ -51,7 +51,11 @@ class DashboardView extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/mascot_dog_peek.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: Color(0xFFFDB813), size: 20),
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.pets,
+                    color: Color(0xFFFDB813),
+                    size: 20,
+                  ),
                 ),
               ),
             ),
@@ -70,7 +74,9 @@ class DashboardView extends StatelessWidget {
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.4,
-                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : const Color(0xFF0F172A),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -78,14 +84,21 @@ class DashboardView extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           gradient: AppColors.yellowBadgeGradient,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
                           'PRO',
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF78350F)),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF78350F),
+                          ),
                         ),
                       ),
                     ],
@@ -94,7 +107,9 @@ class DashboardView extends StatelessWidget {
                     'วางแผนคุมงบการเงิน 🐾',
                     style: TextStyle(
                       fontSize: 11.5,
-                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -109,9 +124,13 @@ class DashboardView extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
             ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             onSelected: (val) {
               if (val == 'auto_sync') {
                 context.push('/auto-sync-settings');
@@ -126,7 +145,10 @@ class DashboardView extends StatelessWidget {
                   children: [
                     Icon(Icons.bolt, color: AppColors.primary, size: 18),
                     SizedBox(width: 10),
-                    Text('ตั้งค่าตรวจจับธนาคาร', style: TextStyle(fontSize: 13)),
+                    Text(
+                      'ตั้งค่าตรวจจับธนาคาร',
+                      style: TextStyle(fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -134,9 +156,16 @@ class DashboardView extends StatelessWidget {
                 value: 'reset',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline, color: AppColors.expense, size: 18),
+                    Icon(
+                      Icons.delete_outline,
+                      color: AppColors.expense,
+                      size: 18,
+                    ),
                     SizedBox(width: 10),
-                    Text('ล้างข้อมูลทั้งหมด', style: TextStyle(color: AppColors.expense, fontSize: 13)),
+                    Text(
+                      'ล้างข้อมูลทั้งหมด',
+                      style: TextStyle(color: AppColors.expense, fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -149,20 +178,26 @@ class DashboardView extends StatelessWidget {
         builder: (context, accountState) {
           return BlocConsumer<TransactionCubit, TransactionState>(
             listener: (context, txState) {
-              context.read<BudgetCubit>().updateWithTransactions(txState.transactions);
-              context.read<AccountCubit>().refreshBalancesFromTransactions(txState.transactions);
+              context.read<BudgetCubit>().updateWithTransactions(
+                txState.transactions,
+              );
+              context.read<AccountCubit>().refreshBalancesFromTransactions(
+                txState.transactions,
+              );
             },
             builder: (context, txState) {
-              if (txState.status == TransactionStatus.loading && txState.transactions.isEmpty) {
+              if (txState.status == TransactionStatus.loading &&
+                  txState.transactions.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
               final selectedBankId = accountState.selectedBankId;
-              final recentTransactions = (selectedBankId == null
-                      ? txState.transactions
-                      : txState.getTransactionsForBank(selectedBankId))
-                  .take(6)
-                  .toList();
+              final recentTransactions =
+                  (selectedBankId == null
+                          ? txState.transactions
+                          : txState.getTransactionsForBank(selectedBankId))
+                      .take(6)
+                      .toList();
 
               final recentHeaderTitle = selectedBankId == null
                   ? 'รายการล่าสุด (ทุกบัญชี)'
@@ -181,14 +216,58 @@ class DashboardView extends StatelessWidget {
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
 
                       // Auto-Sync Detected Transaction / Setup Banner
                       const AutoSyncBanner(),
+
+                      // Swipe Hint Indicator (◄ ปัดซ้าย / ปัดขวา เพื่อเปลี่ยนบัญชี ►)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 4,
+                          right: 4,
+                          bottom: 2,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chevron_left_rounded,
+                              size: 16,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : const Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              'ปัดซ้าย / ขวา เพื่อเปลี่ยนบัญชี',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? AppColors.darkTextMuted
+                                    : const Color(0xFF64748B),
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : const Color(0xFF94A3B8),
+                            ),
+                          ],
+                        ),
+                      ),
 
                       // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
                       BankCardsCarousel(
@@ -197,12 +276,17 @@ class DashboardView extends StatelessWidget {
                         totalBalance: txState.totalBalance,
                         totalMonthlyIncome: txState.totalIncome,
                         totalMonthlyExpense: txState.totalExpense,
-                        getBankBalance: (bankId) => txState.getBankBalance(bankId),
-                        getBankIncome: (bankId) => txState.getBankIncome(bankId),
-                        getBankExpense: (bankId) => txState.getBankExpense(bankId),
+                        getBankBalance: (bankId) =>
+                            txState.getBankBalance(bankId),
+                        getBankIncome: (bankId) =>
+                            txState.getBankIncome(bankId),
+                        getBankExpense: (bankId) =>
+                            txState.getBankExpense(bankId),
                         isEyeViewHidden: accountState.isEyeViewHidden,
-                        onToggleEyeView: () => context.read<AccountCubit>().toggleEyeView(),
-                        onBankSelected: (bankId) => context.read<AccountCubit>().selectBank(bankId),
+                        onToggleEyeView: () =>
+                            context.read<AccountCubit>().toggleEyeView(),
+                        onBankSelected: (bankId) =>
+                            context.read<AccountCubit>().selectBank(bankId),
                         onAddBankTap: () => context.push('/bank-selection'),
                       ),
                       const SizedBox(height: 10),
@@ -211,18 +295,30 @@ class DashboardView extends StatelessWidget {
                       BankQuickJumpBar(
                         accounts: accountState.accounts,
                         selectedBankId: accountState.selectedBankId,
-                        onSelectBank: (bankId) => context.read<AccountCubit>().selectBank(bankId),
+                        onSelectBank: (bankId) =>
+                            context.read<AccountCubit>().selectBank(bankId),
+                        onAddBankTap: () => context.push('/bank-selection'),
                       ),
                       const SizedBox(height: 16),
 
                       // 3. Mascot Speech Bubble Banner
-                      _buildMascotGreetingCard(context, txState.transactions.length, isDark),
+                      _buildMascotGreetingCard(
+                        context,
+                        txState.transactions.length,
+                        isDark,
+                      ),
                       const SizedBox(height: 16),
 
                       // 4. Quick Actions Bar
                       QuickActionsBar(
-                        onAddIncome: () => AddTransactionSheet.show(context, initialType: TransactionType.income),
-                        onAddExpense: () => AddTransactionSheet.show(context, initialType: TransactionType.expense),
+                        onAddIncome: () => AddTransactionSheet.show(
+                          context,
+                          initialType: TransactionType.income,
+                        ),
+                        onAddExpense: () => AddTransactionSheet.show(
+                          context,
+                          initialType: TransactionType.expense,
+                        ),
                         onSetBudget: () => context.go('/spending-plan'),
                       ),
                       const SizedBox(height: 18),
@@ -239,7 +335,8 @@ class DashboardView extends StatelessWidget {
                             children: [
                               Text(
                                 recentHeaderTitle,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 16,
                                       letterSpacing: -0.3,
@@ -248,20 +345,35 @@ class DashboardView extends StatelessWidget {
                               if (selectedBankId != null) ...[
                                 const SizedBox(width: 6),
                                 GestureDetector(
-                                  onTap: () => context.read<AccountCubit>().selectBank(null),
+                                  onTap: () => context
+                                      .read<AccountCubit>()
+                                      .selectBank(null),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                                      color: isDark
+                                          ? AppColors.darkCard
+                                          : AppColors.lightBackground,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
+                                        color: isDark
+                                            ? AppColors.darkBorderSubtle
+                                            : AppColors.lightBorder,
                                       ),
                                     ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text('ล้าง', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                        Text(
+                                          'ล้าง',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                         SizedBox(width: 2),
                                         Icon(Icons.close, size: 10),
                                       ],
@@ -273,7 +385,9 @@ class DashboardView extends StatelessWidget {
                           ),
                           TextButton(
                             onPressed: () {
-                              context.read<TransactionCubit>().setSelectedBankId(selectedBankId);
+                              context
+                                  .read<TransactionCubit>()
+                                  .setSelectedBankId(selectedBankId);
                               context.go('/transactions');
                             },
                             style: TextButton.styleFrom(
@@ -283,7 +397,13 @@ class DashboardView extends StatelessWidget {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('ดูทั้งหมด', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                Text(
+                                  'ดูทั้งหมด',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
                                 SizedBox(width: 4),
                                 Icon(Icons.arrow_forward_ios, size: 12),
                               ],
@@ -300,7 +420,8 @@ class DashboardView extends StatelessWidget {
                           key: ValueKey('recent_${selectedBankId ?? 'all'}'),
                           child: recentTransactions.isEmpty
                               ? EmptyStateWidget(
-                                  imageAsset: 'assets/images/mascot_dog_writing.png',
+                                  imageAsset:
+                                      'assets/images/mascot_dog_writing.png',
                                   title: selectedBankId != null
                                       ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
                                       : 'ยังไม่มีรายการเลยนะโฮ่ง!',
@@ -308,7 +429,8 @@ class DashboardView extends StatelessWidget {
                                       ? 'เมื่อมีรายการเข้าหรือจ่ายออกจากธนาคารนี้ จะปรากฏที่นี่ครับ'
                                       : 'เริ่มจดบันทึกรายรับหรือรายจ่าย ให้เจ้าตูบช่วยคำนวณงบให้นะครับ',
                                   actionText: 'จดรายการใหม่',
-                                  onAction: () => AddTransactionSheet.show(context),
+                                  onAction: () =>
+                                      AddTransactionSheet.show(context),
                                 )
                               : ListView.builder(
                                   shrinkWrap: true,
@@ -318,10 +440,16 @@ class DashboardView extends StatelessWidget {
                                     final item = recentTransactions[index];
                                     return TransactionTile(
                                       transaction: item,
-                                      isEyeViewHidden: accountState.isEyeViewHidden,
-                                      onTap: () => AddTransactionSheet.show(context, existingTransaction: item),
+                                      isEyeViewHidden:
+                                          accountState.isEyeViewHidden,
+                                      onTap: () => AddTransactionSheet.show(
+                                        context,
+                                        existingTransaction: item,
+                                      ),
                                       onDelete: () {
-                                        context.read<TransactionCubit>().deleteTransaction(item.id);
+                                        context
+                                            .read<TransactionCubit>()
+                                            .deleteTransaction(item.id);
                                       },
                                     );
                                   },
@@ -340,7 +468,11 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildMascotGreetingCard(BuildContext context, int txCount, bool isDark) {
+  Widget _buildMascotGreetingCard(
+    BuildContext context,
+    int txCount,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -360,7 +492,8 @@ class DashboardView extends StatelessWidget {
             child: Image.asset(
               'assets/images/mascot_dog_writing.png',
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: AppColors.primary),
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.pets, color: AppColors.primary),
             ),
           ),
           const SizedBox(width: 12),
@@ -385,7 +518,9 @@ class DashboardView extends StatelessWidget {
                   'คุมงบตามแผน ช่วยให้มีเงินเก็บ 🐾',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? AppColors.darkTextMuted : const Color(0xFFC2410C),
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : const Color(0xFFC2410C),
                   ),
                 ),
               ],
@@ -421,7 +556,9 @@ class DashboardView extends StatelessWidget {
             color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
+              color: isDark
+                  ? AppColors.darkBorderSubtle
+                  : AppColors.lightBorderSubtle,
               width: 1,
             ),
             boxShadow: isDark
@@ -452,14 +589,17 @@ class DashboardView extends StatelessWidget {
                       Text(
                         'สถานะงบประมาณรวม',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -480,7 +620,9 @@ class DashboardView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: progress.clamp(0.0, 1.0),
-                  backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFFF1F5F9),
+                  backgroundColor: isDark
+                      ? AppColors.darkBackground
+                      : const Color(0xFFF1F5F9),
                   valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                   minHeight: 8,
                 ),
@@ -493,7 +635,9 @@ class DashboardView extends StatelessWidget {
                     'ใช้ไป ${CurrencyFormatter.format(totalSpent)}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
                     ),
                   ),
                   Text(
@@ -501,7 +645,9 @@ class DashboardView extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
                 ],

@@ -154,7 +154,7 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                             const SizedBox(width: 6),
                             Switch.adaptive(
                               value: isAllEnabled,
-                              activeColor: AppColors.primary,
+                              activeThumbColor: AppColors.primary,
                               onChanged: (val) => cubit.toggleAllBankPackages(val),
                             ),
                           ],
@@ -291,7 +291,7 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                                       // Active Switch
                                       Switch.adaptive(
                                         value: isEnabled,
-                                        activeColor: Color(bank.brandColor),
+                                        activeThumbColor: Color(bank.brandColor),
                                         onChanged: (val) =>
                                             cubit.toggleBankPackage(bank.packageName, val),
                                       ),

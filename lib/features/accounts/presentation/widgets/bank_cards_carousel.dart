@@ -46,7 +46,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
   void initState() {
     super.initState();
     _pageController = widget.externalPageController ??
-        PageController(viewportFraction: 0.92, initialPage: _getInitialPage());
+        PageController(viewportFraction: 0.96, initialPage: _getInitialPage());
   }
 
   int _getInitialPage() {

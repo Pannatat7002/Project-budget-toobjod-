@@ -632,7 +632,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
             const SizedBox(width: 8),
             Switch(
               value: value,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: onChanged,
             ),
           ],

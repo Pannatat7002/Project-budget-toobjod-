@@ -6,24 +6,28 @@ class BankQuickJumpBar extends StatelessWidget {
   final List<BankAccountEntity> accounts;
   final String? selectedBankId; // null = All
   final ValueChanged<String?> onSelectBank;
+  final VoidCallback? onAddBankTap;
 
   const BankQuickJumpBar({
     super.key,
     required this.accounts,
     this.selectedBankId,
     required this.onSelectBank,
+    this.onAddBankTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasAddButton = onAddBankTap != null;
+    final totalCount = 1 + accounts.length + (hasAddButton ? 1 : 0);
 
     return SizedBox(
       height: 38,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 1 + accounts.length,
+        padding: EdgeInsets.zero,
+        itemCount: totalCount,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -39,18 +43,31 @@ class BankQuickJumpBar extends StatelessWidget {
             );
           }
 
-          final acc = accounts[index - 1];
-          final isSelected = selectedBankId == acc.bankId;
+          if (index <= accounts.length) {
+            final acc = accounts[index - 1];
+            final isSelected = selectedBankId == acc.bankId;
 
+            return _buildChip(
+              context: context,
+              label: acc.shortName,
+              icon: Icons.account_balance_rounded,
+              color: Color(acc.brandColor),
+              logoAsset: acc.bankId != 'cash' ? acc.logoAsset : null,
+              isSelected: isSelected,
+              isDark: isDark,
+              onTap: () => onSelectBank(acc.bankId),
+            );
+          }
+
+          // Last Item: + เพิ่มธนาคาร
           return _buildChip(
             context: context,
-            label: acc.shortName,
-            icon: Icons.account_balance_rounded,
-            color: Color(acc.brandColor),
-            logoAsset: acc.bankId != 'cash' ? acc.logoAsset : null,
-            isSelected: isSelected,
+            label: '+ เพิ่มธนาคาร',
+            icon: Icons.add_rounded,
+            color: AppColors.primary,
+            isSelected: false,
             isDark: isDark,
-            onTap: () => onSelectBank(acc.bankId),
+            onTap: onAddBankTap!,
           );
         },
       ),

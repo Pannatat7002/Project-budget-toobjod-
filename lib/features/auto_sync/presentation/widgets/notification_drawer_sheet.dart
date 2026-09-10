@@ -503,6 +503,10 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
       categoryColorValue: _categoryColorValue,
       date: widget.transaction.timestamp,
       note: widget.transaction.rawText,
+      bankId: widget.transaction.bankId,
+      bankAccountId: widget.transaction.bankAccountId,
+      bankShortName: widget.transaction.bankShortName,
+      accountMask: widget.transaction.accountMask,
     );
     widget.onConfirm(entity);
   }
