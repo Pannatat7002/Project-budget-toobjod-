@@ -181,5 +181,51 @@ void main() {
 
       expect(parsed, isNull);
     });
+
+    test('should correctly parse Bank SMS from messaging app', () {
+      // 1. KBANK SMS
+      final kbankSms = ThaiBankParser.parse(
+        packageName: 'com.google.android.apps.messaging',
+        title: 'KBANK',
+        text: 'บช. x-4521 เงินเข้า 3,500.00 บ. จาก นายสมชาย ว. ยอดคงเหลือ 45,650.00 บ.',
+      );
+      expect(kbankSms, isNotNull);
+      expect(kbankSms!.bankShortName, 'K PLUS');
+      expect(kbankSms.type, TransactionType.income);
+      expect(kbankSms.amount, 3500.00);
+
+      // 2. SCB SMS
+      final scbSms = ThaiBankParser.parse(
+        packageName: 'com.google.android.apps.messaging',
+        title: 'SCB',
+        text: 'เงินเข้า 15,000.00บ เข้า บช x-8832 โอนจาก บจก.ไทยซอฟต์แวร์ ยอดคงเหลือ 28,500.00บ',
+      );
+      expect(scbSms, isNotNull);
+      expect(scbSms!.bankShortName, 'SCB EASY');
+      expect(scbSms.type, TransactionType.income);
+      expect(scbSms.amount, 15000.00);
+
+      // 3. KTB SMS
+      final ktbSms = ThaiBankParser.parse(
+        packageName: 'com.samsung.android.messaging',
+        title: 'KTB',
+        text: 'เงินเข้า บช. x-1290 จำนวน 5,000.00 บาท ยอดเงินใช้ได้ 12,300.00 บาท',
+      );
+      expect(ktbSms, isNotNull);
+      expect(ktbSms!.bankShortName, 'Krungthai NEXT');
+      expect(ktbSms.type, TransactionType.income);
+      expect(ktbSms.amount, 5000.00);
+
+      // 4. ttb SMS (Expense)
+      final ttbSms = ThaiBankParser.parse(
+        packageName: 'com.google.android.apps.messaging',
+        title: 'ttb',
+        text: 'โอนเงินออก 320.00 บาท จาก บช x-7714 ให้แก่ ข้าวมันไก่เจ๊หงษ์ ยอดคงเหลือ 8,450.00 บาท',
+      );
+      expect(ttbSms, isNotNull);
+      expect(ttbSms!.bankShortName, 'ttb touch');
+      expect(ttbSms.type, TransactionType.expense);
+      expect(ttbSms.amount, 320.00);
+    });
   });
 }

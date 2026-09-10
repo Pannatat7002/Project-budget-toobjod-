@@ -17,29 +17,9 @@ class CustomBottomNavBar extends StatefulWidget {
   State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
 }
 
-class _CustomBottomNavBarState extends State<CustomBottomNavBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.06).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
+class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
+  int? _hoveredIndex;
+  bool _isAiHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -135,67 +115,82 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
     required bool isDark,
   }) {
     final isSelected = widget.selectedIndex == index;
+    final isHovered = _hoveredIndex == index && !isSelected;
     final activeColor =
         isDark ? AppColors.primaryLight : AppColors.primaryOrange;
-    final inactiveColor =
-        isDark ? AppColors.darkTextMuted : const Color(0xFF64748B);
+    final inactiveColor = isHovered
+        ? (isDark ? Colors.white : const Color(0xFF334155))
+        : (isDark ? AppColors.darkTextMuted : const Color(0xFF64748B));
 
     return Expanded(
-      child: InkWell(
-        onTap: () => widget.onItemSelected(index),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? (isDark
-                        ? AppColors.primary.withValues(alpha: 0.18)
-                        : const Color(0xFFFFEDD5))
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => widget.onItemSelected(index),
+          onHover: (hovering) {
+            setState(() {
+              _hoveredIndex = hovering ? index : null;
+            });
+          },
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark
+                          ? AppColors.primary.withValues(alpha: 0.18)
+                          : const Color(0xFFFFEDD5))
+                      : (isHovered
+                          ? (isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.05))
+                          : Colors.transparent),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  isSelected ? selectedIcon : icon,
+                  size: 22,
+                  color: isSelected ? activeColor : inactiveColor,
+                ),
               ),
-              child: Icon(
-                isSelected ? selectedIcon : icon,
-                size: 22,
-                color: isSelected ? activeColor : inactiveColor,
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : (isHovered ? FontWeight.w600 : FontWeight.w500),
+                  color: isSelected ? activeColor : inactiveColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? activeColor : inactiveColor,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildCenterAiButton(bool isDark) {
-    return GestureDetector(
-      onTap: widget.onAiPressed,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedBuilder(
-            animation: _scaleAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _scaleAnimation.value,
-                child: child,
-              );
-            },
-            child: Container(
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isAiHovered = true),
+      onExit: (_) => setState(() => _isAiHovered = false),
+      child: GestureDetector(
+        onTap: widget.onAiPressed,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: _isAiHovered ? 1.08 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
+              child: Container(
               width: 62,
               height: 62,
               decoration: BoxDecoration(
@@ -254,6 +249,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
           ),
         ],
       ),
+    ),
     );
   }
 }

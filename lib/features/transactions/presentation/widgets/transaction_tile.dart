@@ -228,9 +228,6 @@ class TransactionTile extends StatelessWidget {
   }
 
   String _formatAmount(bool isIncome, bool isTransfer) {
-    if (isIncome && isEyeViewHidden) {
-      return '+฿ •••••';
-    }
     if (isTransfer) {
       return CurrencyFormatter.format(transaction.amount);
     }

@@ -11,6 +11,7 @@ import '../../domain/entities/detected_transaction.dart';
 import '../state/auto_sync_cubit.dart';
 import '../state/auto_sync_state.dart';
 import 'bank_logo_badge.dart';
+import 'mock_notification_sheet.dart';
 
 class NotificationDrawerSheet extends StatelessWidget {
   const NotificationDrawerSheet({super.key});
@@ -122,6 +123,17 @@ class NotificationDrawerSheet extends StatelessWidget {
                           ),
                         ],
                         const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.bolt_rounded, size: 20, color: Color(0xFFF59E0B)),
+                          tooltip: 'จำลองการแจ้งเตือน (Mock)',
+                          onPressed: () {
+                            Navigator.pop(context);
+                            MockNotificationSheet.show(context);
+                          },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                        const SizedBox(width: 4),
                         IconButton(
                           icon: Icon(Icons.close_rounded, size: 20, color: subtextColor),
                           onPressed: () => Navigator.pop(context),
@@ -248,6 +260,23 @@ class NotificationDrawerSheet extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   color: subtextColor,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  MockNotificationSheet.show(context);
+                                },
+                                icon: const Icon(Icons.bolt_rounded, size: 16),
+                                label: const Text('จำลอง Notification ธนาคาร (Mock)'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF59E0B),
+                                  foregroundColor: const Color(0xFF78350F),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               ),
                             ],

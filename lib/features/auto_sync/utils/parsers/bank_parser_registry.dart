@@ -49,21 +49,6 @@ class BankParserRegistry {
       }
     }
 
-    // 2. Fallback attempt across all strategies if packageName didn't match directly
-    for (final strategy in _strategies) {
-      final result = strategy.parse(
-        id: id,
-        packageName: packageName,
-        title: title,
-        text: text,
-        subText: subText,
-        timestamp: timestamp,
-      );
-      if (result != null) {
-        return result;
-      }
-    }
-
     return null;
   }
 

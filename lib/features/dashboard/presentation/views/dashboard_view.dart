@@ -12,6 +12,8 @@ import '../../../accounts/presentation/widgets/bank_cards_carousel.dart';
 import '../../../accounts/presentation/widgets/bank_quick_jump_bar.dart';
 import '../../../auto_sync/presentation/state/auto_sync_cubit.dart';
 import '../../../auto_sync/presentation/widgets/auto_sync_banner.dart';
+import '../../../auto_sync/presentation/widgets/notification_bell_button.dart';
+import '../../../auto_sync/presentation/widgets/mock_notification_sheet.dart';
 import '../../../budget/presentation/state/budget_cubit.dart';
 import '../../../budget/presentation/state/budget_state.dart';
 import '../../../spending_plan/presentation/state/spending_plan_cubit.dart';
@@ -70,6 +72,9 @@ class _DashboardViewState extends State<DashboardView> {
         title: InkWell(
           onTap: () => _showRenameDogDialog(context),
           borderRadius: BorderRadius.circular(16),
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: Row(
@@ -133,7 +138,9 @@ class _DashboardViewState extends State<DashboardView> {
                           Container(
                             padding: const EdgeInsets.all(2.5),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFDB813).withValues(alpha: 0.2),
+                              color: const Color(
+                                0xFFFDB813,
+                              ).withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -184,6 +191,7 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ),
         actions: [
+          const NotificationBellButton(),
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
@@ -195,7 +203,9 @@ class _DashboardViewState extends State<DashboardView> {
               borderRadius: BorderRadius.circular(16),
             ),
             onSelected: (val) {
-              if (val == 'rename_dog') {
+              if (val == 'mock_notification') {
+                MockNotificationSheet.show(context);
+              } else if (val == 'rename_dog') {
                 _showRenameDogDialog(context);
               } else if (val == 'auto_sync') {
                 context.push('/auto-sync-settings');
@@ -205,15 +215,29 @@ class _DashboardViewState extends State<DashboardView> {
             },
             itemBuilder: (ctx) => [
               const PopupMenuItem(
+                value: 'mock_notification',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.bolt_rounded,
+                      color: Color(0xFFF59E0B),
+                      size: 18,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'จำลอง Notification (Mock)',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
                 value: 'rename_dog',
                 child: Row(
                   children: [
                     Icon(Icons.pets, color: Color(0xFFFDB813), size: 18),
                     SizedBox(width: 10),
-                    Text(
-                      'เปลี่ยนชื่อเจ้าตูบ',
-                      style: TextStyle(fontSize: 13),
-                    ),
+                    Text('เปลี่ยนชื่อเจ้าตูบ', style: TextStyle(fontSize: 13)),
                   ],
                 ),
               ),
@@ -307,46 +331,46 @@ class _DashboardViewState extends State<DashboardView> {
                       const AutoSyncBanner(),
 
                       // Swipe Hint Indicator (◄ ปัดซ้าย / ปัดขวา เพื่อเปลี่ยนบัญชี ►)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: 4,
-                          right: 4,
-                          bottom: 2,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.chevron_left_rounded,
-                              size: 16,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : const Color(0xFF94A3B8),
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              'ปัดซ้าย / ขวา เพื่อเปลี่ยนบัญชี',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? AppColors.darkTextMuted
-                                    : const Color(0xFF64748B),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                            const SizedBox(width: 2),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              size: 16,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : const Color(0xFF94A3B8),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      // Padding(
+                      //   padding: const EdgeInsets.only(
+                      //     left: 4,
+                      //     right: 4,
+                      //     bottom: 2,
+                      //   ),
+                      //   // child: Row(
+                      //   //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   //   children: [
+                      //   //     Icon(
+                      //   //       Icons.chevron_left_rounded,
+                      //   //       size: 16,
+                      //   //       color: isDark
+                      //   //           ? AppColors.darkTextMuted
+                      //   //           : const Color(0xFF94A3B8),
+                      //   //     ),
+                      //   //     // const SizedBox(width: 2),
+                      //   //     // Text(
+                      //   //     //   'ปัดซ้าย / ขวา เพื่อเปลี่ยนบัญชี',
+                      //   //     //   style: TextStyle(
+                      //   //     //     fontSize: 11.5,
+                      //   //     //     fontWeight: FontWeight.w600,
+                      //   //     //     color: isDark
+                      //   //     //         ? AppColors.darkTextMuted
+                      //   //     //         : const Color(0xFF64748B),
+                      //   //     //     letterSpacing: 0.2,
+                      //   //     //   ),
+                      //   //     // ),
+                      //   //     const SizedBox(width: 2),
+                      //   //     Icon(
+                      //   //       Icons.chevron_right_rounded,
+                      //   //       size: 16,
+                      //   //       color: isDark
+                      //   //           ? AppColors.darkTextMuted
+                      //   //           : const Color(0xFF94A3B8),
+                      //   //     ),
+                      //   //   ],
+                      //   // ),
+                      // ),
+                      // const SizedBox(height: 6),
 
                       // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
                       BankCardsCarousel(
@@ -420,7 +444,9 @@ class _DashboardViewState extends State<DashboardView> {
                                     recentHeaderTitle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.titleMedium
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.w800,
                                           fontSize: 16,
@@ -527,8 +553,6 @@ class _DashboardViewState extends State<DashboardView> {
                                     final item = recentTransactions[index];
                                     return TransactionTile(
                                       transaction: item,
-                                      isEyeViewHidden:
-                                          accountState.isEyeViewHidden,
                                       onTap: () => AddTransactionSheet.show(
                                         context,
                                         existingTransaction: item,
@@ -757,73 +781,113 @@ class _DashboardViewState extends State<DashboardView> {
     }
 
     final controller = TextEditingController(text: initialSuffix);
-    final suggestions = ['จด', 'นำโชค', 'ถุงทอง', 'เศรษฐี', 'มีตังค์', 'พาเพลิน'];
+    final suggestions = [
+      'จด',
+      'นำโชค',
+      'ถุงทอง',
+      'เศรษฐี',
+      'มีตังค์',
+      'พาเพลิน',
+    ];
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (dialogCtx) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetCtx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
             final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+            final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
 
-            return Dialog(
-              backgroundColor: cardBg,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+            return Container(
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
               ),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Dog Mascot PNG Image
+                    // Handle bar
                     Center(
                       child: Container(
-                        width: 110,
-                        height: 110,
+                        width: 36,
+                        height: 4,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFFDB813).withValues(alpha: 0.12),
-                          border: Border.all(
-                            color: const Color(0xFFFDB813).withValues(alpha: 0.35),
-                            width: 2,
-                          ),
+                          color: isDark ? Colors.white24 : Colors.black12,
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/mascot_dog_writing.png',
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Image.asset(
-                              'assets/images/mascot_dog_peek.png',
-                              fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Header Row: Dog Avatar + Title + Close Button
+                    Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFFDB813).withValues(alpha: 0.15),
+                            border: Border.all(
+                              color: const Color(0xFFFDB813).withValues(alpha: 0.4),
+                              width: 2,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/mascot_dog_writing.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => Image.asset(
+                                'assets/images/mascot_dog_peek.png',
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Title
-                    Text(
-                      'ตั้งชื่อคู่หูเจ้าตูบ 🐾',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: textColor,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'ชื่อคู่หูผู้ช่วยของคุณจะขึ้นต้นด้วย "เจ้าตูบ" เสมอ',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white60 : Colors.black54,
-                        fontWeight: FontWeight.w500,
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ตั้งชื่อคู่หูเจ้าตูบ 🐾',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: textColor,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'ชื่อคู่หูจะขึ้นต้นด้วย "เจ้าตูบ" เสมอ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.white60 : Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close_rounded, color: isDark ? Colors.white54 : Colors.black45, size: 20),
+                          onPressed: () => Navigator.pop(bottomSheetCtx),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 18),
 
@@ -835,8 +899,8 @@ class _DashboardViewState extends State<DashboardView> {
                             : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFFFDB813).withValues(alpha: 0.5),
-                          width: 1.2,
+                          color: const Color(0xFFFDB813).withValues(alpha: 0.6),
+                          width: 1.4,
                         ),
                       ),
                       padding: const EdgeInsets.symmetric(
@@ -847,12 +911,12 @@ class _DashboardViewState extends State<DashboardView> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 10,
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFDB813).withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Text(
                               'เจ้าตูบ',
@@ -863,7 +927,7 @@ class _DashboardViewState extends State<DashboardView> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: TextField(
                               controller: controller,
@@ -889,21 +953,18 @@ class _DashboardViewState extends State<DashboardView> {
                     const SizedBox(height: 14),
 
                     // Preset suggestion chips
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'ไอเดียชื่อน่ารัก:',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
+                    Text(
+                      'ไอเดียชื่อน่ารัก:',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white60 : Colors.black54,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: suggestions.map((name) {
                         final isSelected = controller.text.trim() == name;
                         return InkWell(
@@ -915,124 +976,100 @@ class _DashboardViewState extends State<DashboardView> {
                             setDialogState(() {});
                           },
                           borderRadius: BorderRadius.circular(12),
+                          hoverColor: Colors.transparent,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? const Color(0xFFFDB813)
                                   : (isDark
-                                      ? const Color(0xFF334155)
-                                      : const Color(0xFFE2E8F0)),
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFE2E8F0)),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               name,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 12.5,
                                 fontWeight: isSelected
                                     ? FontWeight.w800
                                     : FontWeight.w600,
                                 color: isSelected
                                     ? const Color(0xFF78350F)
                                     : (isDark
-                                        ? Colors.white70
-                                        : Colors.black87),
+                                          ? Colors.white70
+                                          : Colors.black87),
                               ),
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
 
-                    // Actions: Cancel & Save
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(dialogCtx),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                    // Action: Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          String suffix = controller.text.trim();
+                          if (suffix.startsWith('เจ้าตูบ')) {
+                            suffix = suffix
+                                .substring('เจ้าตูบ'.length)
+                                .trim();
+                          }
+                          if (suffix.isEmpty) {
+                            suffix = 'จด';
+                          }
+                          final newFullName = 'เจ้าตูบ$suffix';
+                          await _saveDogName(newFullName);
+                          if (bottomSheetCtx.mounted) {
+                            Navigator.pop(bottomSheetCtx);
+                          }
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Text('🐶 '),
+                                    Expanded(
+                                      child: Text(
+                                        'เปลี่ยนชื่อคู่หูเป็น "$newFullName" เรียบร้อยแล้ว โฮ่ง!',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: const Color(0xFF10B981),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              side: BorderSide(
-                                color: isDark
-                                    ? Colors.white24
-                                    : const Color(0xFFCBD5E1),
-                              ),
-                            ),
-                            child: Text(
-                              'ยกเลิก',
-                              style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black54,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFDB813),
+                          foregroundColor: const Color(0xFF78350F),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              String suffix = controller.text.trim();
-                              if (suffix.startsWith('เจ้าตูบ')) {
-                                suffix = suffix.substring('เจ้าตูบ'.length).trim();
-                              }
-                              if (suffix.isEmpty) {
-                                suffix = 'จด';
-                              }
-                              final newFullName = 'เจ้าตูบ$suffix';
-                              await _saveDogName(newFullName);
-                              if (dialogCtx.mounted) {
-                                Navigator.pop(dialogCtx);
-                              }
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: [
-                                        const Text('🐶 '),
-                                        Expanded(
-                                          child: Text(
-                                            'เปลี่ยนชื่อคู่หูเป็น "$newFullName" เรียบร้อยแล้ว โฮ่ง!',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    backgroundColor: const Color(0xFF10B981),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFDB813),
-                              foregroundColor: const Color(0xFF78350F),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text(
-                              'บันทึกชื่อ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                              ),
-                            ),
+                        child: const Text(
+                          'บันทึกชื่อคู่หู 🐾',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

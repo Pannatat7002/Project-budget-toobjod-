@@ -39,18 +39,6 @@ class _TransactionsViewState extends State<TransactionsView> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('รายการทั้งหมด'),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  accState.isEyeViewHidden
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                ),
-                tooltip: accState.isEyeViewHidden ? 'แสดงยอดเงินและรายรับ' : 'ซ่อนยอดเงินและรายรับ',
-                onPressed: () => context.read<AccountCubit>().toggleEyeView(),
-              ),
-              const SizedBox(width: 4),
-            ],
           ),
           body: BlocBuilder<TransactionCubit, TransactionState>(
             builder: (context, state) {
@@ -172,11 +160,9 @@ class _TransactionsViewState extends State<TransactionsView> {
                                               ),
                                             ),
                                             Text(
-                                              (group.dailyNet >= 0 && accState.isEyeViewHidden)
-                                                  ? '+฿ •••••'
-                                                  : (group.dailyNet >= 0
-                                                      ? '+${CurrencyFormatter.format(group.dailyNet)}'
-                                                      : '-${CurrencyFormatter.format(group.dailyNet.abs())}'),
+                                              group.dailyNet >= 0
+                                                  ? '+${CurrencyFormatter.format(group.dailyNet)}'
+                                                  : '-${CurrencyFormatter.format(group.dailyNet.abs())}',
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
@@ -190,7 +176,6 @@ class _TransactionsViewState extends State<TransactionsView> {
                                       ...group.items.map((item) {
                                         return TransactionTile(
                                           transaction: item,
-                                          isEyeViewHidden: accState.isEyeViewHidden,
                                           onTap: () => AddTransactionSheet.show(context, existingTransaction: item),
                                           onDelete: () {
                                             context.read<TransactionCubit>().deleteTransaction(item.id);

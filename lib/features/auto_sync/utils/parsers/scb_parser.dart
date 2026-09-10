@@ -54,6 +54,8 @@ class ScbParser extends BankParserStrategy {
         lower.contains('รับเงิน') ||
         lower.contains('รับโอน') ||
         lower.contains('มีเงินโอนเข้า') ||
+        lower.contains('เงินเดือน') ||
+        lower.contains('เงินเดือนเข้า') ||
         lower.contains('แม่มณี')) {
       if (!lower.contains('โอนเงินไป') && !lower.contains('ชำระเงิน')) {
         type = TransactionType.income;

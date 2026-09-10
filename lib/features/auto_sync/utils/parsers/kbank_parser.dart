@@ -100,6 +100,8 @@ class KBankParser extends BankParserStrategy {
     String txTitle;
     if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
       txTitle = merchantOrSender;
+    } else if (title.trim() == 'รายการโอน/ถอน' || lower.contains('รายการโอน/ถอน')) {
+      txTitle = 'รายการโอน/ถอน';
     } else if (lower.contains('ถอนเงินไม่ใช้บัตร')) {
       txTitle = 'ถอนเงินไม่ใช้บัตร';
     } else if (lower.contains('ถอนเงินสด') || lower.contains('atm')) {

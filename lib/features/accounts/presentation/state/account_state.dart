@@ -4,7 +4,7 @@ import '../../domain/entities/bank_account_entity.dart';
 class AccountState extends Equatable {
   final List<BankAccountEntity> accounts;
   final String? selectedBankId; // null = All Wallets (รวมทุกบัญชี)
-  final bool isEyeViewHidden; // true = ซ่อนยอดเงินและรายรับ (••••)
+  final bool isEyeViewHidden; // true = ซ่อนยอดเงินรวมที่ Card (••••)
   final bool isLoading;
   final String? errorMessage;
 

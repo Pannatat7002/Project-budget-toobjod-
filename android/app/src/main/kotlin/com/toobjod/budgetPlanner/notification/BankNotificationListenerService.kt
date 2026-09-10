@@ -57,6 +57,9 @@ class BankNotificationListenerService : NotificationListenerService() {
             "com.krungsri.kept",                // Kept by Krungsri
             "com.cimbthai.digital",             // CIMB THAI
             "com.uob.mightyth",                 // UOB TMRW
+            "com.google.android.apps.messaging", // Google Messages (SMS)
+            "com.samsung.android.messaging",     // Samsung Messages (SMS)
+            "com.android.mms",                   // Android MMS/SMS
             "com.android.shell"                 // ADB Shell command testing
         )
 
@@ -223,8 +226,36 @@ class BankNotificationListenerService : NotificationListenerService() {
             else -> ""
         }
 
-        // Filter: check if package belongs to supported Thai banking, e-wallet, or ADB test package
-        val isSupported = SUPPORTED_PACKAGES.contains(packageName) ||
+        // Check if notification is from an SMS messaging app containing financial keywords
+        val isSmsApp = packageName.contains("messaging", ignoreCase = true) ||
+            packageName.contains(".mms", ignoreCase = true) ||
+            packageName.contains("sms", ignoreCase = true)
+
+        val isSmsBank = isSmsApp && (
+            title.contains("kbank", ignoreCase = true) ||
+            title.contains("k plus", ignoreCase = true) ||
+            title.contains("scb", ignoreCase = true) ||
+            title.contains("ktb", ignoreCase = true) ||
+            title.contains("ttb", ignoreCase = true) ||
+            title.contains("bbl", ignoreCase = true) ||
+            title.contains("krungsri", ignoreCase = true) ||
+            title.contains("bay", ignoreCase = true) ||
+            title.contains("gsb", ignoreCase = true) ||
+            title.contains("uob", ignoreCase = true) ||
+            title.contains("cimb", ignoreCase = true) ||
+            title.contains("truemoney", ignoreCase = true) ||
+            text.contains("บช.", ignoreCase = true) ||
+            text.contains("บัญชี", ignoreCase = true) ||
+            text.contains("เงินเข้า", ignoreCase = true) ||
+            text.contains("เงินออก", ignoreCase = true) ||
+            text.contains("ใช้จ่าย", ignoreCase = true) ||
+            text.contains("ยอดคงเหลือ", ignoreCase = true) ||
+            text.contains("บาท", ignoreCase = true)
+        )
+
+        // Filter: check if package belongs to supported Thai banking, e-wallet, SMS, or ADB test package
+        val isSupported = isSmsBank ||
+            SUPPORTED_PACKAGES.contains(packageName) ||
             packageName.contains("kasikorn", ignoreCase = true) ||
             packageName.contains("kplus", ignoreCase = true) ||
             packageName.contains("scb", ignoreCase = true) ||

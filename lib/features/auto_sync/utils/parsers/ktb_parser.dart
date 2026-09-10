@@ -25,6 +25,7 @@ class KtbParser extends BankParserStrategy {
     return lower.contains('krungthai') ||
         lower.contains('กรุงไทย') ||
         lower.contains('next') ||
+        lower.contains('ktb') ||
         lower.contains('เป๋าตัง') ||
         lower.contains('paotang');
   }

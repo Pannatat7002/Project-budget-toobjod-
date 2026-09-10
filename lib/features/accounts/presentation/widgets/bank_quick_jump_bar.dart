@@ -20,7 +20,17 @@ class BankQuickJumpBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasAddButton = onAddBankTap != null;
-    final totalCount = 1 + accounts.length + (hasAddButton ? 1 : 0);
+
+    // Deduplicate accounts by bankId so duplicate bank accounts don't show multiple chips
+    final uniqueAccounts = <BankAccountEntity>[];
+    final seenBankIds = <String>{};
+    for (final a in accounts) {
+      if (seenBankIds.add(a.bankId)) {
+        uniqueAccounts.add(a);
+      }
+    }
+
+    final totalCount = 1 + uniqueAccounts.length + (hasAddButton ? 1 : 0);
 
     return SizedBox(
       height: 38,
@@ -43,8 +53,8 @@ class BankQuickJumpBar extends StatelessWidget {
             );
           }
 
-          if (index <= accounts.length) {
-            final acc = accounts[index - 1];
+          if (index <= uniqueAccounts.length) {
+            final acc = uniqueAccounts[index - 1];
             final isSelected = selectedBankId == acc.bankId;
 
             return _buildChip(
@@ -84,10 +94,16 @@ class BankQuickJumpBar extends StatelessWidget {
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
+    return Material(
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        hoverColor: Colors.transparent,
+        splashColor: color.withValues(alpha: 0.12),
+        highlightColor: Colors.transparent,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
@@ -152,6 +168,7 @@ class BankQuickJumpBar extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

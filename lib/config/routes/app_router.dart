@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/app_constants.dart';
+import '../../injection_container.dart' as di;
 import '../../features/analytics/presentation/views/analytics_view.dart';
 import '../../features/auto_sync/presentation/views/auto_sync_settings_view.dart';
 import '../../features/auto_sync/presentation/views/bank_selection_view.dart';
@@ -14,10 +18,26 @@ import '../../shared/widgets/toob_jod_ai_dialog.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+String _determineInitialLocation() {
+  try {
+    final prefs = di.sl<SharedPreferences>();
+    final lastSplashDate = prefs.getString(AppConstants.lastSplashDateKey);
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    if (lastSplashDate == today) {
+      return '/';
+    }
+  } catch (_) {}
+  return '/splash';
+}
+
 class AppRouter {
-  static final GoRouter router = GoRouter(
+  static GoRouter? _router;
+
+  static GoRouter get router => _router ??= _buildRouter();
+
+  static GoRouter _buildRouter() => GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/splash',
+    initialLocation: _determineInitialLocation(),
     routes: [
       // 0. Fullscreen Splash Screen (ToobJod Shiba Orange)
       GoRoute(

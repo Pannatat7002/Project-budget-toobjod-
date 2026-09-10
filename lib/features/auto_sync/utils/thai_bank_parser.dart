@@ -37,12 +37,20 @@ class ThaiBankParser {
         bank = BankProfile.findById('kbank');
       } else if (lower.contains('scb') || lower.contains('ไทยพาณิชย์') || lower.contains('แม่มณี')) {
         bank = BankProfile.findById('scb');
-      } else if (lower.contains('krungthai') || lower.contains('กรุงไทย') || lower.contains('next')) {
+      } else if (lower.contains('krungthai') || lower.contains('กรุงไทย') || lower.contains('next') || lower.contains('ktb')) {
         bank = BankProfile.findById('ktb');
-      } else if (lower.contains('ttb') || lower.contains('ทีทีบี')) {
+      } else if (lower.contains('ttb') || lower.contains('ทีทีบี') || lower.contains('ทหารไทยธนชาต')) {
         bank = BankProfile.findById('ttb');
-      } else if (lower.contains('kma') || lower.contains('กรุงศรี')) {
+      } else if (lower.contains('bbl') || lower.contains('กรุงเทพ') || lower.contains('bangkok bank')) {
+        bank = BankProfile.findById('bbl');
+      } else if (lower.contains('kma') || lower.contains('กรุงศรี') || lower.contains('bay')) {
         bank = BankProfile.findById('kma');
+      } else if (lower.contains('gsb') || lower.contains('ออมสิน') || lower.contains('mymo')) {
+        bank = BankProfile.findById('gsb');
+      } else if (lower.contains('uob')) {
+        bank = BankProfile.findById('uob');
+      } else if (lower.contains('cimb')) {
+        bank = BankProfile.findById('cimb');
       } else if (lower.contains('truemoney') || lower.contains('ทรูมันนี่')) {
         bank = BankProfile.findById('truemoney');
       } else if (lower.contains('make') || lower.contains('เมค')) {

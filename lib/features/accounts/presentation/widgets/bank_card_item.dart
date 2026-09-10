@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/bank_account_entity.dart';
 
@@ -34,7 +35,7 @@ class BankCardItem extends StatelessWidget {
 
     final isAllWallets = account == null;
     final primaryColor = isAllWallets
-        ? const Color(0xFF1E293B)
+        ? const Color(0xFFEA580C)
         : Color(account!.brandColor);
 
     // Dynamic gradient based on bank color
@@ -42,7 +43,11 @@ class BankCardItem extends StatelessWidget {
         ? const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF334155)],
+            colors: [
+              Color(0xFFFF7A00),
+              Color(0xFFEA580C),
+              Color(0xFFC2410C),
+            ],
           )
         : LinearGradient(
             begin: Alignment.topLeft,
@@ -144,39 +149,44 @@ class BankCardItem extends StatelessWidget {
                       ],
                     ),
 
-                    // Center: Balance Typography + Eye View Button (Privacy Mode beside label)
+                    // Center: Balance Typography + Eye View Button (Privacy Mode on ยอดเงินคงเหลือ)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'ยอดเงินคงเหลือ',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          onToggleEyeView();
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'ยอดเงินคงเหลือ',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.82),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Eye View Button (Privacy Mode)
-                              GestureDetector(
-                                onTap: onToggleEyeView,
-                                behavior: HitTestBehavior.opaque,
-                                child: Container(
+                                const SizedBox(width: 7),
+                                // Eye View Button (Privacy Mode)
+                                Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
+                                    horizontal: 7,
+                                    vertical: 2.5,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: Colors.white.withValues(
-                                        alpha: 0.25,
+                                        alpha: 0.28,
                                       ),
                                       width: 0.8,
                                     ),
@@ -186,43 +196,43 @@ class BankCardItem extends StatelessWidget {
                                     children: [
                                       Icon(
                                         isEyeViewHidden
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
+                                            ? Icons.visibility_off_rounded
+                                            : Icons.visibility_rounded,
                                         color: Colors.white,
                                         size: 13,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        isEyeViewHidden ? 'ซ่อน' : 'แสดง',
+                                        isEyeViewHidden ? 'แตะเพื่อดู' : 'ซ่อน',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 10,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              isEyeViewHidden
-                                  ? '฿ ••••••••'
-                                  : CurrencyFormatter.format(balance),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.6,
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                isEyeViewHidden
+                                    ? '฿ ••••••••'
+                                    : CurrencyFormatter.format(balance),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.6,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
 
@@ -262,9 +272,7 @@ class BankCardItem extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 3),
                                       Text(
-                                        isEyeViewHidden
-                                            ? 'เข้า: ฿ •••••'
-                                            : 'เข้า: +${CurrencyFormatter.format(monthlyIncome)}',
+                                        'เข้า: +${CurrencyFormatter.format(monthlyIncome)}',
                                         style: const TextStyle(
                                           color: Color(0xFF34D399),
                                           fontSize: 10.5,
@@ -451,16 +459,14 @@ class BankCardItem extends StatelessWidget {
         height: 42,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-          ),
+          color: Colors.white,
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withValues(alpha: 0.8),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withValues(alpha: 0.18),
               blurRadius: 5,
               offset: const Offset(0, 1.5),
             ),
@@ -468,7 +474,7 @@ class BankCardItem extends StatelessWidget {
         ),
         child: const Icon(
           Icons.account_balance_wallet_rounded,
-          color: Colors.white,
+          color: Color(0xFFEA580C),
           size: 22,
         ),
       );

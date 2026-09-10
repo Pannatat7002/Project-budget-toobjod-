@@ -13,6 +13,7 @@ class AppConstants {
   static const String accountsStorageKey = 'bp_bank_accounts_live_v1';
   static const String accountEyeViewKey = 'bp_account_eye_view_live_v1';
   static const String customDogNameKey = 'bp_custom_dog_name_live_v1';
+  static const String lastSplashDateKey = 'bp_last_splash_date_v1';
 
   // Unified Default Categories for Expense (Rich & Vibrant Semantic Palette)
   static const List<CategoryItem> defaultExpenseCategories = [

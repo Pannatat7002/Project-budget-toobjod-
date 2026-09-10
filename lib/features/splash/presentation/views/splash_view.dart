@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../injection_container.dart' as di;
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -20,9 +24,12 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
   void initState() {
     super.initState();
 
+    // Mark that splash was displayed today
+    _markSplashShownToday();
+
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 700),
     );
 
     _scaleAnimation = CurvedAnimation(
@@ -37,12 +44,21 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
 
     _controller.forward();
 
-    // Auto navigate to main dashboard after 1.8 seconds
-    _timer = Timer(const Duration(milliseconds: 1800), () {
-      if (mounted) {
-        context.go('/');
-      }
-    });
+    // Auto navigate to main dashboard after 1.0 second (faster)
+    _timer = Timer(const Duration(milliseconds: 1000), _goToDashboard);
+  }
+
+  void _markSplashShownToday() {
+    try {
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      di.sl<SharedPreferences>().setString(AppConstants.lastSplashDateKey, today);
+    } catch (_) {}
+  }
+
+  void _goToDashboard() {
+    if (mounted) {
+      context.go('/');
+    }
   }
 
   @override
@@ -60,7 +76,10 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
         statusBarIconBrightness: Brightness.light,
         systemNavigationBarColor: Color(0xFFEA580C),
       ),
-      child: Scaffold(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _goToDashboard, // Tap anywhere to skip splash instantly
+        child: Scaffold(
         body: Container(
           width: double.infinity,
           height: double.infinity,
@@ -136,6 +155,7 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
           ),
         ),
       ),
+    ),
     );
   }
 }
