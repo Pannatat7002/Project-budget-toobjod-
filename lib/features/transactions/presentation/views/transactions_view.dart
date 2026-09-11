@@ -4,13 +4,11 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
-import '../../../accounts/presentation/state/account_cubit.dart';
-import '../../../accounts/presentation/state/account_state.dart';
-import '../../../accounts/presentation/widgets/bank_quick_jump_bar.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
 import '../state/transaction_state.dart';
 import '../widgets/transaction_filter_bar.dart';
+import '../widgets/month_selector_bar.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction_sheet.dart';
 
@@ -22,187 +20,251 @@ class TransactionsView extends StatefulWidget {
 }
 
 class _TransactionsViewState extends State<TransactionsView> {
-  final TextEditingController _searchController = TextEditingController();
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    // Ensure search query is cleared since search bar is replaced with month selector
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<TransactionCubit>().setSearchQuery('');
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocBuilder<AccountCubit, AccountState>(
-      builder: (context, accState) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('รายการทั้งหมด'),
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('รายการทั้งหมด'),
+      ),
           body: BlocBuilder<TransactionCubit, TransactionState>(
             builder: (context, state) {
               if (state.status == TransactionStatus.loading && state.transactions.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final transactions = state.filteredTransactions;
+              // Compute distinct available months and transaction counts from all recorded transactions
+              final Map<String, DateTime> monthMap = {};
+              final Map<DateTime, int> countMap = {};
+
+              for (final tx in state.transactions) {
+                final monthKey = '${tx.date.year}-${tx.date.month}';
+                final monthDate = DateTime(tx.date.year, tx.date.month);
+                monthMap.putIfAbsent(monthKey, () => monthDate);
+                countMap[monthDate] = (countMap[monthDate] ?? 0) + 1;
+              }
+
+              final availableMonths = monthMap.values.toList()..sort((a, b) => a.compareTo(b));
+
+              // Ensure the active month is strictly one that has recorded transactions
+              final DateTime activeMonth;
+              if (availableMonths.isNotEmpty) {
+                final isCurrentSelectedValid = availableMonths.any(
+                  (m) => m.year == _selectedMonth.year && m.month == _selectedMonth.month,
+                );
+                activeMonth = isCurrentSelectedValid ? _selectedMonth : availableMonths.last;
+              } else {
+                activeMonth = _selectedMonth;
+              }
+
+              // Filter transactions by the active selected month
+              final transactions = state.filteredTransactions.where((item) {
+                return item.date.year == activeMonth.year &&
+                    item.date.month == activeMonth.month;
+              }).toList();
               final groupedTransactions = _groupTransactionsByDate(transactions);
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 6),
-                    // Modern Clean Search Bar
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurface : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
-                          width: 1,
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity == null) return;
+                  final sorted = availableMonths.isNotEmpty
+                      ? availableMonths
+                      : [DateTime(DateTime.now().year, DateTime.now().month)];
+                  final idx = sorted.indexWhere(
+                    (m) => m.year == activeMonth.year && m.month == activeMonth.month,
+                  );
+                  final currentIdx = idx != -1 ? idx : sorted.length - 1;
+
+                  if (details.primaryVelocity! < -180) {
+                    // Swiped Left -> Next Month with transactions
+                    if (currentIdx < sorted.length - 1) {
+                      setState(() {
+                        _selectedMonth = sorted[currentIdx + 1];
+                      });
+                    }
+                  } else if (details.primaryVelocity! > 180) {
+                    // Swiped Right -> Previous Month with transactions
+                    if (currentIdx > 0) {
+                      setState(() {
+                        _selectedMonth = sorted[currentIdx - 1];
+                      });
+                    }
+                  }
+                },
+                child: RefreshIndicator(
+                  onRefresh: () => context.read<TransactionCubit>().loadTransactions(),
+                  child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 6),
+
+                            // 1. Month Selector Bar (<  เดือน : XXX  >)
+                            MonthSelectorBar(
+                              selectedMonth: activeMonth,
+                              availableMonths: availableMonths,
+                              transactionCounts: countMap,
+                              onMonthChanged: (newMonth) {
+                                setState(() {
+                                  _selectedMonth = newMonth;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 10),
+
+                            // 2. Filter Bar (All / Income / Expense)
+                            TransactionFilterBar(
+                              currentFilter: state.filterType,
+                              onFilterChanged: (filter) => context.read<TransactionCubit>().setFilterType(filter),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                         ),
-                        boxShadow: isDark
-                            ? null
-                            : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                       ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (val) => context.read<TransactionCubit>().setSearchQuery(val),
-                        style: const TextStyle(fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'ค้นหารายการ, หมวดหมู่ หรือโน้ต...',
-                          filled: false,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.darkTextMuted),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.close, size: 16, color: AppColors.darkTextMuted),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    context.read<TransactionCubit>().setSearchQuery('');
-                                  },
-                                )
-                              : null,
+                    ),
+
+                    // 4. Grouped List of Transactions or Empty State for the Selected Month
+                    if (transactions.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                          child: EmptyStateWidget(
+                            imageAsset: 'assets/images/mascot_celebrate.jpg',
+                            title: 'ยังไม่พบรายการนะโฮ่ง!',
+                            message: 'ยังไม่มีรายการใน ${DateFormatter.formatMonthYear(activeMonth)} แตะปุ่มด้านล่างเพื่อบันทึกรายการได้เลย!',
+                            actionText: 'จดรายการใหม่',
+                            onAction: () => AddTransactionSheet.show(
+                              context,
+                              initialBankId: state.selectedBankId,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Bank Filter Bar (Pills)
-                    BankQuickJumpBar(
-                      accounts: accState.accounts,
-                      selectedBankId: state.selectedBankId,
-                      onSelectBank: (bankId) {
-                        context.read<TransactionCubit>().setSelectedBankId(bankId);
-                        context.read<AccountCubit>().selectBank(bankId);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Filter Bar (All / Income / Expense)
-                    TransactionFilterBar(
-                      currentFilter: state.filterType,
-                      onFilterChanged: (filter) => context.read<TransactionCubit>().setFilterType(filter),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Grouped List of Transactions
-                    Expanded(
-                      child: transactions.isEmpty
-                          ? EmptyStateWidget(
-                              imageAsset: 'assets/images/mascot_celebrate.jpg',
-                              title: 'ยังไม่พบรายการนะโฮ่ง!',
-                              message: state.searchQuery.isNotEmpty
-                                  ? 'ลองเปลี่ยนคำค้นหา หรือเคลียร์ตัวกรองดูนะครับ'
-                                  : 'คุณยังไม่มีรายการในช่วงนี้ แตะปุ่มด้านล่างเพื่อบันทึกรายการแรกได้เลย!',
-                              actionText: 'จดรายการใหม่',
-                              onAction: () => AddTransactionSheet.show(
-                                context,
-                                initialBankId: state.selectedBankId,
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: () => context.read<TransactionCubit>().loadTransactions(),
-                              child: ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 64),
-                                itemCount: groupedTransactions.length,
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                itemBuilder: (context, groupIndex) {
-                                  final group = groupedTransactions[groupIndex];
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Date Header with day total
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 4, right: 4, top: 12, bottom: 6),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, groupIndex) {
+                              final group = groupedTransactions[groupIndex];
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Date Header with day total and ToobJod accent
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 4, right: 4, top: 16, bottom: 8),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
                                           children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.12),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                Icons.event_note_rounded,
+                                                size: 13,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
                                             Text(
                                               group.dateTitle,
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                                                letterSpacing: 0.2,
-                                              ),
-                                            ),
-                                            Text(
-                                              group.dailyNet >= 0
-                                                  ? '+${CurrencyFormatter.format(group.dailyNet)}'
-                                                  : '-${CurrencyFormatter.format(group.dailyNet.abs())}',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: group.dailyNet >= 0 ? AppColors.income : AppColors.expense,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                                color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                                                letterSpacing: -0.2,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      // Items under this date
-                                      ...group.items.map((item) {
-                                        return TransactionTile(
-                                          transaction: item,
-                                          onTap: () => AddTransactionSheet.show(context, existingTransaction: item),
-                                          onDelete: () {
-                                            context.read<TransactionCubit>().deleteTransaction(item.id);
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text('ลบ "${item.title}" แล้ว'),
-                                                behavior: SnackBarBehavior.floating,
-                                                action: SnackBarAction(
-                                                  label: 'เลิกทำ',
-                                                  onPressed: () {
-                                                    context.read<TransactionCubit>().addTransaction(item);
-                                                  },
-                                                ),
-                                              ),
-                                            );
-                                          },
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: group.dailyNet >= 0
+                                                ? AppColors.income.withValues(alpha: isDark ? 0.2 : 0.08)
+                                                : AppColors.expense.withValues(alpha: isDark ? 0.2 : 0.08),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: group.dailyNet >= 0
+                                                  ? AppColors.income.withValues(alpha: 0.25)
+                                                  : AppColors.expense.withValues(alpha: 0.25),
+                                              width: 0.8,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            group.dailyNet >= 0
+                                                ? '+${CurrencyFormatter.format(group.dailyNet)}'
+                                                : '-${CurrencyFormatter.format(group.dailyNet.abs())}',
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: group.dailyNet >= 0 ? AppColors.income : AppColors.expense,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Items under this date
+                                  ...group.items.map((item) {
+                                    return TransactionTile(
+                                      transaction: item,
+                                      onTap: () => AddTransactionSheet.show(context, existingTransaction: item),
+                                      onDelete: () {
+                                        context.read<TransactionCubit>().deleteTransaction(item.id);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('ลบ "${item.title}" แล้ว'),
+                                            behavior: SnackBarBehavior.floating,
+                                            action: SnackBarAction(
+                                              label: 'เลิกทำ',
+                                              onPressed: () {
+                                                context.read<TransactionCubit>().addTransaction(item);
+                                              },
+                                            ),
+                                          ),
                                         );
-                                      }),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
+                                      },
+                                    );
+                                  }),
+                                ],
+                              );
+                            },
+                            childCount: groupedTransactions.length,
+                          ),
+                        ),
+                      ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 80),
                     ),
                   ],
                 ),
-              );
+              ),
+            );
             },
           ),
           floatingActionButton: FloatingActionButton(
@@ -210,9 +272,7 @@ class _TransactionsViewState extends State<TransactionsView> {
             child: const Icon(Icons.add, size: 26),
           ),
         );
-      },
-    );
-  }
+      }
 
   List<_TransactionGroup> _groupTransactionsByDate(List<TransactionEntity> list) {
     final Map<String, List<TransactionEntity>> map = {};

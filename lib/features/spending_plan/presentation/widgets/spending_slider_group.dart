@@ -59,15 +59,6 @@ class SpendingSliderGroup extends StatelessWidget {
               : (isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle),
           width: isOverBudget ? 1.5 : 1,
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: (isOverBudget ? AppColors.expense : Colors.black).withValues(alpha: isOverBudget ? 0.06 : 0.02),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,12 +408,6 @@ class _CapsuleSliderThumbShape extends SliderComponentShape {
   }) {
     final canvas = context.canvas;
 
-    // Outer subtle shadow/glow
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.2)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-    final shadowRect = Rect.fromCenter(center: center.translate(0, 1), width: thumbWidth, height: thumbHeight);
-    canvas.drawRRect(RRect.fromRectAndRadius(shadowRect, Radius.circular(thumbRadius)), shadowPaint);
 
     // Thumb Body
     final paint = Paint()

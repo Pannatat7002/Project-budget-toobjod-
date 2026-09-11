@@ -66,9 +66,9 @@ class ToobJodHeroCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFEA580C).withValues(alpha: 0.35),
-                    blurRadius: 22,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -147,13 +147,6 @@ class ToobJodHeroCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: AppColors.blueActionGradient,
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF2563EB).withValues(alpha: 0.4),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,

@@ -100,9 +100,9 @@ class _ToobJodAiDialogState extends State<ToobJodAiDialog> {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(
-                          alpha: isDark ? 0.4 : 0.09),
-                      blurRadius: 20,
-                      offset: const Offset(0, 6),
+                          alpha: isDark ? 0.3 : 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),

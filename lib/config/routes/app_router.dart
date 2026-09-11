@@ -69,25 +69,18 @@ class AppRouter {
               ),
             ],
           ),
-          // 3. Spending Plan Branch (Direct access to interactive sliders)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/spending-plan',
-                builder: (context, state) => const SpendingPlanView(),
-              ),
-            ],
-          ),
-          // 4. Analytics Branch
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/analytics',
-                builder: (context, state) => const AnalyticsView(),
-              ),
-            ],
-          ),
         ],
+      ),
+      // Standalone Routes accessible from Dashboard (ภาพรวม)
+      GoRoute(
+        path: '/spending-plan',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SpendingPlanView(),
+      ),
+      GoRoute(
+        path: '/analytics',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AnalyticsView(),
       ),
       // Standalone Fullscreen Route for Category Budgets
       GoRoute(

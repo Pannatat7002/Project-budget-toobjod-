@@ -25,15 +25,6 @@ class TransactionFilterBar extends StatelessWidget {
           color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
           width: 1,
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
       ),
       child: Row(
         children: [
@@ -88,15 +79,6 @@ class TransactionFilterBar extends StatelessWidget {
                     : (isDark ? AppColors.darkCard : const Color(0xFFF1F5F9)))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected && !isDark && activeColor == null
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

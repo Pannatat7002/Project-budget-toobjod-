@@ -72,9 +72,9 @@ class BudgetView extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: (isDark ? Colors.black : AppColors.primary).withValues(alpha: 0.25),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),

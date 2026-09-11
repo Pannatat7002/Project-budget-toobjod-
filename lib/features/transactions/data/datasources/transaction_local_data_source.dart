@@ -23,7 +23,13 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       final jsonString = sharedPreferences.getString(AppConstants.transactionsStorageKey);
       if (jsonString != null && jsonString.isNotEmpty) {
         final List<dynamic> jsonList = jsonDecode(jsonString);
-        final transactions = jsonList.map((item) => TransactionModel.fromJson(item as Map<String, dynamic>)).toList();
+        final transactions = jsonList
+            .map((item) => TransactionModel.fromJson(item as Map<String, dynamic>))
+            .where((t) => !t.id.startsWith('mock_'))
+            .toList();
+        if (transactions.length != jsonList.length) {
+          await saveTransactions(transactions);
+        }
         // Sort descending by date
         transactions.sort((a, b) => b.date.compareTo(a.date));
         return transactions;

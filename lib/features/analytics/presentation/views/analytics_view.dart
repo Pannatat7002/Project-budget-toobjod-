@@ -16,6 +16,12 @@ class AnalyticsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('วิเคราะห์ & รายงาน'),
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                onPressed: () => Navigator.maybePop(context),
+              )
+            : null,
       ),
       body: BlocBuilder<TransactionCubit, TransactionState>(
         builder: (context, state) {
@@ -39,15 +45,6 @@ class AnalyticsView extends StatelessWidget {
                       color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
                       width: 1,
                     ),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,15 +137,6 @@ class AnalyticsView extends StatelessWidget {
                       color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
                       width: 1,
                     ),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                   ),
                   child: CategoryPieChart(transactions: state.transactions),
                 ),

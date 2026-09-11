@@ -96,7 +96,12 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
     }
     try {
       final List<dynamic> list = jsonDecode(jsonStr);
-      _cachedPending = list.map((e) => DetectedTransaction.fromJson(e as Map<String, dynamic>)).toList();
+      final rawList = list.map((e) => DetectedTransaction.fromJson(e as Map<String, dynamic>)).toList();
+      final filteredList = rawList.where((e) => !e.id.startsWith('mock_')).toList();
+      if (filteredList.length != rawList.length) {
+        savePendingTransactions(filteredList);
+      }
+      _cachedPending = filteredList;
       return List.from(_cachedPending!);
     } catch (_) {
       _cachedPending = [];
@@ -150,7 +155,9 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
     }
     try {
       final List<dynamic> list = jsonDecode(jsonStr);
-      _cachedHistory = list.map((e) => DetectedTransaction.fromJson(e as Map<String, dynamic>)).toList();
+      final rawList = list.map((e) => DetectedTransaction.fromJson(e as Map<String, dynamic>)).toList();
+      final filteredList = rawList.where((e) => !e.id.startsWith('mock_')).toList();
+      _cachedHistory = filteredList;
       return List.from(_cachedHistory!);
     } catch (_) {
       _cachedHistory = [];

@@ -226,6 +226,62 @@ void main() {
       expect(ttbSms!.bankShortName, 'ttb touch');
       expect(ttbSms.type, TransactionType.expense);
       expect(ttbSms.amount, 320.00);
+
+      // 5. BBL SMS
+      final bblSms = ThaiBankParser.parse(
+        packageName: 'com.google.android.apps.messaging',
+        title: 'Bangkok Bank',
+        text: 'เงินโอนเข้า บช. x-9921 จำนวน 4,200.00 บาท จาก นายสมบัติ ส.',
+      );
+      expect(bblSms, isNotNull);
+      expect(bblSms!.bankShortName, 'Bangkok Bank');
+      expect(bblSms.type, TransactionType.income);
+      expect(bblSms.amount, 4200.00);
+
+      // 6. KMA Krungsri SMS / Push
+      final kmaNotif = ThaiBankParser.parse(
+        packageName: 'com.krungsri.kma',
+        title: 'KMA',
+        text: 'โอนเงินสำเร็จ 1,250.00 บาท ให้กับ บจก. แอดวานซ์ ไวร์เลส',
+      );
+      expect(kmaNotif, isNotNull);
+      expect(kmaNotif!.bankShortName, 'KMA Krungsri');
+      expect(kmaNotif.type, TransactionType.expense);
+      expect(kmaNotif.amount, 1250.00);
+
+      // 7. GSB MyMo Push
+      final gsbNotif = ThaiBankParser.parse(
+        packageName: 'com.gsb.mymo',
+        title: 'MyMo',
+        text: 'มีเงินเข้าบัญชี 2,000.00 บาท จาก พร้อมเพย์',
+      );
+      expect(gsbNotif, isNotNull);
+      expect(gsbNotif!.bankShortName, 'MyMo GSB');
+      expect(gsbNotif.type, TransactionType.income);
+      expect(gsbNotif.amount, 2000.00);
+
+      // 8. ShopeePay Push
+      final shopeeNotif = ThaiBankParser.parse(
+        packageName: 'com.shopeepay.th',
+        title: 'ShopeePay',
+        text: 'ชำระเงินสำเร็จ 299.00 บาท ที่ Shopee',
+      );
+      expect(shopeeNotif, isNotNull);
+      expect(shopeeNotif!.bankShortName, 'ShopeePay');
+      expect(shopeeNotif.type, TransactionType.expense);
+      expect(shopeeNotif.amount, 299.00);
+
+      // 9. Dime! Push
+      final dimeNotif = ThaiBankParser.parse(
+        packageName: 'co.th.dime',
+        title: 'Dime!',
+        text: 'ฝากเงินเข้าบัญชี Dime! Save สำเร็จ 3,000.00 บาท',
+      );
+      expect(dimeNotif, isNotNull);
+      expect(dimeNotif!.bankShortName, 'Dime!');
+      expect(dimeNotif.type, TransactionType.income);
+      expect(dimeNotif.amount, 3000.00);
     });
   });
 }
+

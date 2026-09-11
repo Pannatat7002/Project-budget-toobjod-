@@ -142,6 +142,27 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(totalCount, (idx) {
               final isCurrent = _currentPage == idx;
+              final dist = (idx - _currentPage).abs();
+
+              double dotWidth = isCurrent ? 16 : 5.5;
+              double dotHeight = isCurrent ? 5 : 4.5;
+              double opacity = 1.0;
+
+              if (totalCount > 5 && !isCurrent) {
+                if (dist == 1) {
+                  dotWidth = 5.5;
+                  dotHeight = 4.5;
+                } else if (dist == 2) {
+                  dotWidth = 4;
+                  dotHeight = 3.5;
+                  opacity = 0.7;
+                } else {
+                  dotWidth = 3;
+                  dotHeight = 2.5;
+                  opacity = 0.35;
+                }
+              }
+
               return GestureDetector(
                 onTap: () {
                   _pageController.animateToPage(
@@ -152,13 +173,15 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
-                  margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                  width: isCurrent ? 18 : 6,
-                  height: 5,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: dotWidth,
+                  height: dotHeight,
                   decoration: BoxDecoration(
                     color: isCurrent
                         ? (isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C))
-                        : (isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.12)),
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.25 * opacity)
+                            : Colors.black.withValues(alpha: 0.15 * opacity)),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),

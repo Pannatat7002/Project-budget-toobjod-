@@ -293,9 +293,9 @@ class _DetectedTransactionSheetState extends State<DetectedTransactionSheet> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(isDark ? 90 : 20),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+                            color: Colors.black.withAlpha(isDark ? 60 : 15),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),

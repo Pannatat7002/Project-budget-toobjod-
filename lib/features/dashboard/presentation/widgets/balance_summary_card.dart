@@ -43,9 +43,9 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 3,
+            offset: const Offset(0, 1.5),
           ),
         ],
       ),

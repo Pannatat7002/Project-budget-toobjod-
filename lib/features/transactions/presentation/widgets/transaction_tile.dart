@@ -78,15 +78,6 @@ class TransactionTile extends StatelessWidget {
             color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
             width: 1,
           ),
-          boxShadow: isDark
-              ? null
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
         ),
         child: Material(
           color: Colors.transparent,
@@ -125,29 +116,30 @@ class TransactionTile extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            // Category Tag
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: categoryColor.withValues(alpha: 0.10),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  isTransfer ? 'โอนข้ามบัญชี' : transaction.categoryName,
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: categoryColor,
+                            // Show Category Tag only if title is distinct from category name (e.g. custom merchant/title)
+                            if (isTransfer || (transaction.title.trim() != transaction.categoryName.trim()))
+                              Padding(
+                                padding: const EdgeInsets.only(right: 5),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withValues(alpha: 0.10),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  child: Text(
+                                    isTransfer ? 'โอนข้ามบัญชี' : transaction.categoryName,
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: categoryColor,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
-                            ),
                             // Bank Tag Badge
-                            if (bankBadge != null) ...[
-                              const SizedBox(width: 5),
+                            if (bankBadge != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
@@ -169,7 +161,6 @@ class TransactionTile extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            ],
                             // Note snippet
                             if (transaction.note != null &&
                                 transaction.note!.isNotEmpty &&

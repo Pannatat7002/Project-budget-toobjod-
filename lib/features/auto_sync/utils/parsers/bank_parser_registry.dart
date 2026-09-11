@@ -1,9 +1,15 @@
 import '../../domain/entities/detected_transaction.dart';
 import 'bank_parser_strategy.dart';
+import 'bbl_parser.dart';
+import 'dime_parser.dart';
+import 'gsb_parser.dart';
 import 'kbank_parser.dart';
+import 'kma_parser.dart';
 import 'ktb_parser.dart';
 import 'other_banks_parser.dart';
 import 'scb_parser.dart';
+import 'shopeepay_parser.dart';
+import 'ttb_parser.dart';
 import 'truemoney_parser.dart';
 
 class BankParserRegistry {
@@ -11,13 +17,15 @@ class BankParserRegistry {
     KBankParser(),
     ScbParser(),
     KtbParser(),
+    BblParser(),
+    TtbParser(),
+    KmaParser(),
+    GsbParser(),
     TrueMoneyParser(),
-    OtherBanksParser('bbl'),
-    OtherBanksParser('ttb'),
-    OtherBanksParser('kma'),
-    OtherBanksParser('shopeepay'),
-    OtherBanksParser('gsb'),
-    OtherBanksParser('dime'),
+    ShopeePayParser(),
+    DimeParser(),
+    OtherBanksParser('cimb'),
+    OtherBanksParser('uob'),
   ];
 
   /// Find the strategy that handles the notification and parse it

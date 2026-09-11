@@ -77,15 +77,6 @@ class QuickActionsBar extends StatelessWidget {
           color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
           width: 1,
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
       ),
       child: Material(
         color: Colors.transparent,

@@ -9,11 +9,9 @@ import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../../accounts/presentation/state/account_state.dart';
 import '../../../accounts/presentation/widgets/bank_cards_carousel.dart';
-import '../../../accounts/presentation/widgets/bank_quick_jump_bar.dart';
 import '../../../auto_sync/presentation/state/auto_sync_cubit.dart';
 import '../../../auto_sync/presentation/widgets/auto_sync_banner.dart';
 import '../../../auto_sync/presentation/widgets/notification_bell_button.dart';
-import '../../../auto_sync/presentation/widgets/mock_notification_sheet.dart';
 import '../../../budget/presentation/state/budget_cubit.dart';
 import '../../../budget/presentation/state/budget_state.dart';
 import '../../../spending_plan/presentation/state/spending_plan_cubit.dart';
@@ -23,6 +21,7 @@ import '../../../transactions/presentation/state/transaction_state.dart';
 import '../../../transactions/presentation/views/add_transaction_sheet.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
 import '../widgets/quick_actions_bar.dart';
+import '../widgets/finance_hub_section.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -90,13 +89,6 @@ class _DashboardViewState extends State<DashboardView> {
                       color: const Color(0xFFFDB813),
                       width: 2.2,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFDB813).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: ClipOval(
                     child: Image.asset(
@@ -203,9 +195,7 @@ class _DashboardViewState extends State<DashboardView> {
               borderRadius: BorderRadius.circular(16),
             ),
             onSelected: (val) {
-              if (val == 'mock_notification') {
-                MockNotificationSheet.show(context);
-              } else if (val == 'rename_dog') {
+              if (val == 'rename_dog') {
                 _showRenameDogDialog(context);
               } else if (val == 'auto_sync') {
                 context.push('/auto-sync-settings');
@@ -214,23 +204,6 @@ class _DashboardViewState extends State<DashboardView> {
               }
             },
             itemBuilder: (ctx) => [
-              const PopupMenuItem(
-                value: 'mock_notification',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.bolt_rounded,
-                      color: Color(0xFFF59E0B),
-                      size: 18,
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'จำลอง Notification (Mock)',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
               const PopupMenuItem(
                 value: 'rename_dog',
                 child: Row(
@@ -392,16 +365,16 @@ class _DashboardViewState extends State<DashboardView> {
                             context.read<AccountCubit>().selectBank(bankId),
                         onAddBankTap: () => context.push('/bank-selection'),
                       ),
-                      const SizedBox(height: 10),
+                      // const SizedBox(height: 10),
 
                       // 2. Bank Quick Jump Bar (Pill buttons under cards)
-                      BankQuickJumpBar(
-                        accounts: accountState.accounts,
-                        selectedBankId: accountState.selectedBankId,
-                        onSelectBank: (bankId) =>
-                            context.read<AccountCubit>().selectBank(bankId),
-                        onAddBankTap: () => context.push('/bank-selection'),
-                      ),
+                      // BankQuickJumpBar(
+                      //   accounts: accountState.accounts,
+                      //   selectedBankId: accountState.selectedBankId,
+                      //   onSelectBank: (bankId) =>
+                      //       context.read<AccountCubit>().selectBank(bankId),
+                      //   onAddBankTap: () => context.push('/bank-selection'),
+                      // ),
                       const SizedBox(height: 16),
 
                       // 3. Mascot Speech Bubble Banner
@@ -424,11 +397,15 @@ class _DashboardViewState extends State<DashboardView> {
                           initialType: TransactionType.expense,
                           initialBankId: accountState.selectedBankId,
                         ),
-                        onSetBudget: () => context.go('/spending-plan'),
+                        onSetBudget: () => context.push('/budgets'),
                       ),
                       const SizedBox(height: 18),
 
-                      // 5. Budget Health Preview Widget
+                      // 5. Finance Hub: แผนใช้จ่าย & วิเคราะห์
+                      const FinanceHubSection(),
+                      const SizedBox(height: 18),
+
+                      // 6. Budget Health Preview Widget
                       _buildBudgetHealthPreview(context, isDark),
                       const SizedBox(height: 20),
 
@@ -672,15 +649,6 @@ class _DashboardViewState extends State<DashboardView> {
                   : AppColors.lightBorderSubtle,
               width: 1,
             ),
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -804,12 +772,14 @@ class _DashboardViewState extends State<DashboardView> {
             return Container(
               decoration: BoxDecoration(
                 color: cardBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, -4),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
                   ),
                 ],
               ),
@@ -840,9 +810,13 @@ class _DashboardViewState extends State<DashboardView> {
                           height: 48,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFFFDB813).withValues(alpha: 0.15),
+                            color: const Color(
+                              0xFFFDB813,
+                            ).withValues(alpha: 0.15),
                             border: Border.all(
-                              color: const Color(0xFFFDB813).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFFFDB813,
+                              ).withValues(alpha: 0.4),
                               width: 2,
                             ),
                           ),
@@ -876,7 +850,9 @@ class _DashboardViewState extends State<DashboardView> {
                                 'ชื่อคู่หูจะขึ้นต้นด้วย "เจ้าตูบ" เสมอ',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDark ? Colors.white60 : Colors.black54,
+                                  color: isDark
+                                      ? Colors.white60
+                                      : Colors.black54,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -884,7 +860,11 @@ class _DashboardViewState extends State<DashboardView> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.close_rounded, color: isDark ? Colors.white54 : Colors.black45, size: 20),
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: isDark ? Colors.white54 : Colors.black45,
+                            size: 20,
+                          ),
                           onPressed: () => Navigator.pop(bottomSheetCtx),
                         ),
                       ],
@@ -915,7 +895,9 @@ class _DashboardViewState extends State<DashboardView> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFDB813).withValues(alpha: 0.2),
+                              color: const Color(
+                                0xFFFDB813,
+                              ).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Text(
@@ -1018,9 +1000,7 @@ class _DashboardViewState extends State<DashboardView> {
                         onPressed: () async {
                           String suffix = controller.text.trim();
                           if (suffix.startsWith('เจ้าตูบ')) {
-                            suffix = suffix
-                                .substring('เจ้าตูบ'.length)
-                                .trim();
+                            suffix = suffix.substring('เจ้าตูบ'.length).trim();
                           }
                           if (suffix.isEmpty) {
                             suffix = 'จด';

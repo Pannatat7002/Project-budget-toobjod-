@@ -131,9 +131,9 @@ class _TopToastWidgetState extends State<_TopToastWidget>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(isDark ? 90 : 25),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withAlpha(isDark ? 50 : 15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),

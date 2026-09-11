@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -11,7 +12,6 @@ import '../../domain/entities/detected_transaction.dart';
 import '../state/auto_sync_cubit.dart';
 import '../state/auto_sync_state.dart';
 import 'bank_logo_badge.dart';
-import 'mock_notification_sheet.dart';
 
 class NotificationDrawerSheet extends StatelessWidget {
   const NotificationDrawerSheet({super.key});
@@ -42,21 +42,24 @@ class NotificationDrawerSheet extends StatelessWidget {
           Navigator.of(context).pop();
         }
       },
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(isDark ? 120 : 30),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
+      child: BlocBuilder<AutoSyncCubit, AutoSyncState>(
+        builder: (context, state) {
+          final isEmpty = state.pendingTransactions.isEmpty;
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * (isEmpty ? 0.38 : 0.75),
             ),
-          ],
-        ),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(isDark ? 80 : 15),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
         child: SafeArea(
           top: false,
           child: Column(
@@ -123,17 +126,6 @@ class NotificationDrawerSheet extends StatelessWidget {
                           ),
                         ],
                         const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.bolt_rounded, size: 20, color: Color(0xFFF59E0B)),
-                          tooltip: 'จำลองการแจ้งเตือน (Mock)',
-                          onPressed: () {
-                            Navigator.pop(context);
-                            MockNotificationSheet.show(context);
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                        ),
-                        const SizedBox(width: 4),
                         IconButton(
                           icon: Icon(Icons.close_rounded, size: 20, color: subtextColor),
                           onPressed: () => Navigator.pop(context),
@@ -263,20 +255,21 @@ class NotificationDrawerSheet extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 14),
-                              ElevatedButton.icon(
+                              OutlinedButton.icon(
                                 onPressed: () {
                                   Navigator.pop(context);
-                                  MockNotificationSheet.show(context);
+                                  context.push('/auto-sync-settings');
                                 },
-                                icon: const Icon(Icons.bolt_rounded, size: 16),
-                                label: const Text('จำลอง Notification ธนาคาร (Mock)'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF59E0B),
-                                  foregroundColor: const Color(0xFF78350F),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                icon: const Icon(Icons.tune_rounded, size: 16),
+                                label: const Text(
+                                  'ไปที่การตั้งค่าตรวจจับธนาคาร',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  side: BorderSide(color: AppColors.primary.withAlpha(120)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
                               ),
                             ],
@@ -383,9 +376,11 @@ class NotificationDrawerSheet extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
+    },
+  ),
+);
+}
 }
 
 class _DismissibleNotificationCard extends StatefulWidget {
@@ -626,13 +621,6 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
           color: cardBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: widget.borderColor, width: 0.8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(widget.isDark ? 25 : 8),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Row(
           children: [

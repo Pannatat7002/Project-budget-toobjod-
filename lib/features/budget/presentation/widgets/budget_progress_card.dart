@@ -43,15 +43,6 @@ class BudgetProgressCard extends StatelessWidget {
               : (isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle),
           width: isOverBudget ? 1.5 : 1,
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

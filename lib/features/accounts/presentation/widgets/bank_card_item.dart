@@ -76,9 +76,9 @@ class BankCardItem extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withValues(alpha: isSelected ? 0.35 : 0.2),
-                blurRadius: isSelected ? 18 : 12,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: isSelected ? 0.12 : 0.05),
+                blurRadius: isSelected ? 4 : 2,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -464,13 +464,6 @@ class BankCardItem extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.8),
             width: 1.2,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 5,
-              offset: const Offset(0, 1.5),
-            ),
-          ],
         ),
         child: const Icon(
           Icons.account_balance_wallet_rounded,
@@ -490,13 +483,6 @@ class BankCardItem extends StatelessWidget {
           color: Colors.white.withValues(alpha: 0.7),
           width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 5,
-            offset: const Offset(0, 1.5),
-          ),
-        ],
       ),
       child: ClipOval(
         child: Padding(

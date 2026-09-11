@@ -371,9 +371,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               controller: _amountController,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                              autofocus: widget.existingTransaction == null,
+                              autofocus: false,
                               textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _onSubmit(),
+                              onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,

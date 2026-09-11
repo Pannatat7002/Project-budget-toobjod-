@@ -39,13 +39,6 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                 width: 1,
               ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, -4),
-              ),
-            ],
           ),
           child: SafeArea(
             top: false,
@@ -54,7 +47,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  // Tab 0: ภาพรวม
+                  // Tab 0: ภาพรวม (Left)
                   _buildNavItem(
                     index: 0,
                     icon: Icons.dashboard_outlined,
@@ -63,33 +56,15 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                     isDark: isDark,
                   ),
 
-                  // Tab 1: รายการ
+                  // Center Spacer for Floating AI Button
+                  const SizedBox(width: 80),
+
+                  // Tab 1: รายการ (Right)
                   _buildNavItem(
                     index: 1,
                     icon: Icons.receipt_long_outlined,
                     selectedIcon: Icons.receipt_long_rounded,
                     label: 'รายการ',
-                    isDark: isDark,
-                  ),
-
-                  // Center Spacer for Floating AI Button
-                  const SizedBox(width: 72),
-
-                  // Tab 2: แผนใช้จ่าย
-                  _buildNavItem(
-                    index: 2,
-                    icon: Icons.tune_outlined,
-                    selectedIcon: Icons.tune_rounded,
-                    label: 'แผนใช้จ่าย',
-                    isDark: isDark,
-                  ),
-
-                  // Tab 3: วิเคราะห์
-                  _buildNavItem(
-                    index: 3,
-                    icon: Icons.insights_outlined,
-                    selectedIcon: Icons.insights_rounded,
-                    label: 'วิเคราะห์',
                     isDark: isDark,
                   ),
                 ],
@@ -200,18 +175,15 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                border: Border.all(
+                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  width: 2.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.55),
-                    blurRadius: 14,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 6),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    spreadRadius: 1,
-                    offset: const Offset(0, -2),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.08),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1.5),
                   ),
                 ],
               ),

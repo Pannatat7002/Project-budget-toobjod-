@@ -35,15 +35,6 @@ class SpendingSummaryHeader extends StatelessWidget {
           color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
           width: 1,
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
