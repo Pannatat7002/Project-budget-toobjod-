@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../state/auto_sync_cubit.dart';
 import '../state/auto_sync_state.dart';
@@ -13,6 +14,8 @@ class NotificationPermissionView extends StatefulWidget {
 
 class _NotificationPermissionViewState extends State<NotificationPermissionView>
     with WidgetsBindingObserver {
+  bool _isSimulating = false;
+
   @override
   void initState() {
     super.initState();
@@ -56,9 +59,9 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
         ),
         title: Text(
           'ขอสิทธิ์การเข้าถึงแจ้งเตือน',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 17,
+          style: GoogleFonts.prompt(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
             color: textColor,
           ),
         ),
@@ -67,6 +70,7 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
         builder: (context, state) {
           final cubit = context.read<AutoSyncCubit>();
           final isGranted = state.isPermissionGranted;
+          final isBatteryIgnored = state.isBatteryOptimizationIgnored;
 
           return Column(
             children: [
@@ -76,13 +80,32 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                   children: [
                     // 1. Hero Mascot & Permission Status Card
                     _buildStatusHero(context, isGranted, isDark, textColor, subtextColor),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
-                    // 2. Step-by-Step Guide
+                    // 2. Interactive Live Test Simulator (Visible when granted)
+                    if (isGranted) ...[
+                      _buildLiveTestSimulator(context, cubit, isDark, cardColor, textColor, subtextColor, borderColor),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // 3. Step-by-Step Guide
                     _buildStepsGuide(context, isDark, cardColor, textColor, subtextColor, borderColor),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
-                    // 3. Privacy & Security Highlights
+                    // 4. Battery Optimization Guidance (Universal / OEM Friendly)
+                    _buildBatteryOptimizationSection(
+                      context,
+                      cubit,
+                      isBatteryIgnored,
+                      isDark,
+                      cardColor,
+                      textColor,
+                      subtextColor,
+                      borderColor,
+                    ),
+                    const SizedBox(height: 18),
+
+                    // 5. Privacy & Security Highlights (PDPA & Google Play Compliant)
                     _buildPrivacySection(context, isDark, cardColor, textColor, subtextColor, borderColor),
                     const SizedBox(height: 24),
                   ],
@@ -111,7 +134,7 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
         gradient: LinearGradient(
           colors: isGranted
               ? (isDark
-                  ? [const Color(0xFF133E2B), const Color(0xFF0D281C)]
+                  ? [const Color(0xFF0F3826), const Color(0xFF0A2619)]
                   : [const Color(0xFFECFDF5), const Color(0xFFD1FAE5)])
               : (isDark
                   ? [const Color(0xFF332014), const Color(0xFF22150D)]
@@ -122,13 +145,13 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isGranted
-              ? AppColors.income.withAlpha(isDark ? 100 : 160)
+              ? AppColors.success.withAlpha(isDark ? 110 : 160)
               : AppColors.primary.withAlpha(isDark ? 100 : 160),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isGranted ? AppColors.income : AppColors.primary)
+            color: (isGranted ? AppColors.success : AppColors.primary)
                 .withAlpha(isDark ? 40 : 18),
             blurRadius: 18,
             offset: const Offset(0, 5),
@@ -139,35 +162,60 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
         children: [
           // Icon Circle with Pulse Effect
           Container(
-            width: 68,
-            height: 68,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               color: isGranted
-                  ? AppColors.income.withAlpha(35)
+                  ? AppColors.success.withAlpha(35)
                   : AppColors.primary.withAlpha(35),
               shape: BoxShape.circle,
               border: Border.all(
-                color: isGranted ? AppColors.income : AppColors.primary,
-                width: 2,
+                color: isGranted ? AppColors.success : AppColors.primary,
+                width: 2.2,
               ),
             ),
             child: Icon(
               isGranted ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
-              color: isGranted ? AppColors.income : AppColors.primary,
-              size: 36,
+              color: isGranted ? AppColors.success : AppColors.primary,
+              size: 40,
             ),
           ),
           const SizedBox(height: 14),
 
+          // Status Badge Pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: isGranted
+                  ? AppColors.success.withAlpha(isDark ? 40 : 25)
+                  : AppColors.primary.withAlpha(isDark ? 40 : 25),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isGranted ? AppColors.success.withAlpha(120) : AppColors.primary.withAlpha(120),
+              ),
+            ),
+            child: Text(
+              isGranted ? 'สถานะ: พร้อมใช้งานแล้ว ✅' : 'สถานะ: รอการเปิดสิทธิ์ ⏳',
+              style: GoogleFonts.prompt(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isGranted
+                    ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF047857))
+                    : (isDark ? AppColors.primaryLight : AppColors.primaryDark),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
           // Status Title
           Text(
             isGranted
-                ? 'เปิดสิทธิ์การเข้าถึงเรียบร้อยแล้ว ✅'
-                : 'จำเป็นต้องเปิดสิทธิ์ Notification Access 🔔',
+                ? 'เปิดสิทธิ์การเข้าถึงเรียบร้อยแล้ว'
+                : 'จำเป็นต้องเปิดสิทธิ์ Notification Access',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.prompt(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
               color: isGranted
                   ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF047857))
                   : textColor,
@@ -178,13 +226,119 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
           // Status Description
           Text(
             isGranted
-                ? 'แอปพร้อมตรวจจับและดักฟังยอดเงินเข้า-ออก จากการแจ้งเตือนของแอปธนาคารไทยอัตโนมัติแล้ว'
+                ? 'แอปพร้อมตรวจจับและบันทึกยอดเงินเข้า-ออก จากการแจ้งเตือนของแอปธนาคารไทยอัตโนมัติแล้ว'
                 : 'เพื่อให้ "เจ้าตูบจด" สามารถรับรู้ยอดเงินเข้า-ออก จากแอปธนาคารได้ทันที โดยไม่ต้องพิมพ์เอง',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
+            style: GoogleFonts.prompt(
+              fontSize: 13.5,
               color: subtextColor,
               height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveTestSimulator(
+    BuildContext context,
+    AutoSyncCubit cubit,
+    bool isDark,
+    Color cardColor,
+    Color textColor,
+    Color subtextColor,
+    Color borderColor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.success.withAlpha(100), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science_rounded, size: 20, color: AppColors.success),
+              const SizedBox(width: 8),
+              Text(
+                'ทดสอบจำลองการทำงานจริง (Live Test)',
+                style: GoogleFonts.prompt(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'ทดสอบว่าระบบสามารถตรวจจับและอ่านยอดเงินได้ถูกต้อง โดยจำลองการแจ้งเตือนจากธนาคาร',
+            style: GoogleFonts.prompt(
+              fontSize: 12.5,
+              color: subtextColor,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: OutlinedButton.icon(
+              onPressed: _isSimulating
+                  ? null
+                  : () async {
+                      setState(() => _isSimulating = true);
+                      await cubit.sendTestNotification(
+                        title: 'ธนาคารกสิกรไทย',
+                        text: 'เงินเข้า 500.00 บ. เข้าบัญชี x-1234 เวลา 12:30 น.',
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'ส่งการแจ้งเตือนจำลองสำเร็จ! ตรวจสอบรายการในหน้าแจ้งเตือนได้ทันที',
+                                    style: GoogleFonts.prompt(fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: AppColors.success,
+                            duration: const Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      }
+                      await Future.delayed(const Duration(milliseconds: 600));
+                      if (mounted) setState(() => _isSimulating = false);
+                    },
+              icon: _isSimulating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.success),
+                    )
+                  : const Icon(Icons.play_arrow_rounded, color: AppColors.success, size: 20),
+              label: Text(
+                _isSimulating ? 'กำลังจำลองแจ้งเตือน...' : 'จำลองยอดเงินเข้า ฿500.00 (K PLUS)',
+                style: GoogleFonts.prompt(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.success,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.success, width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
             ),
           ),
         ],
@@ -210,20 +364,14 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
       {
         'num': '2',
         'title': 'ค้นหาและเลือกแอป "เจ้าตูบจด"',
-        'desc': 'มองหาไอคอนเจ้าตูบจด (Budget Planner) ในรายการแอป',
+        'desc': 'มองหาไอคอนเจ้าตูบจด (Budget Planner) ในรายการแอปบนเครื่องของคุณ',
         'icon': Icons.pets_rounded,
       },
       {
         'num': '3',
         'title': 'เลื่อนเปิดสวิตช์ "อนุญาต"',
-        'desc': 'กดยืนยันการอนุญาต เพื่อให้ระบบเริ่มทำงานอัตโนมัติ',
+        'desc': 'กดยืนยันการอนุญาต เพื่อให้ระบบเริ่มบันทึกยอดเงินเข้า-ออกอัตโนมัติ',
         'icon': Icons.toggle_on_rounded,
-      },
-      {
-        'num': '4',
-        'title': 'ตั้งค่าแบตเตอรี่เป็น "ไม่จำกัด" (Unrestricted)',
-        'desc': 'เพื่อป้องกันไม่ให้ Android ฆ่าระบบดักจับแจ้งเตือนเมื่อปิดแอปหรือจอดับ',
-        'icon': Icons.battery_charging_full_rounded,
       },
     ];
 
@@ -243,9 +391,9 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
               const SizedBox(width: 8),
               Text(
                 'วิธีเปิดสิทธิ์ง่ายๆ 3 ขั้นตอน',
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.prompt(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                   color: textColor,
                 ),
               ),
@@ -269,9 +417,9 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                     alignment: Alignment.center,
                     child: Text(
                       s['num'] as String,
-                      style: const TextStyle(
+                      style: GoogleFonts.prompt(
                         fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                       ),
                     ),
@@ -283,8 +431,8 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                       children: [
                         Text(
                           s['title'] as String,
-                          style: TextStyle(
-                            fontSize: 13.5,
+                          style: GoogleFonts.prompt(
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: textColor,
                           ),
@@ -292,10 +440,10 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                         const SizedBox(height: 2),
                         Text(
                           s['desc'] as String,
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: GoogleFonts.prompt(
+                            fontSize: 12.5,
                             color: subtextColor,
-                            height: 1.35,
+                            height: 1.38,
                           ),
                         ),
                       ],
@@ -305,6 +453,88 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBatteryOptimizationSection(
+    BuildContext context,
+    AutoSyncCubit cubit,
+    bool isBatteryIgnored,
+    bool isDark,
+    Color cardColor,
+    Color textColor,
+    Color subtextColor,
+    Color borderColor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isBatteryIgnored ? AppColors.success.withAlpha(80) : borderColor,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isBatteryIgnored ? Icons.battery_charging_full_rounded : Icons.battery_saver_rounded,
+                size: 20,
+                color: isBatteryIgnored ? AppColors.success : AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'การตั้งค่าแบตเตอรี่ (ทำงานเบื้องหลังตลอดเวลา)',
+                  style: GoogleFonts.prompt(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isBatteryIgnored
+                ? 'ระบบประหยัดแบตเตอรี่ถูกปิดแล้ว แอปสามารถตรวจจับการแจ้งเตือนได้ต่อเนื่องแม้จอดับหรือปิดแอป ✅'
+                : 'สมาร์ทโฟน Android (Samsung, Xiaomi, Oppo, Vivo) มักจะปิดแอปเบื้องหลังเมื่อจอดับ แนะนำให้ตั้งค่าเป็น "ไม่จำกัด" (Unrestricted)',
+            style: GoogleFonts.prompt(
+              fontSize: 12.5,
+              color: subtextColor,
+              height: 1.4,
+            ),
+          ),
+          if (!isBatteryIgnored) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: ElevatedButton.icon(
+                onPressed: () => cubit.requestIgnoreBatteryOptimization(),
+                icon: const Icon(Icons.bolt_rounded, size: 18),
+                label: Text(
+                  'อนุญาตให้ทำงานเบื้องหลังไม่จำกัด ⚡',
+                  style: GoogleFonts.prompt(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -333,10 +563,10 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
               const Icon(Icons.shield_rounded, size: 20, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
-                'ความปลอดภัยและความเป็นส่วนตัวสูงสุด',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                'ความปลอดภัยและความเป็นส่วนตัวสูงสุด (PDPA)',
+                style: GoogleFonts.prompt(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
                   color: textColor,
                 ),
               ),
@@ -389,8 +619,8 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 12.5,
+                style: GoogleFonts.prompt(
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: textColor,
                 ),
@@ -398,8 +628,8 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
               const SizedBox(height: 1),
               Text(
                 desc,
-                style: TextStyle(
-                  fontSize: 11.5,
+                style: GoogleFonts.prompt(
+                  fontSize: 12,
                   color: subtextColor,
                   height: 1.35,
                 ),
@@ -444,51 +674,91 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () => cubit.openNotificationSettings(),
-              icon: Icon(
-                isGranted ? Icons.settings_rounded : Icons.settings_suggest_rounded,
-                size: 20,
-              ),
-              label: Text(
-                isGranted
-                    ? 'เปิดหน้าตั้งค่าการแจ้งเตือน ⚙️'
-                    : 'ไปหน้าตั้งค่า Android (เปิดสิทธิ์) ⚙️',
-                style: const TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.bold,
+          if (isGranted) ...[
+            // Primary Button when granted: Done & Go to Main
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+                label: Text(
+                  'เริ่มต้นใช้งานทันที 🎉',
+                  style: GoogleFonts.prompt(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: TextButton.icon(
-              onPressed: () => cubit.checkPermission(),
-              icon: Icon(Icons.refresh_rounded, size: 16, color: subtextColor),
-              label: Text(
-                'ตรวจสอบสถานะสิทธิ์อีกครั้ง',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: subtextColor,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: TextButton.icon(
+                onPressed: () => cubit.openNotificationSettings(),
+                icon: Icon(Icons.settings_rounded, size: 16, color: subtextColor),
+                label: Text(
+                  'เปิดหน้าตั้งค่าการแจ้งเตือน Android ⚙️',
+                  style: GoogleFonts.prompt(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: subtextColor,
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            // Primary Button when NOT granted: Go to Android Settings
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => cubit.openNotificationSettings(),
+                icon: const Icon(Icons.settings_suggest_rounded, size: 20),
+                label: Text(
+                  'ไปหน้าตั้งค่า Android (เปิดสิทธิ์) ⚙️',
+                  style: GoogleFonts.prompt(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: TextButton.icon(
+                onPressed: () => cubit.checkPermission(),
+                icon: Icon(Icons.refresh_rounded, size: 16, color: subtextColor),
+                label: Text(
+                  'ตรวจสอบสถานะสิทธิ์อีกครั้ง 🔄',
+                  style: GoogleFonts.prompt(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: subtextColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

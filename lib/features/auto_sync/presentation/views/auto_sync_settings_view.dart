@@ -91,13 +91,13 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                   height: 44,
                   decoration: BoxDecoration(
                     color: isGranted
-                        ? AppColors.income.withAlpha(25)
+                        ? AppColors.success.withAlpha(25)
                         : AppColors.primary.withAlpha(25),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
                     isGranted ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
-                    color: isGranted ? AppColors.income : AppColors.primary,
+                    color: isGranted ? AppColors.success : AppColors.primary,
                     size: 24,
                   ),
                 ),
@@ -106,7 +106,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                     ? 'เปิดใช้งานเรียบร้อยแล้ว'
                     : 'จำเป็นต้องเปิดสิทธิ์ Notification Access',
                 badgeText: isGranted ? 'เปิดแล้ว ✅' : 'ต้องเปิดสิทธิ์ ⚠️',
-                badgeColor: isGranted ? AppColors.income : AppColors.warning,
+                badgeColor: isGranted ? AppColors.success : AppColors.warning,
                 onTap: () => context.push('/notification-permission'),
               ),
               const SizedBox(height: 14),
@@ -123,13 +123,13 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                   height: 44,
                   decoration: BoxDecoration(
                     color: isBatteryIgnored
-                        ? AppColors.income.withAlpha(25)
+                        ? AppColors.success.withAlpha(25)
                         : const Color(0xFFF59E0B).withAlpha(25),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
                     isBatteryIgnored ? Icons.battery_charging_full_rounded : Icons.battery_alert_rounded,
-                    color: isBatteryIgnored ? AppColors.income : const Color(0xFFF59E0B),
+                    color: isBatteryIgnored ? AppColors.success : const Color(0xFFF59E0B),
                     size: 24,
                   ),
                 ),
@@ -138,7 +138,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                     ? 'ไม่จำกัดการทำงานเบื้องหลัง (พร้อมดักจับตลอดเวลา)'
                     : 'แนะนำให้ตั้งเป็น "ไม่จำกัด" เพื่อไม่ให้ Android ฆ่าระบบตรวจจับ',
                 badgeText: isBatteryIgnored ? 'ไม่จำกัด ✅' : 'แนะนำตั้งค่า ⚡',
-                badgeColor: isBatteryIgnored ? AppColors.income : const Color(0xFFF59E0B),
+                badgeColor: isBatteryIgnored ? AppColors.success : const Color(0xFFF59E0B),
                 onTap: () => context.read<AutoSyncCubit>().requestIgnoreBatteryOptimization(),
               ),
               const SizedBox(height: 14),

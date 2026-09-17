@@ -30,13 +30,17 @@ class AppColors {
   static const Color darkTextSecondary = Color(0xFF94A3B8);
   static const Color darkTextMuted = Color(0xFF64748B);
 
-  // Financial Semantics (Integrated into 4-Color system)
+  // Financial & Status Semantics (Integrated into 4-Color system)
   static const Color income = Color(0xFF2563EB); // Royal Blue for positive / income
   static const Color incomeLight = Color(0xFFDBEAFE);
   static const Color expense = Color(0xFFFF7A00); // Vibrant Orange for expense
   static const Color expenseLight = Color(0xFFFFEDD5);
   static const Color warning = Color(0xFFFF7A00);
   static const Color warningLight = Color(0xFFFFEDD5);
+  static const Color success = Color(0xFF10B981); // Emerald green for verified/granted
+  static const Color successLight = Color(0xFFD1FAE5);
+  static const Color error = Color(0xFFEF4444); // Crimson red for error/delete
+  static const Color errorLight = Color(0xFFFEE2E2);
 
   // Light Theme Palette (Clean White / Soft Off-white using 4-Color Harmony)
   static const Color lightBackground = Color(0xFFF8FAFC);
