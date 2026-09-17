@@ -38,6 +38,22 @@ class BudgetCubit extends Cubit<BudgetState> {
   }
 
   void updateWithTransactions(List<TransactionEntity> transactions) {
+    // Guard: skip if transactions list is identical reference (no change)
+    if (identical(_latestTransactions, transactions)) return;
+
+    // Guard: skip if content is same (same length & same ids in order)
+    if (_latestTransactions.length == transactions.length) {
+      bool same = true;
+      for (int i = 0; i < transactions.length; i++) {
+        if (_latestTransactions[i].id != transactions[i].id ||
+            _latestTransactions[i].amount != transactions[i].amount) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return;
+    }
+
     _latestTransactions = transactions;
     if (state.budgets.isNotEmpty) {
       final recalculated = _calculateSpentAmounts(state.budgets, transactions);

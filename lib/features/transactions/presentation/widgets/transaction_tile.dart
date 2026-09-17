@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -6,7 +7,7 @@ import '../../../../core/utils/icon_helper.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../domain/entities/transaction_entity.dart';
 
-class TransactionTile extends StatelessWidget {
+class TransactionTile extends StatefulWidget {
   final TransactionEntity transaction;
   final bool isEyeViewHidden;
   final VoidCallback? onTap;
@@ -21,90 +22,112 @@ class TransactionTile extends StatelessWidget {
   });
 
   @override
+  State<TransactionTile> createState() => _TransactionTileState();
+}
+
+class _TransactionTileState extends State<TransactionTile>
+    with SingleTickerProviderStateMixin {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final isIncome = transaction.isIncome;
-    final isTransfer = transaction.isTransfer;
+    final isIncome = widget.transaction.isIncome;
+    final isTransfer = widget.transaction.isTransfer;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final smartIcon = isTransfer
         ? Icons.swap_horiz_rounded
         : IconHelper.getSmartIcon(
-            categoryName: transaction.categoryName,
-            title: transaction.title,
-            code: transaction.categoryIconCode,
+            categoryName: widget.transaction.categoryName,
+            title: widget.transaction.title,
+            code: widget.transaction.categoryIconCode,
           );
 
     final categoryColor = isTransfer
         ? const Color(0xFF6366F1)
-        : Color(transaction.categoryColorValue != 0
-            ? transaction.categoryColorValue
+        : Color(widget.transaction.categoryColorValue != 0
+            ? widget.transaction.categoryColorValue
             : (isIncome ? 0xFF10B981 : 0xFFEF4444));
 
-    final bankBadge = transaction.bankShortName ?? _extractBankBadge(transaction.note);
-    final bankColor = _getBankColor(transaction.bankId, bankBadge);
+    final bankBadge = widget.transaction.bankShortName ?? _extractBankBadge(widget.transaction.note);
+    final bankColor = _getBankColor(widget.transaction.bankId, bankBadge);
 
-    return Dismissible(
-      key: Key('tx_${transaction.id}'),
-      direction: DismissDirection.endToStart,
-      onDismissed: (direction) {
-        onDelete?.call();
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: AppColors.expense.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'ลบ',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-            SizedBox(width: 6),
-            Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
-          ],
-        ),
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
-            width: 1,
+    return AnimatedScale(
+      scale: _isPressed ? 0.97 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeOut,
+      child: Dismissible(
+        key: Key('tx_${widget.transaction.id}'),
+        direction: DismissDirection.endToStart,
+        onDismissed: (direction) {
+          HapticFeedback.mediumImpact();
+          widget.onDelete?.call();
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: AppColors.expense.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'ลบ',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              SizedBox(width: 6),
+              Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
+            ],
           ),
         ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          child: InkWell(
-            onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            splashColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.06),
-            highlightColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.03),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
+            border: Border.all(
+              color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
+              width: 1,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: widget.onTap != null
+                  ? () {
+                      HapticFeedback.lightImpact();
+                      widget.onTap?.call();
+                    }
+                  : null,
+              onTapDown: (_) => setState(() => _isPressed = true),
+              onTapUp: (_) => setState(() => _isPressed = false),
+              onTapCancel: () => setState(() => _isPressed = false),
+              borderRadius: BorderRadius.circular(16),
+              splashColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.06),
+              highlightColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.03),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
                 children: [
                   CategoryIconBadge(
                     icon: smartIcon,
                     color: categoryColor,
                     size: 48,
                     iconSize: 24,
-                    categoryId: transaction.categoryId,
+                    categoryId: widget.transaction.categoryId,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          transaction.title,
+                          widget.transaction.title,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14.5,
@@ -117,7 +140,7 @@ class TransactionTile extends StatelessWidget {
                         Row(
                           children: [
                             // Show Category Tag only if title is distinct from category name (e.g. custom merchant/title)
-                            if (isTransfer || (transaction.title.trim() != transaction.categoryName.trim()))
+                            if (isTransfer || (widget.transaction.title.trim() != widget.transaction.categoryName.trim()))
                               Padding(
                                 padding: const EdgeInsets.only(right: 5),
                                 child: Container(
@@ -127,7 +150,7 @@ class TransactionTile extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    isTransfer ? 'โอนข้ามบัญชี' : transaction.categoryName,
+                                    isTransfer ? 'โอนข้ามบัญชี' : widget.transaction.categoryName,
                                     style: TextStyle(
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w600,
@@ -162,13 +185,13 @@ class TransactionTile extends StatelessWidget {
                                 ),
                               ),
                             // Note snippet
-                            if (transaction.note != null &&
-                                transaction.note!.isNotEmpty &&
-                                !transaction.note!.startsWith('ตรวจจับอัตโนมัติจาก')) ...[
+                            if (widget.transaction.note != null &&
+                                widget.transaction.note!.isNotEmpty &&
+                                !widget.transaction.note!.startsWith('ตรวจจับอัตโนมัติจาก')) ...[
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  transaction.note!,
+                                  widget.transaction.note!,
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
@@ -186,6 +209,7 @@ class TransactionTile extends StatelessWidget {
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _formatAmount(isIncome, isTransfer),
@@ -200,7 +224,7 @@ class TransactionTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        DateFormatter.formatTime(transaction.date),
+                        DateFormatter.formatTime(widget.transaction.date),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -215,14 +239,15 @@ class TransactionTile extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   String _formatAmount(bool isIncome, bool isTransfer) {
     if (isTransfer) {
-      return CurrencyFormatter.format(transaction.amount);
+      return CurrencyFormatter.format(widget.transaction.amount);
     }
-    return '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}';
+    return '${isIncome ? '+' : '-'}${CurrencyFormatter.format(widget.transaction.amount)}';
   }
 
   static Color _getBankColor(String? bankId, String? bankBadge) {

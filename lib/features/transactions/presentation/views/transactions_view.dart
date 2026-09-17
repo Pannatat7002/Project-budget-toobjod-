@@ -42,6 +42,14 @@ class _TransactionsViewState extends State<TransactionsView> {
         title: const Text('รายการทั้งหมด'),
       ),
           body: BlocBuilder<TransactionCubit, TransactionState>(
+            // Rebuild only when transactions or filter/status change
+            buildWhen: (prev, curr) =>
+                prev.transactions != curr.transactions ||
+                prev.status != curr.status ||
+                prev.filterType != curr.filterType ||
+                prev.selectedCategoryId != curr.selectedCategoryId ||
+                prev.selectedBankId != curr.selectedBankId ||
+                prev.searchQuery != curr.searchQuery,
             builder: (context, state) {
               if (state.status == TransactionStatus.loading && state.transactions.isEmpty) {
                 return const Center(child: CircularProgressIndicator());

@@ -18,7 +18,7 @@ class TransactionCubit extends Cubit<TransactionState> {
     required this.addTransactionUseCase,
     required this.deleteTransactionUseCase,
     required this.updateTransactionUseCase,
-  }) : super(const TransactionState());
+  }) : super(TransactionState());
 
   Future<void> loadTransactions() async {
     emit(state.copyWith(status: TransactionStatus.loading));
@@ -39,6 +39,14 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> addTransaction(TransactionEntity transaction) async {
     try {
       await addTransactionUseCase(transaction);
+      // Optimistic: add locally first for zero-flicker UI
+      final optimistic = List<TransactionEntity>.from(state.transactions)
+        ..insert(0, transaction);
+      emit(state.copyWith(
+        status: TransactionStatus.success,
+        transactions: optimistic,
+      ));
+      // Then reload from source of truth
       await loadTransactions();
     } catch (e) {
       emit(state.copyWith(
@@ -62,6 +70,14 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   Future<void> deleteTransaction(String transactionId) async {
     try {
+      // Optimistic: remove locally first for zero-flicker UI
+      final optimistic = state.transactions
+          .where((t) => t.id != transactionId)
+          .toList();
+      emit(state.copyWith(
+        status: TransactionStatus.success,
+        transactions: optimistic,
+      ));
       await deleteTransactionUseCase(transactionId);
       await loadTransactions();
     } catch (e) {

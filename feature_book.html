@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เจ้าตูบจด (ToobJod) - Feature Book & Widget Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --primary-light: #FFF4EC;
+      --primary-gradient: linear-gradient(135deg, #FF9E44 0%, #FF6500 100%);
+      --accent: #2A60E4;
+      --success: #10B981;
+      --success-bg: #ECFDF5;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-border: #E2E8F0;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+      --card-hover: 0 20px 30px -10px rgba(255, 122, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+    }
+
+    [data-theme="dark"] {
+      --primary: #FF8F26;
+      --primary-light: #2A1A0F;
+      --primary-gradient: linear-gradient(135deg, #FFA959 0%, #E65A00 100%);
+      --accent: #3B82F6;
+      --success: #10B981;
+      --success-bg: #064E3B;
+      --bg: #0B0F19;
+      --surface: #151D2E;
+      --surface-border: #232E45;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      --card-hover: 0 20px 35px -10px rgba(255, 143, 38, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Kanit', sans-serif;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+    [data-theme="dark"] header {
+      background: rgba(21, 29, 46, 0.85);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--primary-gradient);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 14px rgba(255, 101, 0, 0.35);
+    }
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .brand-badge {
+      background: #FF5500;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: 0.5px;
+    }
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .search-box {
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      color: var(--text-main);
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
+    }
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .btn-action {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-action:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Main Container */
+    .app-layout {
+      display: flex;
+      flex: 1;
+      position: relative;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--surface-border);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      height: calc(100vh - 77px);
+      position: sticky;
+      top: 77px;
+      overflow-y: auto;
+    }
+    .category-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      width: 100%;
+    }
+    .category-btn:hover {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+    .category-btn.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .badge-count {
+      margin-left: auto;
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border: 1px solid var(--surface-border);
+    }
+    .category-btn.active .badge-count {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Hero Summary Banner */
+    .summary-banner {
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.4);
+    }
+    .summary-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(255, 122, 0, 0.35) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .summary-content h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .summary-content p {
+      color: #94A3B8;
+      font-size: 0.95rem;
+      max-width: 680px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+    }
+    .stat-card .val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #FFB370;
+    }
+    .stat-card .lbl {
+      font-size: 0.82rem;
+      color: #CBD5E1;
+      margin-top: 2px;
+    }
+
+    /* Showcase Layout: 2 Columns (Mockup Viewer & Cards Grid) */
+    .showcase-grid-wrapper {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    /* Interactive Phone Mockup Container */
+    .phone-column {
+      position: sticky;
+      top: 97px;
+    }
+    .mockup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+    .mockup-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .phone-device {
+      width: 100%;
+      height: 720px;
+      background: #000;
+      border-radius: 40px;
+      padding: 10px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 2px #334155;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-notch {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 18px;
+      background: #000;
+      border-radius: 12px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .phone-camera {
+      width: 9px;
+      height: 9px;
+      background: #111827;
+      border-radius: 50%;
+      border: 1px solid #374151;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      cursor: zoom-in;
+    }
+    .phone-meta {
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      box-shadow: var(--card-shadow);
+    }
+    .phone-meta h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .phone-meta p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .phone-meta .tag-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .tag-pill {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+    }
+
+    /* Cards Grid */
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
+    }
+    .feature-card:hover {
+      box-shadow: var(--card-hover);
+      border-color: rgba(255, 122, 0, 0.4);
+      transform: translateY(-4px);
+    }
+    .feature-card.active {
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2);
+    }
+    .card-thumb {
+      height: 200px;
+      background: #0f172a;
+      overflow: hidden;
+      position: relative;
+    }
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .card-badge-status {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(16, 185, 129, 0.95);
+      backdrop-filter: blur(6px);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-category {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(6px);
+      color: #F8FAFC;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .card-body {
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.35rem;
+    }
+    .card-desc {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      flex: 1;
+      margin-bottom: 1rem;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 0.75rem;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+    .card-footer code {
+      font-family: monospace;
+      color: var(--primary);
+    }
+    .btn-preview {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid rgba(255, 122, 0, 0.3);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-preview:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Lightbox Modal */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .lightbox.active {
+      display: flex;
+    }
+    .lightbox-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .lightbox-content img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+    .lightbox-title {
+      color: white;
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    @media (max-width: 1080px) {
+      .showcase-grid-wrapper {
+        grid-template-columns: 1fr;
+      }
+      .phone-column {
+        position: static;
+        max-width: 380px;
+        margin: 0 auto 2rem auto;
+      }
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <a href="#" class="brand">
+      <div class="brand-icon">🐾</div>
+      <div class="brand-text">
+        <h1>เจ้าตูบจด <span class="brand-badge">PRO v1.2</span></h1>
+        <p>Widgetbook & Feature Interactive Catalog</p>
+      </div>
+    </a>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="ค้นหาฟีเจอร์ เช่น บัญชี, งบประมาณ, สลิป, รายรับ..." onkeyup="filterFeatures()" />
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-action" onclick="toggleTheme()">
+        <span id="themeIcon">🌙</span> <span id="themeLabel">โหมดมืด</span>
+      </button>
+      <button class="btn-action" onclick="openLightboxCurrent()">
+        <span>🔍</span> ขยายดูรูปเต็ม
+      </button>
+    </div>
+  </header>
+
+  <!-- App Layout -->
+  <div class="app-layout">
+
+    <!-- Category Sidebar -->
+    <aside class="sidebar">
+      <button class="category-btn active" onclick="selectCategory('all', this)">
+        <span>✨</span> ทั้งหมด (All Features)
+        <span class="badge-count" id="count-all">17</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('dashboard', this)">
+        <span>💳</span> 1. หน้าแรก & บัญชี
+        <span class="badge-count">5</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('transactions', this)">
+        <span>📝</span> 2. บันทึก & ประวัติรายการ
+        <span class="badge-count">4</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('budget', this)">
+        <span>🎯</span> 3. จัดการงบประมาณ
+        <span class="badge-count">2</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('spending-plan', this)">
+        <span>📊</span> 4. แผนการเงิน 50/30/20
+        <span class="badge-count">1</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('analytics', this)">
+        <span>🍩</span> 5. วิเคราะห์ & รายงาน
+        <span class="badge-count">1</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('auto-sync', this)">
+        <span>⚡</span> 6. ตรวจจับสลิปอัตโนมัติ
+        <span class="badge-count">3</span>
+      </button>
+      <button class="category-btn" onclick="selectCategory('ai', this)">
+        <span>🤖</span> 7. ตูบจด AI Companion
+        <span class="badge-count">1</span>
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content-area">
+
+      <!-- Summary Stats Banner -->
+      <section class="summary-banner">
+        <div class="summary-content">
+          <h2>🐶 เจ้าตูบจด Feature & Widget Showcase <span style="background: rgba(255, 122, 0, 0.2); border: 1px solid #FF7A00; color: #FFB370; font-size: 0.85rem; padding: 4px 12px; border-radius: 9999px; font-weight: 500;">☀️ Light Mode</span></h2>
+          <p>เอกสารสรุปและทดสอบระบบการทำงานของแอปพลิเคชันวางแผนการเงินและตรวจจับสลิปอัตโนมัติ ทดสอบสดบนโทรศัพท์จริง Samsung SM A075F ในโหมดสว่าง (Light Mode) คมชัดครบทั้ง 17 ฟังก์ชัน</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="val">17</div>
+            <div class="lbl">ฟีเจอร์ทดสอบครบ 100%</div>
+          </div>
+          <div class="stat-card">
+            <div class="val">☀️ Light Theme</div>
+            <div class="lbl">โหมดสว่าง คมชัดสวยงามทุกหน้า</div>
+          </div>
+          <div class="stat-card">
+            <div class="val">Android 16</div>
+            <div class="lbl">ทดสอบบน Samsung Galaxy จริง</div>
+          </div>
+          <div class="stat-card">
+            <div class="val">Local 100%</div>
+            <div class="lbl">ข้อมูลปลอดภัย ไม่ส่งออกเซิร์ฟเวอร์</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Showcase Grid (Phone Preview + Cards) -->
+      <div class="showcase-grid-wrapper">
+
+        <!-- Phone Device Sticky Column -->
+        <div class="phone-column">
+          <div class="mockup-header">
+            <h3>📱 Live Device View</h3>
+            <span style="font-size: 0.75rem; color: var(--success); font-weight: 600;">● Online</span>
+          </div>
+
+          <div class="phone-device">
+            <div class="phone-notch"><div class="phone-camera"></div></div>
+            <div class="phone-screen" onclick="openLightboxCurrent()">
+              <img id="activeDeviceScreen" src="showcase_assets/v2_dashboard.png" alt="Device Screen" />
+            </div>
+          </div>
+
+          <div class="phone-meta">
+            <h4 id="activeMetaTitle">1. ภาพรวมการเงิน (Dashboard View)</h4>
+            <p id="activeMetaDesc">แสดงยอดคงเหลือแยกตามบัตรบัญชีธนาคาร จุดบอกตำแหน่งบัตรสไตล์ iOS และปุ่มลัดทำรายการด่วน</p>
+            <div class="tag-row">
+              <span class="tag-pill" id="activeMetaFile">dashboard_view.dart</span>
+              <span class="tag-pill" style="color: var(--success); border-color: rgba(16,185,129,0.3)">Passed ✅</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Cards List -->
+        <div class="feature-list" id="featureContainer">
+
+          <!-- Feature 1 -->
+          <div class="feature-card active" data-cat="dashboard" onclick="previewFeature(this, 'showcase_assets/v2_dashboard.png', '1. ภาพรวมการเงิน (Dashboard View)', 'แสดงยอดคงเหลือแยกตามบัตรบัญชีธนาคาร จุดบอกตำแหน่งบัตรสไตล์ iOS และปุ่มลัดทำรายการด่วน', 'dashboard_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_dashboard.png" loading="lazy" alt="Dashboard" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Dashboard</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">หน้าหลัก Dashboard & Cards</h4>
+              <p class="card-desc">สลับดูยอดเงินแยกตามบัญชีธนาคาร พร้อม Dynamic Dots สไตล์ iOS และสรุปสถิติจำนวนรายการวันนี้</p>
+              <div class="card-footer">
+                <code>dashboard_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="feature-card" data-cat="dashboard" onclick="previewFeature(this, 'showcase_assets/feat_privacy_hidden.png', '2. โหมดซ่อนยอดเงิน (Privacy Mode)', 'แตะบริเวณยอดเงินบนบัตร เพื่อพรางตัวเลขเป็น ฿ •••••••• เพิ่มความปลอดภัยขณะอยู่ในที่สาธารณะ', 'bank_cards_carousel.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/feat_privacy_hidden.png" loading="lazy" alt="Privacy Mode" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Dashboard</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">โหมดซ่อนยอดเงิน Privacy</h4>
+              <p class="card-desc">แตะที่ยอดเงินบนบัตรเพื่อซ่อนเป็น ฿ •••••••• ป้องกันคนอื่นมองเห็นยอดเงินส่วนตัว</p>
+              <div class="card-footer">
+                <code>bank_cards_carousel.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="feature-card" data-cat="dashboard" onclick="previewFeature(this, 'showcase_assets/feat02_eye_privacy.png', '3. สลับบัญชีธนาคาร (SCB EASY)', 'รองรับการปัด Carousel เพื่อดูยอดเงินแยกตามธนาคาร เช่น SCB, K PLUS, ttb', 'bank_cards_carousel.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/feat02_eye_privacy.png" loading="lazy" alt="SCB EASY Card" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Dashboard</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">สลับบัตรบัญชีธนาคาร</h4>
+              <p class="card-desc">ปัดสลับบัตรธนาคารไทยพร้อมระบุสถานะตรวจจับสด เช่น SCB EASY, K PLUS, ttb touch</p>
+              <div class="card-footer">
+                <code>bank_cards_carousel.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="feature-card" data-cat="dashboard" onclick="previewFeature(this, 'showcase_assets/feat_mascot_rename.png', '4. ตั้งชื่อคู่หูเจ้าตูบ', 'แตะที่หัวเรื่องหรือเมนู เพื่อตั้งชื่อเจ้าตูบ เช่น เจ้าตูบจด, เจ้าตูบรวย, เจ้าตูบช่วยออม', 'dashboard_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/feat_mascot_rename.png" loading="lazy" alt="Mascot Rename" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Dashboard</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">ตั้งชื่อคู่หูเจ้าตูบ</h4>
+              <p class="card-desc">ป๊อปอัปปรับแต่งชื่อสุนัขคู่หูเพื่อสร้างความเป็นกันเองและสนุกสนานในการบันทึกบัญชี</p>
+              <div class="card-footer">
+                <code>dashboard_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="feature-card" data-cat="dashboard" onclick="previewFeature(this, 'showcase_assets/app_menu.png', '5. เมนูทางลัดด้านบน', 'เมนู Popup ทางลัดสำหรับสลับโหมด, ลบข้อมูลทดสอบ, และตั้งค่าระบบ', 'dashboard_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_menu.png" loading="lazy" alt="App Menu" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Dashboard</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">เมนูทางลัดด้านบน</h4>
+              <p class="card-desc">เมนูตั้งค่าสำหรับเปลี่ยนชื่อเจ้าตูบ, ซิงค์ข้อมูล, และจัดการบัญชีด่วน</p>
+              <div class="card-footer">
+                <code>dashboard_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="feature-card" data-cat="transactions" onclick="previewFeature(this, 'showcase_assets/v2_add_sheet.png', '6. บันทึกรายจ่าย (Add Expense Sheet)', 'แผ่นบันทึกรายจ่ายด่วน แป้นพิมพ์ไม่บังหมวดหมู่อาหาร/เดินทาง และปุ่มบันทึก', 'add_transaction_sheet.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_add_sheet.png" loading="lazy" alt="Add Expense" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Transactions</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">บันทึกรายจ่าย (-)</h4>
+              <p class="card-desc">เลือกหมวดหมู่อาหาร เดินทาง ช้อปปิ้ง บันเทิง พร้อมเลือกบัญชีและวันที่ แป้นพิมพ์ไม่บังปุ่ม</p>
+              <div class="card-footer">
+                <code>add_transaction_sheet.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 7 -->
+          <div class="feature-card" data-cat="transactions" onclick="previewFeature(this, 'showcase_assets/feat_add_income.png', '7. บันทึกรายรับ (Add Income Sheet)', 'บันทึกเงินเดือน โบนัส ค่าคอมมิชชัน ปันผล หรืองานเสริมเข้าสู่บัญชี', 'add_transaction_sheet.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/feat_add_income.png" loading="lazy" alt="Add Income" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Transactions</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">บันทึกรายรับ (+)</h4>
+              <p class="card-desc">สลับแท็บเป็นรายรับ บันทึกเงินเดือน โบนัส ดอกเบี้ย และรายรับอื่นๆ ได้อย่างรวดเร็ว</p>
+              <div class="card-footer">
+                <code>add_transaction_sheet.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 8 -->
+          <div class="feature-card" data-cat="transactions" onclick="previewFeature(this, 'showcase_assets/v2_tx_list.png', '8. หน้ารวมรายการธุรกรรม (Transactions List)', 'แสดงประวัติรายการทั้งหมด พร้อมป้ายสัญลักษณ์ธนาคาร ตัวกรอง และสรุปยอดประจำเดือน', 'transactions_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_tx_list.png" loading="lazy" alt="Transactions List" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Transactions</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">ประวัติรายการธุรกรรม</h4>
+              <p class="card-desc">กรองรายรับ/จ่าย สลับเดือนดูย้อนหลัง มีป้ายโลโก้ธนาคาร คลีนตา ไร้แท็กซ้ำซ้อน</p>
+              <div class="card-footer">
+                <code>transactions_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 9 -->
+          <div class="feature-card" data-cat="transactions" onclick="previewFeature(this, 'showcase_assets/app_tx_detail.png', '9. รายละเอียดธุรกรรม (Transaction Details)', 'หน้าต่างแสดงรายละเอียดรายการ เวลาที่ทำรายการ บัญชีธนาคาร และโน้ตช่วยจำ', 'transaction_tile.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_tx_detail.png" loading="lazy" alt="Transaction Details" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Transactions</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">รายละเอียดธุรกรรม</h4>
+              <p class="card-desc">แตะเพื่อดูรายละเอียดครบถ้วน ยอดสุทธิ เวลา บัญชีต้นทาง และโน้ตช่วยจำ</p>
+              <div class="card-footer">
+                <code>transaction_tile.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 10 -->
+          <div class="feature-card" data-cat="budget" onclick="previewFeature(this, 'showcase_assets/v2_budgets_opened.png', '10. งบประมาณรายหมวดหมู่ (Category Budgets)', 'ตั้งเพดานงบประมาณแยกตามหมวดหมู่ พร้อมแถบ Budget Progress Bar แสดง % การใช้เงิน', 'budget_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_budgets_opened.png" loading="lazy" alt="Budgets" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Budgets</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">งบประมาณรายหมวดหมู่</h4>
+              <p class="card-desc">กำหนดเพดานงบค่าอาหาร ช้อปปิ้ง เดินทาง พร้อมแถบความคืบหน้าแจ้งเตือนเมื่อใกล้เกินงบ</p>
+              <div class="card-footer">
+                <code>budget_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 11 -->
+          <div class="feature-card" data-cat="spending-plan" onclick="previewFeature(this, 'showcase_assets/app_spending_plan.png', '11. แผนการเงิน 50/30/20 (Spending Plan)', 'แบ่งสัดส่วนรายได้เป็น จำเป็น 50% ผันแปร 30% เงินออม 20% พร้อม Slider ปรับแต่งตามใจชอบ', 'spending_plan_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_spending_plan.png" loading="lazy" alt="Spending Plan" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Spending Plan</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">แผนการเงิน 50/30/20</h4>
+              <p class="card-desc">แบ่งสัดส่วนเงินจำเป็น ผันแปร และเงินออม พร้อม Slider ปรับแต่งยอดตามรายได้จริง</p>
+              <div class="card-footer">
+                <code>spending_plan_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 12 -->
+          <div class="feature-card" data-cat="analytics" onclick="previewFeature(this, 'showcase_assets/app_analytics.png', '12. รายงาน & กราฟวิเคราะห์ (Analytics)', 'Donut Chart สรุปสัดส่วนค่าใช้จ่ายแยกตามหมวดหมู่ พร้อมอัตราการออมสุทธิประจำเดือน', 'finance_hub_section.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_analytics.png" loading="lazy" alt="Analytics" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Analytics</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">รายงาน & สถิติ Donut Chart</h4>
+              <p class="card-desc">กราฟวงกลมแยกหมวดหมู่การใช้จ่าย พร้อมคำนวณอัตราการออมเงินสุทธิประจำเดือน</p>
+              <div class="card-footer">
+                <code>finance_hub_section.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 13 -->
+          <div class="feature-card" data-cat="auto-sync" onclick="previewFeature(this, 'showcase_assets/v2_auto_sync_clean.png', '13. ตั้งค่าตรวจจับสลิป (Auto-Sync Settings)', 'หน้าสวิตช์เปิด-ปิดการตรวจจับสลิปและข้อความธนาคาร ข้อความไทยกระชับ สวยงาม ไม่ล้นจอ', 'auto_sync_settings_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_auto_sync_clean.png" loading="lazy" alt="Auto Sync Settings" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Auto-Sync</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">ตั้งค่าตรวจจับธนาคาร</h4>
+              <p class="card-desc">สวิตช์เปิด-ปิดระบบตรวจจับการแจ้งเตือนธนาคารอัตโนมัติ ข้อความภาษาไทยอ่านง่าย ไม่ล้นจอ</p>
+              <div class="card-footer">
+                <code>auto_sync_settings_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 14 -->
+          <div class="feature-card" data-cat="auto-sync" onclick="previewFeature(this, 'showcase_assets/v2_empty_drawer.png', '14. ลิ้นชักกล่องข้อความตรวจจับ (Notification Drawer)', 'ลิ้นชักแสดงสลิปที่ตรวจพบ พร้อมปุ่มทางลัดไปยังหน้าตั้งค่าตรวจจับธนาคารเมื่อยังไม่มีรายการ', 'notification_drawer_sheet.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_empty_drawer.png" loading="lazy" alt="Empty Notification Drawer" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Auto-Sync</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">กล่องข้อความตรวจจับ</h4>
+              <p class="card-desc">ลิ้นชักการแจ้งเตือนสไตล์กะทัดรัด พร้อมปุ่มทางลัดไปยังการตั้งค่าระบบตรวจจับทันที</p>
+              <div class="card-footer">
+                <code>notification_drawer_sheet.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 15 -->
+          <div class="feature-card" data-cat="auto-sync" onclick="previewFeature(this, 'showcase_assets/app_bank_selection_success.png', '15. เลือกเชื่อมต่อบัญชีธนาคารไทย 10+ แห่ง', 'เชื่อมต่อ K PLUS, SCB EASY, ttb touch, Krungthai NEXT, MyMo, Dime!, ShopeePay ฯลฯ', 'bank_selection_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_bank_selection_success.png" loading="lazy" alt="Bank Selection" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Auto-Sync</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">เชื่อมต่อ 10+ ธนาคารไทย</h4>
+              <p class="card-desc">รองรับแอปธนาคารและวอลเล็ตหลักของไทย ตรวจจับยอดโอนเข้า-ออกโดยไม่ต้องคีย์มือ</p>
+              <div class="card-footer">
+                <code>bank_selection_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 16 -->
+          <div class="feature-card" data-cat="auto-sync" onclick="previewFeature(this, 'showcase_assets/app_troubleshooting_guide.png', '16. คู่มือเปิดสิทธิ์ตามรุ่นมือถือ', 'แนะนำวิธีตั้งค่าเปิด Notification Access สำหรับ Samsung, Xiaomi, Oppo, Vivo, Huawei', 'bank_selection_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_troubleshooting_guide.png" loading="lazy" alt="Troubleshooting Guide" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Auto-Sync</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">คู่มือตั้งค่าตามรุ่นมือถือ</h4>
+              <p class="card-desc">คำแนะนำการปลดล็อกการแจ้งเตือนสำหรับมือถือแอนดรอยด์แต่ละยี่ห้อ ป้องกันระบบปิดตัวเอง</p>
+              <div class="card-footer">
+                <code>bank_selection_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 17 -->
+          <div class="feature-card" data-cat="ai" onclick="previewFeature(this, 'showcase_assets/app_ai_advice.png', '17. ป๊อปอัปเจ้าตูบจด AI ให้คำปรึกษา', 'แตะปุ่มกลางด้านล่างเพื่อรับคำแนะนำวินัยการเงิน กำลังใจ และเทคนิคการออมสไตล์เจ้าตูบ', 'toob_jod_ai_dialog.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/app_ai_advice.png" loading="lazy" alt="ToobJod AI Advice" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">AI Companion</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">ผู้ช่วย AI ตูบจด</h4>
+              <p class="card-desc">คำแนะนำการเงินจากเจ้าตูบ พร้อมเทคนิคคุมงบไม่ให้บานปลายและให้กำลังใจผู้ใช้งาน</p>
+              <div class="card-footer">
+                <code>toob_jod_ai_dialog.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+      <img id="lightboxImg" src="showcase_assets/v2_dashboard.png" alt="Full Image" />
+      <div class="lightbox-title" id="lightboxTitle">ภาพขนาดเต็ม</div>
+    </div>
+  </div>
+
+  <script>
+    let currentImage = 'showcase_assets/v2_dashboard.png';
+    let currentTitle = '1. ภาพรวมการเงิน (Dashboard View)';
+
+    function previewFeature(cardEl, imgSrc, title, desc, file) {
+      document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('active'));
+      cardEl.classList.add('active');
+
+      const screenImg = document.getElementById('activeDeviceScreen');
+      screenImg.style.opacity = '0.3';
+      setTimeout(() => {
+        screenImg.src = imgSrc;
+        screenImg.style.opacity = '1';
+      }, 150);
+
+      document.getElementById('activeMetaTitle').innerText = title;
+      document.getElementById('activeMetaDesc').innerText = desc;
+      document.getElementById('activeMetaFile').innerText = file;
+
+      currentImage = imgSrc;
+      currentTitle = title;
+    }
+
+    function selectCategory(category, btnEl) {
+      document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      const cards = document.querySelectorAll('.feature-card');
+      let visibleCount = 0;
+      cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-cat') === category) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function filterFeatures() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.feature-card');
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (text.includes(q)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.body.removeAttribute('data-theme');
+        document.getElementById('themeIcon').innerText = '🌙';
+        document.getElementById('themeLabel').innerText = 'โหมดมืด';
+      } else {
+        document.body.setAttribute('data-theme', 'dark');
+        document.getElementById('themeIcon').innerText = '☀️';
+        document.getElementById('themeLabel').innerText = 'โหมดสว่าง';
+      }
+    }
+
+    function openLightboxCurrent() {
+      document.getElementById('lightboxImg').src = currentImage;
+      document.getElementById('lightboxTitle').innerText = currentTitle;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  </script>
+</body>
+</html>

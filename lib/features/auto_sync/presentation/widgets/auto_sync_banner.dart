@@ -14,6 +14,11 @@ class AutoSyncBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AutoSyncCubit, AutoSyncState>(
+      // Rebuild only when pending transactions change or permission state changes
+      buildWhen: (prev, curr) =>
+          prev.pendingTransactions.length != curr.pendingTransactions.length ||
+          prev.isPermissionGranted != curr.isPermissionGranted ||
+          prev.isAutoSyncEnabled != curr.isAutoSyncEnabled,
       builder: (context, state) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;

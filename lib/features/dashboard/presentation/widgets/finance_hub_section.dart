@@ -58,6 +58,7 @@ class FinanceHubSection extends StatelessWidget {
 
   Widget _buildSpendingPlanCard(BuildContext context, bool isDark) {
     return BlocBuilder<SpendingPlanCubit, SpendingPlanState>(
+      buildWhen: (prev, curr) => prev.plan != curr.plan,
       builder: (context, state) {
         final plan = state.plan;
         final hasPlan = plan != null && plan.monthlyIncome > 0;
@@ -93,6 +94,7 @@ class FinanceHubSection extends StatelessWidget {
 
   Widget _buildAnalyticsCard(BuildContext context, bool isDark) {
     return BlocBuilder<TransactionCubit, TransactionState>(
+      buildWhen: (prev, curr) => prev.transactions != curr.transactions,
       builder: (context, state) {
         final totalIncome = state.totalIncome;
         final totalExpense = state.totalExpense;
@@ -156,30 +158,30 @@ class FinanceHubSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? borderColorDark : borderColorLight,
-          width: 1.2,
+          width: 1.1,
         ),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           splashColor: actionColor.withValues(alpha: 0.12),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: Icon + Title + Badge
+                // Top row: Icon + Title
                 Row(
                   children: [
                     Container(
-                      width: 34,
-                      height: 34,
+                      width: 26,
+                      height: 26,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: iconGradient,
@@ -188,14 +190,14 @@ class FinanceHubSection extends StatelessWidget {
                         ),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(icon, color: Colors.white, size: 18),
+                      child: Icon(icon, color: Colors.white, size: 14),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         title,
                         style: TextStyle(
-                          fontSize: 14.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
                           letterSpacing: -0.2,
@@ -206,43 +208,43 @@ class FinanceHubSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
 
                 // Main Value & Label
                 Text(
                   mainLabel,
                   style: TextStyle(
-                    fontSize: 10.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   mainValue,
                   style: TextStyle(
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
-                    letterSpacing: -0.4,
+                    letterSpacing: -0.3,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
 
                 // Subtitle
                 Text(
                   subLabel,
                   style: TextStyle(
-                    fontSize: 10.5,
+                    fontSize: 9.5,
                     fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white60 : const Color(0xFF475569),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
 
                 // Action Arrow
                 Row(
@@ -251,7 +253,7 @@ class FinanceHubSection extends StatelessWidget {
                     Text(
                       actionText,
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         color: isDark ? actionColor.withValues(alpha: 0.9) : actionColor,
                       ),
@@ -259,7 +261,7 @@ class FinanceHubSection extends StatelessWidget {
                     const SizedBox(width: 2),
                     Icon(
                       Icons.arrow_forward_rounded,
-                      size: 13,
+                      size: 11,
                       color: isDark ? actionColor.withValues(alpha: 0.9) : actionColor,
                     ),
                   ],

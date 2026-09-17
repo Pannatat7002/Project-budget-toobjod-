@@ -25,6 +25,8 @@ class SpendingPlanView extends StatelessWidget {
             : null,
       ),
       body: BlocBuilder<SpendingPlanCubit, SpendingPlanState>(
+        buildWhen: (prev, curr) =>
+            prev.status != curr.status || prev.plan != curr.plan,
         builder: (context, state) {
           if (state.status == SpendingPlanStatus.loading && state.plan == null) {
             return const Center(child: CircularProgressIndicator());
@@ -36,6 +38,7 @@ class SpendingPlanView extends StatelessWidget {
           }
 
           return BlocBuilder<TransactionCubit, TransactionState>(
+            buildWhen: (prev, curr) => prev.transactions != curr.transactions,
             builder: (context, txState) {
               // Calculate actual monthly expense per category from transactions
               final now = DateTime.now();

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/bank_account_entity.dart';
+import '../../../../config/theme/app_colors.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import 'bank_card_item.dart';
 
 class BankCardsCarousel extends StatefulWidget {
@@ -45,13 +47,16 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
   @override
   void initState() {
     super.initState();
-    _pageController = widget.externalPageController ??
+    _pageController =
+        widget.externalPageController ??
         PageController(viewportFraction: 0.985, initialPage: _getInitialPage());
   }
 
   int _getInitialPage() {
     if (widget.selectedBankId == null) return 0;
-    final idx = widget.accounts.indexWhere((a) => a.bankId == widget.selectedBankId);
+    final idx = widget.accounts.indexWhere(
+      (a) => a.bankId == widget.selectedBankId,
+    );
     return idx != -1 ? idx + 1 : 0;
   }
 
@@ -88,7 +93,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 208,
+          height: 170,
           child: PageView.builder(
             controller: _pageController,
             clipBehavior: Clip.none,
@@ -97,11 +102,16 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
               setState(() {
                 _currentPage = index;
               });
+              // Guard: only call onBankSelected if the bank actually changed
               if (index == 0) {
-                widget.onBankSelected(null); // All Wallets
+                if (widget.selectedBankId != null) {
+                  widget.onBankSelected(null); // All Wallets
+                }
               } else if (index <= widget.accounts.length) {
                 final acc = widget.accounts[index - 1];
-                widget.onBankSelected(acc.bankId);
+                if (widget.selectedBankId != acc.bankId) {
+                  widget.onBankSelected(acc.bankId);
+                }
               }
             },
             itemBuilder: (context, index) {
@@ -137,7 +147,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
           ),
         ),
         if (totalCount > 1) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(totalCount, (idx) {
@@ -178,10 +188,12 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                   height: dotHeight,
                   decoration: BoxDecoration(
                     color: isCurrent
-                        ? (isDark ? const Color(0xFFF97316) : const Color(0xFFEA580C))
+                        ? (isDark
+                              ? const Color(0xFFF97316)
+                              : const Color(0xFFEA580C))
                         : (isDark
-                            ? Colors.white.withValues(alpha: 0.25 * opacity)
-                            : Colors.black.withValues(alpha: 0.15 * opacity)),
+                              ? Colors.white.withValues(alpha: 0.25 * opacity)
+                              : Colors.black.withValues(alpha: 0.15 * opacity)),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -189,6 +201,159 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
             }),
           ),
         ],
+        const SizedBox(height: 10),
+
+        // Inflow / Outflow Section (below carousel)
+        Builder(
+          builder: (context) {
+            final isDarkSection = Theme.of(context).brightness == Brightness.dark;
+            final income = _currentPage == 0
+                ? widget.totalMonthlyIncome
+                : (_currentPage <= widget.accounts.length
+                    ? widget.getBankIncome(widget.accounts[_currentPage - 1].bankId)
+                    : 0.0);
+            final expense = _currentPage == 0
+                ? widget.totalMonthlyExpense
+                : (_currentPage <= widget.accounts.length
+                    ? widget.getBankExpense(widget.accounts[_currentPage - 1].bankId)
+                    : 0.0);
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDarkSection ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDarkSection ? AppColors.darkBorderSubtle : AppColors.lightBorder,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  // เข้า (Inflow) — Royal Blue
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: isDarkSection ? 0.15 : 0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.accent.withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_downward_rounded,
+                            color: AppColors.accent,
+                            size: 17,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'เข้า',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w500,
+                                color: isDarkSection
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                            Text(
+                              widget.isEyeViewHidden
+                                  ? '••••'
+                                  : CurrencyFormatter.format(income),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isDarkSection
+                                    ? AppColors.accentLight
+                                    : AppColors.accent,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Divider
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: isDarkSection
+                        ? AppColors.darkBorderSubtle
+                        : AppColors.lightBorder,
+                  ),
+
+                  // ออก (Outflow) — Shiba Orange
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'ออก',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w500,
+                                color: isDarkSection
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                            Text(
+                              widget.isEyeViewHidden
+                                  ? '••••'
+                                  : CurrencyFormatter.format(expense),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isDarkSection
+                                    ? AppColors.primaryLight
+                                    : AppColors.primaryDark,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: isDarkSection ? 0.15 : 0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_upward_rounded,
+                            color: AppColors.primary,
+                            size: 17,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }

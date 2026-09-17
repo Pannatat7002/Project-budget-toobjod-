@@ -81,7 +81,7 @@ class SpendingSummaryHeader extends StatelessWidget {
                           Text(
                             monthlyIncome > 0
                                 ? CurrencyFormatter.format(monthlyIncome, showDecimals: false)
-                                : '฿0 (แตะเพื่อตั้งค่า)',
+                                : '0 (แตะเพื่อตั้งค่า)',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,

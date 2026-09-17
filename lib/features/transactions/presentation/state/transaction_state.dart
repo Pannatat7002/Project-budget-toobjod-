@@ -13,7 +13,7 @@ class TransactionState extends Equatable {
   final String searchQuery;
   final String? errorMessage;
 
-  const TransactionState({
+  TransactionState({
     this.status = TransactionStatus.initial,
     this.transactions = const [],
     this.filterType = TransactionFilterType.all,
@@ -71,19 +71,20 @@ class TransactionState extends Equatable {
 
   double getBankBalance(String? bankId) => getBankIncome(bankId) - getBankExpense(bankId);
 
-  double get totalIncome {
-    return transactions
-        .where((t) => t.isIncome)
-        .fold(0.0, (sum, item) => sum + item.amount);
-  }
+  // Cached computed aggregates — safe because TransactionState is immutable
+  late final double totalIncome = transactions
+      .where((t) => t.isIncome)
+      .fold(0.0, (sum, item) => sum + item.amount);
 
-  double get totalExpense {
-    return transactions
-        .where((t) => t.isExpense)
-        .fold(0.0, (sum, item) => sum + item.amount);
-  }
+  late final double totalExpense = transactions
+      .where((t) => t.isExpense)
+      .fold(0.0, (sum, item) => sum + item.amount);
 
-  double get totalBalance => totalIncome - totalExpense;
+  late final double totalBalance = totalIncome - totalExpense;
+
+  // Cache filteredTransactions as well (called multiple times per build)
+  late final List<TransactionEntity> _cachedFiltered = filteredTransactions;
+  List<TransactionEntity> get cachedFilteredTransactions => _cachedFiltered;
 
   TransactionState copyWith({
     TransactionStatus? status,

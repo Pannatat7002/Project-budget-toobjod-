@@ -59,7 +59,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
 
       // Start listening to real-time notification stream if enabled
       _startStreamListener();
-      _startTransactionListener();
+      // Note: _startTransactionListener already called in constructor — do not call again
     } catch (e) {
       emit(state.copyWith(
         isLoading: false,

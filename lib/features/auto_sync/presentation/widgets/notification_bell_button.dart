@@ -13,6 +13,9 @@ class NotificationBellButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocBuilder<AutoSyncCubit, AutoSyncState>(
+      // Only rebuild when pending notification count changes
+      buildWhen: (prev, curr) =>
+          prev.pendingTransactions.length != curr.pendingTransactions.length,
       builder: (context, state) {
         final count = state.pendingTransactions.length;
         final hasNotifications = count > 0;

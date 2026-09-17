@@ -24,6 +24,10 @@ class AnalyticsView extends StatelessWidget {
             : null,
       ),
       body: BlocBuilder<TransactionCubit, TransactionState>(
+        // Rebuild only when transaction list or status changes (analytics doesn't need filter fields)
+        buildWhen: (prev, curr) =>
+            prev.transactions != curr.transactions ||
+            prev.status != curr.status,
         builder: (context, state) {
           final totalIncome = state.totalIncome;
           final totalExpense = state.totalExpense;

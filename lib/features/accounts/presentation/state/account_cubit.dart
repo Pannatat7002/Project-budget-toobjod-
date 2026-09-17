@@ -116,6 +116,16 @@ class AccountCubit extends Cubit<AccountState> {
       return acc.copyWith(currentBalance: balance);
     }).toList();
 
+    // Guard: only emit if any balance actually changed
+    bool changed = false;
+    for (int i = 0; i < updated.length; i++) {
+      if (updated[i].currentBalance != state.accounts[i].currentBalance) {
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) return;
+
     emit(state.copyWith(accounts: updated));
   }
 }

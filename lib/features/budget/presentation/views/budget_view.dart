@@ -35,6 +35,10 @@ class BudgetView extends StatelessWidget {
         ],
       ),
       body: BlocBuilder<BudgetCubit, BudgetState>(
+        // Rebuild only when budgets or status changes
+        buildWhen: (prev, curr) =>
+            prev.status != curr.status ||
+            prev.budgets != curr.budgets,
         builder: (context, state) {
           if (state.status == BudgetStatus.loading && state.budgets.isEmpty) {
             return const Center(child: CircularProgressIndicator());

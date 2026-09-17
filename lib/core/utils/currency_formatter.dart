@@ -6,7 +6,7 @@ class CurrencyFormatter {
   static final NumberFormat _noDecimalFormat = NumberFormat('#,##0', 'th_TH');
 
   /// Format as ฿1,234.56
-  static String format(double amount, {String symbol = '฿', bool showDecimals = true}) {
+  static String format(double amount, {String symbol = '', bool showDecimals = true}) {
     final formatted = showDecimals ? _currencyFormat.format(amount) : _noDecimalFormat.format(amount);
     return '$symbol$formatted';
   }
@@ -17,7 +17,7 @@ class CurrencyFormatter {
   }
 
   /// Compact format for charts or badges (e.g. 1.2k)
-  static String formatCompact(double amount, {String symbol = '฿'}) {
+  static String formatCompact(double amount, {String symbol = ''}) {
     return '$symbol${_compactFormat.format(amount)}';
   }
 }

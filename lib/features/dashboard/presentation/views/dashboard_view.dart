@@ -250,8 +250,18 @@ class _DashboardViewState extends State<DashboardView> {
         ],
       ),
       body: BlocBuilder<AccountCubit, AccountState>(
+        // Only rebuild when accounts list, selected bank, eye-view or loading state changes
+        buildWhen: (prev, curr) =>
+            prev.accounts != curr.accounts ||
+            prev.selectedBankId != curr.selectedBankId ||
+            prev.isEyeViewHidden != curr.isEyeViewHidden ||
+            prev.isLoading != curr.isLoading,
         builder: (context, accountState) {
           return BlocConsumer<TransactionCubit, TransactionState>(
+            // Only fire listener when the actual transactions list changes
+            listenWhen: (previous, current) =>
+                !identical(previous.transactions, current.transactions) &&
+                previous.transactions != current.transactions,
             listener: (context, txState) {
               context.read<BudgetCubit>().updateWithTransactions(
                 txState.transactions,
@@ -375,7 +385,7 @@ class _DashboardViewState extends State<DashboardView> {
                       //       context.read<AccountCubit>().selectBank(bankId),
                       //   onAddBankTap: () => context.push('/bank-selection'),
                       // ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
                       // 3. Mascot Speech Bubble Banner
                       _buildMascotGreetingCard(
@@ -383,7 +393,7 @@ class _DashboardViewState extends State<DashboardView> {
                         txState.transactions.length,
                         isDark,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
                       // 4. Quick Actions Bar
                       QuickActionsBar(
@@ -399,15 +409,15 @@ class _DashboardViewState extends State<DashboardView> {
                         ),
                         onSetBudget: () => context.push('/budgets'),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 10),
 
                       // 5. Finance Hub: แผนใช้จ่าย & วิเคราะห์
                       const FinanceHubSection(),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 10),
 
                       // 6. Budget Health Preview Widget
                       _buildBudgetHealthPreview(context, isDark),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
 
                       // 6. Recent Transactions Header (Dynamic by selected bank)
                       Row(
@@ -562,50 +572,76 @@ class _DashboardViewState extends State<DashboardView> {
     bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131E3A) : const Color(0xFFFFEDD5),
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? const Color(0xFF131E3A) : const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? const Color(0xFF22355E) : const Color(0xFFFED7AA),
-          width: 1,
+          width: 0.9,
         ),
       ),
       child: Row(
         children: [
-          // Mascot Mini Image (PNG)
-          SizedBox(
-            width: 46,
-            height: 46,
-            child: Image.asset(
-              'assets/images/mascot_dog_writing.png',
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.pets, color: AppColors.primary),
+          // Mascot Mini Avatar
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFFEA580C).withValues(alpha: 0.2)
+                  : Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/mascot_dog_writing.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.pets,
+                  size: 14,
+                  color: Color(0xFFEA580C),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
           // Speech Text
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  txCount > 0
-                      ? 'วันนี้ตูบจดให้ $txCount รายการแล้วนะโฮ่ง!'
-                      : 'วันนี้มีค่าใช้จ่ายอะไรไหม ให้ตูบช่วยจดนะ!',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                    color: isDark ? Colors.white : const Color(0xFF9A3412),
+                Flexible(
+                  child: Text(
+                    txCount > 0
+                        ? 'วันนี้ตูบจดให้ $txCount รายการแล้วนะโฮ่ง!'
+                        : 'วันนี้มีค่าใช้จ่ายอะไร ให้ตูบช่วยจดนะ!',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: isDark ? Colors.white : const Color(0xFF9A3412),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(width: 6),
+                Container(
+                  width: 3,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark
+                        ? Colors.white38
+                        : const Color(0xFFC2410C).withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(width: 6),
                 Text(
-                  'คุมงบตามแผน ช่วยให้มีเงินเก็บ 🐾',
+                  'คุมงบมีเงินเก็บ 🐾',
                   style: TextStyle(
                     fontSize: 11,
+                    fontWeight: FontWeight.w600,
                     color: isDark
                         ? AppColors.darkTextMuted
                         : const Color(0xFFC2410C),
@@ -621,6 +657,11 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildBudgetHealthPreview(BuildContext context, bool isDark) {
     return BlocBuilder<BudgetCubit, BudgetState>(
+      // Only rebuild when budget totals or status changes
+      buildWhen: (prev, curr) =>
+          prev.status != curr.status ||
+          prev.totalBudgetLimit != curr.totalBudgetLimit ||
+          prev.totalBudgetSpent != curr.totalBudgetSpent,
       builder: (context, budgetState) {
         final totalLimit = budgetState.totalBudgetLimit;
         final totalSpent = budgetState.totalBudgetSpent;
@@ -639,10 +680,10 @@ class _DashboardViewState extends State<DashboardView> {
         }
 
         return Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark
                   ? AppColors.darkBorderSubtle
@@ -660,33 +701,33 @@ class _DashboardViewState extends State<DashboardView> {
                     children: [
                       Image.asset(
                         'assets/images/action_budget.png',
-                        width: 24,
-                        height: 24,
+                        width: 20,
+                        height: 20,
                         fit: BoxFit.contain,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Text(
                         'สถานะงบประมาณรวม',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontSize: 13,
                         ),
                       ),
                     ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
+                      horizontal: 7,
+                      vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       '$percentage%',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: statusColor,
                       ),
@@ -694,26 +735,26 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               ClipRRect(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(5),
                 child: LinearProgressIndicator(
                   value: progress.clamp(0.0, 1.0),
                   backgroundColor: isDark
                       ? AppColors.darkBackground
                       : const Color(0xFFF1F5F9),
                   valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                  minHeight: 8,
+                  minHeight: 6,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'ใช้ไป ${CurrencyFormatter.format(totalSpent)}',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: isDark
                           ? AppColors.darkTextSecondary
                           : AppColors.lightTextSecondary,
@@ -722,7 +763,7 @@ class _DashboardViewState extends State<DashboardView> {
                   Text(
                     'จากงบ ${CurrencyFormatter.format(totalLimit)}',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: isDark
                           ? AppColors.darkTextPrimary
