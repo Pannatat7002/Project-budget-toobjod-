@@ -85,6 +85,46 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(true)
                 }
+                "shareText" -> {
+                    val text = call.argument<String>("text") ?: ""
+                    val subject = call.argument<String>("subject") ?: "รายงานการเงิน - เจ้าตูบจด"
+                    val sendIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, text)
+                        putExtra(Intent.EXTRA_SUBJECT, subject)
+                        type = "text/plain"
+                    }
+                    val shareIntent = Intent.createChooser(sendIntent, "แชร์รายงานการเงิน")
+                    startActivity(shareIntent)
+                    result.success(true)
+                }
+                "shareCsv" -> {
+                    try {
+                        val csvContent = call.argument<String>("csvContent") ?: ""
+                        val fileName = call.argument<String>("fileName") ?: "financial_report.csv"
+                        val reportFile = java.io.File(cacheDir, fileName)
+                        reportFile.writeBytes(csvContent.toByteArray(java.nio.charset.StandardCharsets.UTF_8))
+
+                        val uri: Uri = androidx.core.content.FileProvider.getUriForFile(
+                            this,
+                            "${applicationContext.packageName}.fileprovider",
+                            reportFile
+                        )
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            putExtra(Intent.EXTRA_SUBJECT, "รายงานการเงิน (CSV) - เจ้าตูบจด")
+                            type = "text/comma-separated-values"
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, "ส่งออกรายงานการเงิน (CSV)")
+                        startActivity(shareIntent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error sharing CSV", e)
+                        result.error("SHARE_ERROR", e.message, null)
+                    }
+                }
                 else -> {
                     result.notImplemented()
                 }
