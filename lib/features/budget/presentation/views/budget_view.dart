@@ -203,6 +203,8 @@ class BudgetView extends StatelessWidget {
                             height: 60,
                             child: Image.asset(
                               'assets/images/mascot_dog_peek.png',
+                              cacheWidth: 120,
+                              cacheHeight: 120,
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) =>
                                   const SizedBox.shrink(),

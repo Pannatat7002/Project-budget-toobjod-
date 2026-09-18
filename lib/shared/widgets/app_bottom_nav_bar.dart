@@ -242,12 +242,18 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                   child: ClipOval(
                     child: Image.asset(
                       'assets/images/mascot_ai_dog_avatar.png',
+                      cacheWidth: 150,
+                      cacheHeight: 150,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Image.asset(
                         'assets/images/mascot_ai_dog.png',
+                        cacheWidth: 150,
+                        cacheHeight: 150,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Image.asset(
                           'assets/images/mascot_avatar.jpg',
+                          cacheWidth: 150,
+                          cacheHeight: 150,
                           fit: BoxFit.cover,
                         ),
                       ),

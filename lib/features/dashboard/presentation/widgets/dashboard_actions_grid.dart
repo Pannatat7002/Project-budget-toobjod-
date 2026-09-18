@@ -44,7 +44,7 @@ class DashboardActionsGrid extends StatelessWidget {
                   subtitle: 'คุมงบรายหมวด',
                   imageAsset: 'assets/images/action_budget.png',
                   fallbackIcon: Icons.pie_chart_rounded,
-                  accentColor: const Color(0xFF8B5CF6),
+                  accentColor: const Color.fromARGB(255, 110, 110, 110),
                   imageSize: 42,
                   titleFontSize: 12.5,
                   subtitleFontSize: 10,
@@ -57,7 +57,7 @@ class DashboardActionsGrid extends StatelessWidget {
                   subtitle: 'สัดส่วน 50/30/20',
                   imageAsset: 'assets/images/action_spending_plan.png',
                   fallbackIcon: Icons.tune_rounded,
-                  accentColor: const Color(0xFFEA580C),
+                  accentColor: const Color.fromARGB(255, 110, 110, 110),
                   imageSize: 42,
                   titleFontSize: 12.5,
                   subtitleFontSize: 10,
@@ -70,7 +70,7 @@ class DashboardActionsGrid extends StatelessWidget {
                   subtitle: 'สถิติ & กราฟสรุป',
                   imageAsset: 'assets/images/action_analytics.png',
                   fallbackIcon: Icons.insights_rounded,
-                  accentColor: const Color(0xFF0284C7),
+                  accentColor: const Color.fromARGB(255, 110, 110, 110),
                   imageSize: 42,
                   titleFontSize: 12.5,
                   subtitleFontSize: 10,
@@ -94,7 +94,7 @@ class DashboardActionsGrid extends StatelessWidget {
                     subtitle: 'บันทึกรายรับ 🐾',
                     imageAsset: 'assets/images/action_income.png',
                     fallbackIcon: Icons.arrow_downward_rounded,
-                    accentColor: AppColors.income,
+                    accentColor: const Color.fromARGB(255, 110, 110, 110),
                     imageSize: 48,
                     titleFontSize: 14.5,
                     subtitleFontSize: 11,
@@ -109,7 +109,7 @@ class DashboardActionsGrid extends StatelessWidget {
                     subtitle: 'บันทึกรายจ่าย 🐾',
                     imageAsset: 'assets/images/action_expense.png',
                     fallbackIcon: Icons.arrow_upward_rounded,
-                    accentColor: AppColors.expense,
+                    accentColor: const Color.fromARGB(255, 110, 110, 110),
                     imageSize: 48,
                     titleFontSize: 14.5,
                     subtitleFontSize: 11,
@@ -176,10 +176,7 @@ class _TactileActionCardState extends State<_TactileActionCard> {
         decoration: BoxDecoration(
           color: effectiveSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: 1.2,
-          ),
+          border: Border.all(color: borderColor, width: 1.2),
           boxShadow: [
             BoxShadow(
               color: widget.accentColor.withValues(
@@ -234,6 +231,8 @@ class _TactileActionCardState extends State<_TactileActionCard> {
                       borderRadius: BorderRadius.circular(11),
                       child: Image.asset(
                         widget.imageAsset,
+                        cacheWidth: (widget.imageSize * 3).round(),
+                        cacheHeight: (widget.imageSize * 3).round(),
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Container(
                           decoration: BoxDecoration(

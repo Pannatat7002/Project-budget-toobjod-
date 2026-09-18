@@ -70,7 +70,10 @@ class BankNotificationListenerService : NotificationListenerService() {
          *    to reconnect the listener if Android OS dropped it in the background.
          */
         @Synchronized
-        fun rebindService(context: Context): Boolean {
+        fun rebindService(context: Context, forceToggle: Boolean = false): Boolean {
+            if (isServiceConnected && !forceToggle) {
+                return true
+            }
             return try {
                 val cn = ComponentName(context, BankNotificationListenerService::class.java)
                 
@@ -79,19 +82,21 @@ class BankNotificationListenerService : NotificationListenerService() {
                     Log.i(TAG, "🔄 [BankNotifListener] requestRebind called successfully.")
                 }
 
-                // Component toggling trick to kickstart NotificationManagerService
-                val pm = context.packageManager
-                pm.setComponentEnabledSetting(
-                    cn,
-                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    android.content.pm.PackageManager.DONT_KILL_APP
-                )
-                pm.setComponentEnabledSetting(
-                    cn,
-                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    android.content.pm.PackageManager.DONT_KILL_APP
-                )
-                Log.i(TAG, "⚡ [BankNotifListener] Component toggled to force OS re-binding.")
+                if (forceToggle) {
+                    // Component toggling trick to kickstart NotificationManagerService only if explicitly forced
+                    val pm = context.packageManager
+                    pm.setComponentEnabledSetting(
+                        cn,
+                        android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        android.content.pm.PackageManager.DONT_KILL_APP
+                    )
+                    pm.setComponentEnabledSetting(
+                        cn,
+                        android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        android.content.pm.PackageManager.DONT_KILL_APP
+                    )
+                    Log.i(TAG, "⚡ [BankNotifListener] Component toggled to force OS re-binding.")
+                }
                 true
             } catch (e: Exception) {
                 Log.e(TAG, "❌ [BankNotifListener] Failed to rebind service", e)

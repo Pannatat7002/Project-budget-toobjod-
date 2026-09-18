@@ -43,6 +43,8 @@ class EmptyStateWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(28),
                   child: Image.asset(
                     imageAsset!,
+                    cacheWidth: 280,
+                    cacheHeight: 280,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       padding: const EdgeInsets.all(20),

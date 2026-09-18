@@ -122,6 +122,8 @@ class _DashboardViewState extends State<DashboardView> {
                   child: ClipOval(
                     child: Image.asset(
                       'assets/images/mascot_dog_peek.png',
+                      cacheWidth: 126,
+                      cacheHeight: 126,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => const Icon(
                         Icons.pets,
@@ -297,19 +299,10 @@ class _DashboardViewState extends State<DashboardView> {
             prev.isEyeViewHidden != curr.isEyeViewHidden ||
             prev.isLoading != curr.isLoading,
         builder: (context, accountState) {
-          return BlocConsumer<TransactionCubit, TransactionState>(
-            // Only fire listener when the actual transactions list changes
-            listenWhen: (previous, current) =>
-                !identical(previous.transactions, current.transactions) &&
-                previous.transactions != current.transactions,
-            listener: (context, txState) {
-              context.read<BudgetCubit>().updateWithTransactions(
-                txState.transactions,
-              );
-              context.read<AccountCubit>().refreshBalancesFromTransactions(
-                txState.transactions,
-              );
-            },
+          return BlocBuilder<TransactionCubit, TransactionState>(
+            buildWhen: (previous, current) =>
+                previous.transactions != current.transactions ||
+                previous.status != current.status,
             builder: (context, txState) {
               if (txState.status == TransactionStatus.loading &&
                   txState.transactions.isEmpty) {
@@ -592,6 +585,8 @@ class _DashboardViewState extends State<DashboardView> {
             child: ClipOval(
               child: Image.asset(
                 'assets/images/mascot_dog_writing.png',
+                cacheWidth: 78,
+                cacheHeight: 78,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) =>
                     const Icon(Icons.pets, size: 14, color: Color(0xFFEA580C)),
@@ -731,6 +726,8 @@ class _DashboardViewState extends State<DashboardView> {
                               'assets/images/action_budget.png',
                               width: 20,
                               height: 20,
+                              cacheWidth: 60,
+                              cacheHeight: 60,
                               fit: BoxFit.contain,
                             ),
                             const SizedBox(width: 7),
@@ -912,9 +909,13 @@ class _DashboardViewState extends State<DashboardView> {
                           child: ClipOval(
                             child: Image.asset(
                               'assets/images/mascot_dog_writing.png',
+                              cacheWidth: 120,
+                              cacheHeight: 120,
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) => Image.asset(
                                 'assets/images/mascot_dog_peek.png',
+                                cacheWidth: 120,
+                                cacheHeight: 120,
                                 fit: BoxFit.cover,
                               ),
                             ),

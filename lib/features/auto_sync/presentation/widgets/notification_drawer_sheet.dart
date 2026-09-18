@@ -485,6 +485,8 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
                               cat.imageAsset,
                               width: 16,
                               height: 16,
+                              cacheWidth: 48,
+                              cacheHeight: 48,
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) => Icon(
                                 cat.icon,
@@ -677,6 +679,8 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
                                 IconHelper.getCategoryAsset(_categoryId) ?? '',
                                 width: 14,
                                 height: 14,
+                                cacheWidth: 42,
+                                cacheHeight: 42,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) => Icon(
                                   IconHelper.getSmartIcon(

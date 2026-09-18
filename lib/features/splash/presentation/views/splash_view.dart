@@ -108,6 +108,8 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
                         height: 140,
                         child: Image.asset(
                           'assets/images/mascot_dog_peek.png',
+                          cacheWidth: 280,
+                          cacheHeight: 280,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.pets,

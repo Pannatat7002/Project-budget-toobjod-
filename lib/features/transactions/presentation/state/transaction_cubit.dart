@@ -21,7 +21,9 @@ class TransactionCubit extends Cubit<TransactionState> {
   }) : super(TransactionState());
 
   Future<void> loadTransactions() async {
-    emit(state.copyWith(status: TransactionStatus.loading));
+    if (state.transactions.isEmpty) {
+      emit(state.copyWith(status: TransactionStatus.loading));
+    }
     try {
       final transactions = await getTransactionsUseCase(const NoParams());
       emit(state.copyWith(

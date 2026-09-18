@@ -181,9 +181,13 @@ class ToobJodHeroCard extends StatelessWidget {
                   height: 95,
                   child: Image.asset(
                     'assets/images/mascot_dog_peek.png',
+                    cacheWidth: 190,
+                    cacheHeight: 190,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Image.asset(
                       'assets/images/mascot_avatar.jpg',
+                      cacheWidth: 190,
+                      cacheHeight: 190,
                       fit: BoxFit.contain,
                     ),
                   ),

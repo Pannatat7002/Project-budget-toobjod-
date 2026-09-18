@@ -50,7 +50,7 @@ class QuickActionsBar extends StatelessWidget {
             imageAsset: 'assets/images/action_budget.png',
             icon: Icons.pie_chart_outline,
             label: 'ตั้งงบประมาณ',
-            color: AppColors.primary,
+            // color: AppColors.primary,
             onTap: onSetBudget,
             isDark: isDark,
           ),
@@ -68,7 +68,8 @@ class QuickActionsBar extends StatelessWidget {
     required VoidCallback onTap,
     required bool isDark,
   }) {
-    final effectiveColor = color ?? (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A));
+    final effectiveColor =
+        color ?? (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A));
 
     return Container(
       decoration: BoxDecoration(
@@ -103,6 +104,8 @@ class QuickActionsBar extends StatelessWidget {
                   height: 38,
                   child: Image.asset(
                     imageAsset,
+                    cacheWidth: 114,
+                    cacheHeight: 114,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Container(
                       padding: const EdgeInsets.all(7),
@@ -120,7 +123,9 @@ class QuickActionsBar extends StatelessWidget {
                   style: GoogleFonts.prompt(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : const Color(0xFF1E293B),
                     letterSpacing: -0.2,
                   ),
                   maxLines: 1,

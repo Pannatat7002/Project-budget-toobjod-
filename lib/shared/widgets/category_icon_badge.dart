@@ -49,6 +49,8 @@ class CategoryIconBadge extends StatelessWidget {
                 resolvedAsset,
                 width: size * 0.90,
                 height: size * 0.90,
+                cacheWidth: (size * 3).round(),
+                cacheHeight: (size * 3).round(),
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Icon(
                   icon,

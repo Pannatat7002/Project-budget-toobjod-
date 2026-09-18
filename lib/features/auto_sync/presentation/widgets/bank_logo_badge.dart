@@ -77,6 +77,8 @@ class BankLogoBadge extends StatelessWidget {
             profile.logoAsset,
             width: size,
             height: size,
+            cacheWidth: (size * 3).round(),
+            cacheHeight: (size * 3).round(),
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => _buildFallback(brandColor, profile.icon, profile.shortName, r),
           ),

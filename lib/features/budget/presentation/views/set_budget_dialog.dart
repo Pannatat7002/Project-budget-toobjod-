@@ -128,6 +128,8 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                         'assets/images/action_budget.png',
                         width: 32,
                         height: 32,
+                        cacheWidth: 96,
+                        cacheHeight: 96,
                         fit: BoxFit.contain,
                       ),
                       const SizedBox(width: 10),
@@ -233,6 +235,8 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                             child: Center(
                               child: Image.asset(
                                 cat.imageAsset,
+                                cacheWidth: 114,
+                                cacheHeight: 114,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) => CategoryIconBadge(
                                   icon: cat.icon,

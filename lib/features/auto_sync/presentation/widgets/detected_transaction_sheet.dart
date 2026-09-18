@@ -322,6 +322,8 @@ class _DetectedTransactionSheetState extends State<DetectedTransactionSheet> {
                                 child: ClipOval(
                                   child: Image.asset(
                                     'assets/images/mascot_ai_dog_avatar.png',
+                                    cacheWidth: 60,
+                                    cacheHeight: 60,
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: Colors.white, size: 12),
                                   ),
@@ -553,6 +555,8 @@ class _DetectedTransactionSheetState extends State<DetectedTransactionSheet> {
                                           cat.imageAsset,
                                           width: 18,
                                           height: 18,
+                                          cacheWidth: 54,
+                                          cacheHeight: 54,
                                           fit: BoxFit.contain,
                                           errorBuilder: (_, __, ___) => Icon(
                                             cat.icon,

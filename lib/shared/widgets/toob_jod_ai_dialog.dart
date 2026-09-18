@@ -129,12 +129,18 @@ class _ToobJodAiDialogState extends State<ToobJodAiDialog> {
                           child: ClipOval(
                             child: Image.asset(
                               'assets/images/mascot_ai_dog_avatar.png',
+                              cacheWidth: 90,
+                              cacheHeight: 90,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Image.asset(
                                 'assets/images/mascot_ai_dog.png',
+                                cacheWidth: 90,
+                                cacheHeight: 90,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Image.asset(
                                   'assets/images/mascot_avatar.jpg',
+                                  cacheWidth: 90,
+                                  cacheHeight: 90,
                                   fit: BoxFit.cover,
                                 ),
                               ),

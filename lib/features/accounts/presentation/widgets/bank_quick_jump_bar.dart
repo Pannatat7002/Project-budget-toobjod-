@@ -144,6 +144,8 @@ class BankQuickJumpBar extends StatelessWidget {
                     padding: const EdgeInsets.all(1.5),
                     child: Image.asset(
                       logoAsset,
+                      cacheWidth: 54,
+                      cacheHeight: 54,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => Icon(icon, size: 12, color: color),
                     ),

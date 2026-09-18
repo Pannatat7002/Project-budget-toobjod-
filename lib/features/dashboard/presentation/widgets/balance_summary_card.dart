@@ -69,6 +69,8 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
                     child: ClipOval(
                       child: Image.asset(
                         'assets/images/mascot_avatar.jpg',
+                        cacheWidth: 60,
+                        cacheHeight: 60,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.pets, color: Color(0xFFFDB813), size: 16),
                       ),
@@ -153,6 +155,8 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
                         'assets/images/action_income.png',
                         width: 30,
                         height: 30,
+                        cacheWidth: 90,
+                        cacheHeight: 90,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Container(
                           padding: const EdgeInsets.all(7),
@@ -208,6 +212,8 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
                         'assets/images/action_expense.png',
                         width: 30,
                         height: 30,
+                        cacheWidth: 90,
+                        cacheHeight: 90,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Container(
                           padding: const EdgeInsets.all(7),

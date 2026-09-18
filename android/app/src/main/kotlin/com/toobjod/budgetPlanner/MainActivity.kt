@@ -201,6 +201,8 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun tryRebindNotificationListener() {
-        BankNotificationListenerService.rebindService(this)
+        if (!BankNotificationListenerService.isServiceConnected) {
+            BankNotificationListenerService.rebindService(this)
+        }
     }
 }

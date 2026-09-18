@@ -101,6 +101,8 @@ class TransactionFilterBar extends StatelessWidget {
                   imageAsset,
                   width: 14,
                   height: 14,
+                  cacheWidth: 42,
+                  cacheHeight: 42,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 4),

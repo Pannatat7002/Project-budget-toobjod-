@@ -511,6 +511,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                   child: Center(
                                     child: Image.asset(
                                       cat.imageAsset,
+                                      cacheWidth: 108,
+                                      cacheHeight: 108,
                                       fit: BoxFit.contain,
                                       errorBuilder: (_, __, ___) => CategoryIconBadge(
                                         icon: cat.icon,
@@ -667,6 +669,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               imageAsset,
               width: 22,
               height: 22,
+              cacheWidth: 66,
+              cacheHeight: 66,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => Icon(
                 icon,
@@ -754,6 +758,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                             child: ClipOval(
                               child: Image.asset(
                                 acc.logoAsset,
+                                cacheWidth: 60,
+                                cacheHeight: 60,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) => const Icon(
                                   Icons.account_balance,

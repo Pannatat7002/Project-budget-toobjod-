@@ -336,9 +336,13 @@ class BankCardItem extends StatelessWidget {
               height: 120,
               child: Image.asset(
                 'assets/images/mascot_dog_peek.png',
+                cacheWidth: 240,
+                cacheHeight: 240,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Image.asset(
                   'assets/images/mascot_avatar.jpg',
+                  cacheWidth: 240,
+                  cacheHeight: 240,
                   fit: BoxFit.contain,
                 ),
               ),
@@ -493,6 +497,8 @@ class BankCardItem extends StatelessWidget {
           padding: const EdgeInsets.all(6.0),
           child: Image.asset(
             acc.logoAsset,
+            cacheWidth: 90,
+            cacheHeight: 90,
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => const Icon(
               Icons.account_balance,
