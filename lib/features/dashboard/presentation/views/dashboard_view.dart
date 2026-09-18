@@ -377,7 +377,7 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                       const SizedBox(height: 10),
 
-                      // 2. Unified Dashboard Actions Grid (ซ้าย: ตั้งงบ, แผนใช้จ่าย, วิเคราะห์ / ขวา: รับเงินเข้า, จ่ายเงินออก)
+                      // 2. Unified Dashboard Actions Grid (ซ้าย: วิเคราะห์ขยายเต็ม / ขวา: รับเงินเข้า, จ่ายเงินออก)
                       DashboardActionsGrid(
                         onAddIncome: () => AddTransactionSheet.show(
                           context,
@@ -389,7 +389,6 @@ class _DashboardViewState extends State<DashboardView> {
                           initialType: TransactionType.expense,
                           initialBankId: accountState.selectedBankId,
                         ),
-                        onSetBudget: () => context.push('/budgets'),
                         onAnalytics: () => context.push('/analytics'),
                       ),
                       const SizedBox(height: 10),
@@ -676,7 +675,91 @@ class _DashboardViewState extends State<DashboardView> {
         final progress = budgetState.totalProgressPercentage;
 
         if (totalLimit == 0) {
-          return const SizedBox.shrink();
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => context.push('/budgets'),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.darkBorderSubtle
+                        : AppColors.lightBorderSubtle,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDB813).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      padding: const EdgeInsets.all(7),
+                      child: Image.asset(
+                        'assets/images/action_budget.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.pie_chart_rounded,
+                          color: Color(0xFFD97706),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ตั้งงบประมาณ',
+                            style: GoogleFonts.prompt(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.5,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 1.5),
+                          Text(
+                            'วางแผนคุมงบประมาณรายหมวด 🐾',
+                            style: GoogleFonts.prompt(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         }
 
         final percentage = (progress * 100).toInt();

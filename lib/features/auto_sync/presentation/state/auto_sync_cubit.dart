@@ -7,6 +7,7 @@ import '../../../transactions/presentation/state/transaction_state.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
+import '../../domain/entities/swipe_history_record.dart';
 import '../../domain/repositories/auto_sync_repository.dart';
 import 'auto_sync_state.dart';
 
@@ -317,9 +318,19 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     }
     await repository.markAsSaved(detected);
     final updatedPending = await repository.getPendingTransactions();
+
+    // 📋 บันทึกประวัติการปัด
+    final record = _buildSwipeRecord(
+      detected: detected,
+      result: SwipeResult.confirmed,
+      confirmedCategoryId: customEntity?.categoryId ?? detected.suggestedCategoryId,
+      confirmedCategoryName: customEntity?.categoryName ?? detected.suggestedCategoryName,
+    );
+
     emit(state.copyWith(
       pendingTransactions: updatedPending,
       clearLatestDetected: true,
+      swipeHistory: [...state.swipeHistory, record],
     ));
   }
 
@@ -329,9 +340,19 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     await transactionCubit.deleteTransaction(detected.id);
     await repository.markAsDiscarded(detected);
     final updatedPending = await repository.getPendingTransactions();
+
+    // 📋 บันทึกประวัติการปัด
+    final record = _buildSwipeRecord(
+      detected: detected,
+      result: SwipeResult.discarded,
+      confirmedCategoryId: detected.suggestedCategoryId,
+      confirmedCategoryName: detected.suggestedCategoryName,
+    );
+
     emit(state.copyWith(
       pendingTransactions: updatedPending,
       clearLatestDetected: true,
+      swipeHistory: [...state.swipeHistory, record],
     ));
   }
 
@@ -353,9 +374,19 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       await repository.markAsSaved(tx);
     }
     final updatedPending = await repository.getPendingTransactions();
+
+    // 📋 บันทึกประวัติการปัดแบบ bulk
+    final newRecords = pending.map((tx) => _buildSwipeRecord(
+      detected: tx,
+      result: SwipeResult.confirmed,
+      confirmedCategoryId: tx.suggestedCategoryId,
+      confirmedCategoryName: tx.suggestedCategoryName,
+    )).toList();
+
     emit(state.copyWith(
       pendingTransactions: updatedPending,
       clearLatestDetected: true,
+      swipeHistory: [...state.swipeHistory, ...newRecords],
     ));
   }
 
@@ -367,9 +398,19 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       await repository.markAsDiscarded(tx);
     }
     final updatedPending = await repository.getPendingTransactions();
+
+    // 📋 บันทึกประวัติการปัดแบบ bulk
+    final newRecords = pending.map((tx) => _buildSwipeRecord(
+      detected: tx,
+      result: SwipeResult.discarded,
+      confirmedCategoryId: tx.suggestedCategoryId,
+      confirmedCategoryName: tx.suggestedCategoryName,
+    )).toList();
+
     emit(state.copyWith(
       pendingTransactions: updatedPending,
       clearLatestDetected: true,
+      swipeHistory: [...state.swipeHistory, ...newRecords],
     ));
   }
 
@@ -384,6 +425,34 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
 
   void clearLatestDetected() {
     emit(state.copyWith(clearLatestDetected: true));
+  }
+
+  /// Clear swipe history
+  void clearSwipeHistory() {
+    emit(state.copyWith(swipeHistory: []));
+  }
+
+  /// Helper: สร้าง SwipeHistoryRecord จาก DetectedTransaction
+  SwipeHistoryRecord _buildSwipeRecord({
+    required DetectedTransaction detected,
+    required SwipeResult result,
+    required String confirmedCategoryId,
+    required String confirmedCategoryName,
+  }) {
+    return SwipeHistoryRecord(
+      id: detected.id,
+      swipedAt: DateTime.now(),
+      title: detected.title,
+      bankShortName: detected.bankShortName,
+      type: detected.type,
+      amount: detected.amount,
+      suggestedCategoryId: detected.suggestedCategoryId,
+      suggestedCategoryName: detected.suggestedCategoryName,
+      confirmedCategoryId: confirmedCategoryId,
+      confirmedCategoryName: confirmedCategoryName,
+      swipeResult: result,
+      rawText: detected.rawText,
+    );
   }
 
   @override

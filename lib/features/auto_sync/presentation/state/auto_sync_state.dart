@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/detected_transaction.dart';
+import '../../domain/entities/swipe_history_record.dart';
 
 class AutoSyncState extends Equatable {
   final bool isPermissionGranted;
@@ -12,6 +13,7 @@ class AutoSyncState extends Equatable {
   final DetectedTransaction? latestDetected;
   final bool isLoading;
   final String? errorMessage;
+  final List<SwipeHistoryRecord> swipeHistory;
 
   const AutoSyncState({
     this.isPermissionGranted = false,
@@ -24,6 +26,7 @@ class AutoSyncState extends Equatable {
     this.latestDetected,
     this.isLoading = false,
     this.errorMessage,
+    this.swipeHistory = const [],
   });
 
   AutoSyncState copyWith({
@@ -38,6 +41,7 @@ class AutoSyncState extends Equatable {
     bool clearLatestDetected = false,
     bool? isLoading,
     String? errorMessage,
+    List<SwipeHistoryRecord>? swipeHistory,
   }) {
     return AutoSyncState(
       isPermissionGranted: isPermissionGranted ?? this.isPermissionGranted,
@@ -52,6 +56,7 @@ class AutoSyncState extends Equatable {
           clearLatestDetected ? null : (latestDetected ?? this.latestDetected),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
+      swipeHistory: swipeHistory ?? this.swipeHistory,
     );
   }
 
@@ -67,5 +72,6 @@ class AutoSyncState extends Equatable {
         latestDetected,
         isLoading,
         errorMessage,
+        swipeHistory,
       ];
 }

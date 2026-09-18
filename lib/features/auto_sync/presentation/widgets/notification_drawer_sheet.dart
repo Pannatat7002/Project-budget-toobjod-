@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -11,6 +11,7 @@ import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../domain/entities/detected_transaction.dart';
 import '../state/auto_sync_cubit.dart';
 import '../state/auto_sync_state.dart';
+import '../views/swipe_history_view.dart';
 import 'bank_logo_badge.dart';
 
 class NotificationDrawerSheet extends StatelessWidget {
@@ -29,13 +30,18 @@ class NotificationDrawerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subtextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return BlocListener<AutoSyncCubit, AutoSyncState>(
       listenWhen: (previous, current) =>
-          previous.pendingTransactions.isNotEmpty && current.pendingTransactions.isEmpty,
+          previous.pendingTransactions.isNotEmpty &&
+          current.pendingTransactions.isEmpty,
       listener: (context, state) {
         // Automatically close the sheet when all items are cleared
         if (Navigator.of(context).canPop()) {
@@ -44,343 +50,365 @@ class NotificationDrawerSheet extends StatelessWidget {
       },
       child: BlocBuilder<AutoSyncCubit, AutoSyncState>(
         builder: (context, state) {
-          final isEmpty = state.pendingTransactions.isEmpty;
-          return Container(
+          final list = state.pendingTransactions;
+          final isEmpty = list.isEmpty;
+          final count = list.length;
+
+          return ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * (isEmpty ? 0.38 : 0.75),
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
             ),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(isDark ? 80 : 15),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
+            child: Container(
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
-              ],
-            ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Top Handle Bar
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10, bottom: 6),
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: subtextColor.withAlpha(70),
-                    borderRadius: BorderRadius.circular(2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(isDark ? 80 : 15),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
                   ),
-                ),
+                ],
               ),
-
-              // Header Row
-              BlocBuilder<AutoSyncCubit, AutoSyncState>(
-                builder: (context, state) {
-                  final count = state.pendingTransactions.length;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(isDark ? 35 : 20),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.receipt_long_rounded,
-                            color: AppColors.primary,
-                            size: 16,
-                          ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Top Handle Bar
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 10, bottom: 6),
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: subtextColor.withAlpha(70),
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'รายการตรวจพบ',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: textColor,
-                          ),
-                        ),
-                        if (count > 0) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '$count',
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                        const Spacer(),
-                        IconButton(
-                          icon: Icon(Icons.close_rounded, size: 20, color: subtextColor),
-                          onPressed: () => Navigator.pop(context),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-              // Gesture Helper Guide (Visual Indicator for One-Handed Use)
-              BlocBuilder<AutoSyncCubit, AutoSyncState>(
-                builder: (context, state) {
-                  if (state.pendingTransactions.isEmpty) return const SizedBox.shrink();
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCard : AppColors.lightBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Left Action Guide
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: AppColors.expense.withAlpha(25),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.arrow_back_rounded, size: 12, color: AppColors.expense),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'ปัดซ้าย: ลบออก',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.expense,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: 1,
-                          height: 14,
-                          color: subtextColor.withAlpha(60),
-                        ),
-                        // Right Action Guide
-                        Row(
-                          children: [
-                            const Text(
-                              'ปัดขวา: บันทึก',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.income,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: AppColors.income.withAlpha(25),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.arrow_forward_rounded, size: 12, color: AppColors.income),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-              Divider(height: 1, color: borderColor),
-
-              // Content List
-              Expanded(
-                child: BlocBuilder<AutoSyncCubit, AutoSyncState>(
-                  builder: (context, state) {
-                    final list = state.pendingTransactions;
-
-                    if (list.isEmpty) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.income.withAlpha(25),
-                                ),
-                                child: const Icon(
-                                  Icons.check_circle_rounded,
-                                  color: AppColors.income,
-                                  size: 30,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'ตรวจทานครบเรียบร้อยแล้ว 🐾',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'ทุกรายการบันทึกลงระบบให้เรียบร้อยแล้วครับ',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: subtextColor,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              OutlinedButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  context.push('/auto-sync-settings');
-                                },
-                                icon: const Icon(Icons.tune_rounded, size: 16),
-                                label: const Text(
-                                  'ไปที่การตั้งค่าตรวจจับธนาคาร',
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.primary,
-                                  side: BorderSide(color: AppColors.primary.withAlpha(120)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                      itemCount: list.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final item = list[index];
-                        return _DismissibleNotificationCard(
-                          key: ValueKey(item.id),
-                          transaction: item,
-                          isDark: isDark,
-                          borderColor: borderColor,
-                          textColor: textColor,
-                          subtextColor: subtextColor,
-                          onConfirm: (customEntity) {
-                            context.read<AutoSyncCubit>().confirmTransaction(
-                                  item,
-                                  customEntity: customEntity,
-                                );
-                          },
-                          onDiscard: () {
-                            context.read<AutoSyncCubit>().discardTransaction(item);
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              // Bottom Thumb Quick Action Bar (for One-Handed Bulk Action)
-              BlocBuilder<AutoSyncCubit, AutoSyncState>(
-                builder: (context, state) {
-                  if (state.pendingTransactions.length > 1) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : AppColors.lightBackground,
-                        border: Border(top: BorderSide(color: borderColor)),
                       ),
+                    ),
+
+                    // Header Row: Title, Counter, History Button, and Close Button
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(
+                                isDark ? 35 : 20,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.receipt_long_rounded,
+                              color: AppColors.primary,
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'รายการตรวจพบ',
+                            style: GoogleFonts.prompt(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: textColor,
+                            ),
+                          ),
+                          if (count > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '$count',
+                                style: GoogleFonts.prompt(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          // ปุ่มไปที่หน้าประวัติการตรวจจับ (คู่กับปุ่มปิด)
                           TextButton.icon(
                             onPressed: () {
-                              context.read<AutoSyncCubit>().discardAllPending();
-                              TopToast.show(
-                                context,
-                                message: '🗑️ ลบรายการค้างตรวจทานทั้งหมดแล้ว',
-                                isSuccess: false,
-                              );
+                              Navigator.pop(context);
+                              SwipeHistoryView.show(context);
                             },
-                            icon: const Icon(Icons.delete_outline_rounded, size: 15, color: AppColors.expense),
-                            label: const Text(
-                              'ลบทั้งหมด',
-                              style: TextStyle(
+                            icon: const Icon(Icons.history_rounded, size: 15),
+                            label: Text(
+                              state.swipeHistory.isEmpty
+                                  ? 'ประวัติ'
+                                  : 'ประวัติ (${state.swipeHistory.length})',
+                              style: GoogleFonts.prompt(
                                 fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.expense,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              foregroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               visualDensity: VisualDensity.compact,
                             ),
                           ),
-                          TextButton.icon(
-                            onPressed: () {
-                              context.read<AutoSyncCubit>().confirmAllPending();
-                              TopToast.show(
-                                context,
-                                message: '✅ บันทึกรายการทั้งหมดเรียบร้อย',
-                                isSuccess: true,
-                              );
-                            },
-                            icon: const Icon(Icons.done_all_rounded, size: 15, color: AppColors.income),
-                            label: const Text(
-                              'บันทึกทั้งหมด',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.income,
-                              ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.close_rounded,
+                              size: 20,
+                              color: subtextColor,
                             ),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              visualDensity: VisualDensity.compact,
+                            onPressed: () => Navigator.pop(context),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
                             ),
                           ),
                         ],
                       ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+                    ),
+
+                    // Gesture Helper Guide (Visual Indicator for One-Handed Use)
+                    if (!isEmpty)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Left Action Guide
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.expense.withAlpha(25),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    size: 12,
+                                    color: AppColors.expense,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'ปัดซ้าย: ลบออก',
+                                  style: GoogleFonts.prompt(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.expense,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: 1,
+                              height: 14,
+                              color: subtextColor.withAlpha(60),
+                            ),
+                            // Right Action Guide
+                            Row(
+                              children: [
+                                Text(
+                                  'ปัดขวา: บันทึก',
+                                  style: GoogleFonts.prompt(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.income,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.income.withAlpha(25),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 12,
+                                    color: AppColors.income,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    Divider(height: 1, color: borderColor),
+
+                    // Content List: shrinkWrap & Flexible to show height based on items
+                    if (isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 28,
+                        ),
+                        child: Center(
+                          child: Text(
+                            'ไม่พบรายการ 🐾',
+                            style: GoogleFonts.prompt(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                          itemCount: list.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final item = list[index];
+                            return _DismissibleNotificationCard(
+                              key: ValueKey(item.id),
+                              transaction: item,
+                              isDark: isDark,
+                              borderColor: borderColor,
+                              textColor: textColor,
+                              subtextColor: subtextColor,
+                              onConfirm: (customEntity) {
+                                context
+                                    .read<AutoSyncCubit>()
+                                    .confirmTransaction(
+                                      item,
+                                      customEntity: customEntity,
+                                    );
+                              },
+                              onDiscard: () {
+                                context
+                                    .read<AutoSyncCubit>()
+                                    .discardTransaction(item);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+
+                    // Bottom Thumb Quick Action Bar (for One-Handed Bulk Action)
+                    if (list.length > 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightBackground,
+                          border: Border(top: BorderSide(color: borderColor)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () {
+                                context
+                                    .read<AutoSyncCubit>()
+                                    .discardAllPending();
+                                TopToast.show(
+                                  context,
+                                  message: '🗑️ ลบรายการค้างตรวจทานทั้งหมดแล้ว',
+                                  isSuccess: false,
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 15,
+                                color: AppColors.expense,
+                              ),
+                              label: Text(
+                                'ลบทั้งหมด',
+                                style: GoogleFonts.prompt(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.expense,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () {
+                                context
+                                    .read<AutoSyncCubit>()
+                                    .confirmAllPending();
+                                TopToast.show(
+                                  context,
+                                  message: '✅ บันทึกรายการทั้งหมดเรียบร้อย',
+                                  isSuccess: true,
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.done_all_rounded,
+                                size: 15,
+                                color: AppColors.income,
+                              ),
+                              label: Text(
+                                'บันทึกทั้งหมด',
+                                style: GoogleFonts.prompt(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.income,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      );
-    },
-  ),
-);
-}
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _DismissibleNotificationCard extends StatefulWidget {
@@ -404,10 +432,12 @@ class _DismissibleNotificationCard extends StatefulWidget {
   });
 
   @override
-  State<_DismissibleNotificationCard> createState() => _DismissibleNotificationCardState();
+  State<_DismissibleNotificationCard> createState() =>
+      _DismissibleNotificationCardState();
 }
 
-class _DismissibleNotificationCardState extends State<_DismissibleNotificationCard> {
+class _DismissibleNotificationCardState
+    extends State<_DismissibleNotificationCard> {
   late String _categoryId;
   late String _categoryName;
   late int _categoryIconCode;
@@ -467,14 +497,21 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
                       },
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Color(cat.colorValue)
-                              : (widget.isDark ? AppColors.darkCard : AppColors.lightBorderSubtle),
+                              : (widget.isDark
+                                    ? AppColors.darkCard
+                                    : AppColors.lightBorderSubtle),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isSelected ? Color(cat.colorValue) : widget.borderColor,
+                            color: isSelected
+                                ? Color(cat.colorValue)
+                                : widget.borderColor,
                             width: 0.8,
                           ),
                         ),
@@ -491,7 +528,9 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
                               errorBuilder: (_, __, ___) => Icon(
                                 cat.icon,
                                 size: 13,
-                                color: isSelected ? Colors.white : Color(cat.colorValue),
+                                color: isSelected
+                                    ? Colors.white
+                                    : Color(cat.colorValue),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -499,8 +538,12 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
                               cat.name,
                               style: TextStyle(
                                 fontSize: 11.5,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                color: isSelected ? Colors.white : widget.textColor,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : widget.textColor,
                               ),
                             ),
                           ],
@@ -561,7 +604,11 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
         ),
         child: const Row(
           children: [
-            Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 22),
+            Icon(
+              Icons.check_circle_outline_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
             SizedBox(width: 8),
             Text(
               'ยืนยันบันทึก',
@@ -705,17 +752,30 @@ class _DismissibleNotificationCardState extends State<_DismissibleNotificationCa
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Icon(Icons.arrow_drop_down, size: 12, color: widget.subtextColor),
+                              Icon(
+                                Icons.arrow_drop_down,
+                                size: 12,
+                                color: widget.subtextColor,
+                              ),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text('•', style: TextStyle(fontSize: 9, color: widget.subtextColor.withAlpha(120))),
+                      Text(
+                        '•',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: widget.subtextColor.withAlpha(120),
+                        ),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         DateFormatter.formatRelativeWithTime(tx.timestamp),
-                        style: TextStyle(fontSize: 10, color: widget.subtextColor),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: widget.subtextColor,
+                        ),
                       ),
                     ],
                   ),

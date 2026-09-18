@@ -39,13 +39,16 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor =
-        isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final bgColor = isDark
+        ? AppColors.darkBackground
+        : AppColors.lightBackground;
     final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subtextColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return BlocConsumer<AutoSyncCubit, AutoSyncState>(
@@ -111,8 +114,9 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
         return Scaffold(
           backgroundColor: bgColor,
           appBar: AppBar(
-            backgroundColor:
-                isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            backgroundColor: isDark
+                ? AppColors.darkSurface
+                : AppColors.lightSurface,
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
@@ -151,24 +155,27 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: (isGranted
-                                    ? AppColors.success
-                                    : AppColors.primary)
-                                .withAlpha(isDark ? 40 : 25),
+                            color:
+                                (isGranted
+                                        ? AppColors.success
+                                        : AppColors.primary)
+                                    .withAlpha(isDark ? 40 : 25),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: (isGranted
-                                      ? AppColors.success
-                                      : AppColors.primary)
-                                  .withAlpha(isDark ? 90 : 120),
+                              color:
+                                  (isGranted
+                                          ? AppColors.success
+                                          : AppColors.primary)
+                                      .withAlpha(isDark ? 90 : 120),
                               width: 2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: (isGranted
-                                        ? AppColors.success
-                                        : AppColors.primary)
-                                    .withAlpha(isDark ? 30 : 15),
+                                color:
+                                    (isGranted
+                                            ? AppColors.success
+                                            : AppColors.primary)
+                                        .withAlpha(isDark ? 30 : 15),
                                 blurRadius: 20,
                                 offset: const Offset(0, 6),
                               ),
@@ -193,16 +200,18 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: (isGranted
-                                    ? AppColors.success
-                                    : AppColors.primary)
-                                .withAlpha(isDark ? 35 : 20),
+                            color:
+                                (isGranted
+                                        ? AppColors.success
+                                        : AppColors.primary)
+                                    .withAlpha(isDark ? 35 : 20),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: (isGranted
-                                      ? AppColors.success
-                                      : AppColors.primary)
-                                  .withAlpha(isDark ? 90 : 120),
+                              color:
+                                  (isGranted
+                                          ? AppColors.success
+                                          : AppColors.primary)
+                                      .withAlpha(isDark ? 90 : 120),
                             ),
                           ),
                           child: Text(
@@ -214,11 +223,11 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                               fontWeight: FontWeight.w600,
                               color: isGranted
                                   ? (isDark
-                                      ? const Color(0xFF4ADE80)
-                                      : const Color(0xFF047857))
+                                        ? const Color(0xFF4ADE80)
+                                        : const Color(0xFF047857))
                                   : (isDark
-                                      ? AppColors.primaryLight
-                                      : AppColors.primaryDark),
+                                        ? AppColors.primaryLight
+                                        : AppColors.primaryDark),
                             ),
                           ),
                         ),
@@ -316,10 +325,11 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: (state.isAutoSyncEnabled
-                                            ? AppColors.success
-                                            : subtextColor)
-                                        .withAlpha(25),
+                                    color:
+                                        (state.isAutoSyncEnabled
+                                                ? AppColors.success
+                                                : subtextColor)
+                                            .withAlpha(25),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
@@ -362,8 +372,7 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                                 Switch.adaptive(
                                   value: state.isAutoSyncEnabled,
                                   activeTrackColor: AppColors.success,
-                                  onChanged: (val) =>
-                                      cubit.toggleAutoSync(val),
+                                  onChanged: (val) => cubit.toggleAutoSync(val),
                                 ),
                               ],
                             ),
@@ -383,8 +392,9 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                     MediaQuery.of(context).padding.bottom + 14,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                    color: isDark
+                        ? AppColors.darkSurface
+                        : AppColors.lightSurface,
                     border: Border(
                       top: BorderSide(
                         color: isDark
@@ -408,7 +418,7 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                               size: 20,
                             ),
                             label: Text(
-                              'ไปหน้าตั้งค่า Android (เพื่อปิดสิทธิ์) ⚙️',
+                              'ไปหน้าตั้งค่า > เพื่อปิดสิทธ์',
                               style: GoogleFonts.prompt(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -436,7 +446,7 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
                               size: 20,
                             ),
                             label: Text(
-                              'ไปหน้าตั้งค่า Android (เปิดสิทธิ์) ⚙️',
+                              'ไปหน้าตั้งค่า > เปิดสิทธิ์ ⚙️',
                               style: GoogleFonts.prompt(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -501,9 +511,7 @@ class _NotificationPermissionViewState extends State<NotificationPermissionView>
           decoration: BoxDecoration(
             color: AppColors.primary.withAlpha(25),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.primary.withAlpha(80),
-            ),
+            border: Border.all(color: AppColors.primary.withAlpha(80)),
           ),
           alignment: Alignment.center,
           child: Text(

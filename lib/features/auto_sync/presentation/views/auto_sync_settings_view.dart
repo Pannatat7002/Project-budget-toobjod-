@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../domain/entities/bank_profile.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
@@ -71,8 +72,8 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
         ),
         title: Text(
           'ตรวจจับแจ้งเตือนธนาคาร',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.prompt(
+            fontWeight: FontWeight.w700,
             fontSize: 18,
             color: textColor,
           ),
@@ -93,8 +94,12 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                 final profile = BankProfile.findById(acc.bankId);
                 if (profile == null) return true;
                 if (state.enabledBankPackages.isEmpty) return true;
-                return state.enabledBankPackages.contains(profile.packageName) ||
-                    profile.packageAliases.any((a) => state.enabledBankPackages.contains(a));
+                return state.enabledBankPackages.contains(
+                      profile.packageName,
+                    ) ||
+                    profile.packageAliases.any(
+                      (a) => state.enabledBankPackages.contains(a),
+                    );
               }).length;
 
               final String bankBadgeText;
@@ -113,47 +118,71 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                 bankBadgeColor = AppColors.primary;
               }
 
-              final Widget bankLeadingWidget;
+              final Widget bankIconWidget;
               if (userAccounts.isEmpty) {
-                bankLeadingWidget = Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(25),
-                    borderRadius: BorderRadius.circular(14),
+                bankIconWidget = _buildGradientIcon(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: const Icon(
-                    Icons.account_balance_rounded,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
+                  icon: Icons.account_balance_rounded,
                 );
               } else if (userAccounts.length == 1) {
                 final singleAcc = userAccounts.first;
-                bankLeadingWidget = BankLogoBadge(
-                  bankId: singleAcc.bankId,
-                  fallbackShortName: singleAcc.shortName,
-                  fallbackColorValue: singleAcc.brandColor,
-                  size: 44,
-                  borderRadius: 14,
+                bankIconWidget = Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(singleAcc.brandColor).withAlpha(60),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: BankLogoBadge(
+                    bankId: singleAcc.bankId,
+                    fallbackShortName: singleAcc.shortName,
+                    fallbackColorValue: singleAcc.brandColor,
+                    size: 46,
+                    borderRadius: 15,
+                  ),
                 );
               } else {
                 final displayAccounts = userAccounts.take(3).toList();
-                bankLeadingWidget = SizedBox(
+                bankIconWidget = Container(
                   width: 46,
-                  height: 36,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3B82F6).withAlpha(70),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
                   child: Stack(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.center,
                     children: [
                       for (int i = 0; i < displayAccounts.length; i++)
                         Positioned(
-                          left: i * 11.0,
+                          left: 4.0 + (i * 10.0),
                           child: BankLogoBadge(
                             bankId: displayAccounts[i].bankId,
                             fallbackShortName: displayAccounts[i].shortName,
                             fallbackColorValue: displayAccounts[i].brandColor,
-                            size: 26,
-                            borderRadius: 8,
+                            size: 22,
+                            borderRadius: 7,
                           ),
                         ),
                     ],
@@ -162,375 +191,205 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
               }
 
               return ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                children: [
-              // 1. ปุ่ม: สิทธิ์การเข้าถึงแจ้งเตือน
-              _buildMenuItem(
-                isDark: isDark,
-                cardColor: cardColor,
-                textColor: textColor,
-                subtextColor: subtextColor,
-                borderColor: borderColor,
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isGranted
-                        ? AppColors.success.withAlpha(25)
-                        : AppColors.primary.withAlpha(25),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    isGranted
-                        ? Icons.check_circle_rounded
-                        : Icons.notifications_active_rounded,
-                    color: isGranted ? AppColors.success : AppColors.primary,
-                    size: 24,
-                  ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 18,
                 ),
-                title: 'สิทธิ์การเข้าถึงแจ้งเตือน',
-                subtitle: isGranted
-                    ? 'เปิดใช้งานแล้ว (แตะเพื่อจัดการหรือปิดสิทธิ์)'
-                    : 'จำเป็นต้องเปิดสิทธิ์ Notification Access',
-                badgeText: isGranted
-                    ? 'เปิดแล้ว ✅'
-                    : 'สถานะ: รอการเปิดสิทธิ์ ⏳',
-                badgeColor: isGranted ? AppColors.success : AppColors.warning,
-                onTap: () => context.push('/notification-permission'),
-              ),
-              const SizedBox(height: 14),
-
-              // 2. ปุ่ม: ปิดการประหยัดแบตเตอรี่ (Battery Optimization)
-              _buildMenuItem(
-                isDark: isDark,
-                cardColor: cardColor,
-                textColor: textColor,
-                subtextColor: subtextColor,
-                borderColor: borderColor,
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isBatteryIgnored
-                        ? AppColors.success.withAlpha(25)
-                        : const Color(0xFFF59E0B).withAlpha(25),
-                    borderRadius: BorderRadius.circular(14),
+                children: [
+                  // 1. เมนู: สิทธิ์การเข้าถึงแจ้งเตือน
+                  _buildMenuItem(
+                    isDark: isDark,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    borderColor: borderColor,
+                    leading: _buildGradientIcon(
+                      gradient: isGranted
+                          ? const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF059669)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : const LinearGradient(
+                              colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      icon: isGranted
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_none_rounded,
+                    ),
+                    title: 'สิทธิ์การเข้าถึงแจ้งเตือน',
+                    subtitle: isGranted
+                        ? 'เปิดใช้งานแล้ว (แตะเพื่อจัดการหรือปิดสิทธิ์)'
+                        : 'จำเป็นต้องเปิดสิทธิ์ Notification Access',
+                    badgeText: isGranted
+                        ? 'เปิดแล้ว ✅'
+                        : 'สถานะ: รอเปิดสิทธิ์ ⏳',
+                    badgeColor: isGranted
+                        ? AppColors.success
+                        : AppColors.warning,
+                    onTap: () => context.push('/notification-permission'),
                   ),
-                  child: Icon(
-                    isBatteryIgnored
-                        ? Icons.battery_charging_full_rounded
-                        : Icons.battery_alert_rounded,
-                    color: isBatteryIgnored
+                  const SizedBox(height: 12),
+
+                  // 2. เมนู: ซ่อมแซมการเชื่อมต่อ Service
+                  _buildMenuItem(
+                    isDark: isDark,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    borderColor: borderColor,
+                    leading: _buildGradientIcon(
+                      gradient: (isGranted && isConnected)
+                          ? const LinearGradient(
+                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : const LinearGradient(
+                              colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      icon: Icons.sync_rounded,
+                    ),
+                    title: 'ซ่อมแซมการเชื่อมต่อ',
+                    subtitle:
+                        'กดเพื่อบังคับ Rebind Service หากระบบ Android ตัดการทำงาน',
+                    badgeText: (isGranted && isConnected)
+                        ? 'เชื่อมต่อปกติ 🟢'
+                        : 'กดเชื่อมต่อใหม่ 🔄',
+                    badgeColor: (isGranted && isConnected)
+                        ? const Color(0xFF0EA5E9)
+                        : const Color(0xFFF43F5E),
+                    onTap: () async {
+                      final scaffold = ScaffoldMessenger.of(context);
+                      final success = await context
+                          .read<AutoSyncCubit>()
+                          .forceRebindService();
+                      scaffold.showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(
+                                success
+                                    ? Icons.check_circle_rounded
+                                    : Icons.error_outline_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  success
+                                      ? '🔄 สั่ง Rebind Service ดักจับแจ้งเตือนใหม่สำเร็จแล้ว!'
+                                      : '⚠️ ไม่สามารถ Rebind ได้ กรุณาตรวจสอบสิทธิ์',
+                                  style: GoogleFonts.prompt(fontSize: 13.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: success
+                              ? const Color(0xFF059669)
+                              : Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // 3. เมนู: ปิดการประหยัดแบตเตอรี่ (Battery Optimization)
+                  _buildMenuItem(
+                    isDark: isDark,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    borderColor: borderColor,
+                    leading: _buildGradientIcon(
+                      gradient: isBatteryIgnored
+                          ? const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF059669)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : const LinearGradient(
+                              colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      icon: isBatteryIgnored
+                          ? Icons.battery_charging_full_rounded
+                          : Icons.battery_saver_rounded,
+                    ),
+                    title: 'การประหยัดแบตเตอรี่',
+                    subtitle: isBatteryIgnored
+                        ? 'ไม่จำกัดการทำงานเบื้องหลัง (พร้อมดักจับตลอดเวลา)'
+                        : 'แนะนำให้ตั้งเป็น "ไม่จำกัด" เพื่อไม่ให้ Android ฆ่าระบบตรวจจับ',
+                    badgeText: isBatteryIgnored
+                        ? 'ไม่จำกัด ✅'
+                        : 'แนะนำตั้งค่า ⚡',
+                    badgeColor: isBatteryIgnored
                         ? AppColors.success
                         : const Color(0xFFF59E0B),
-                    size: 24,
+                    onTap: () => context
+                        .read<AutoSyncCubit>()
+                        .requestIgnoreBatteryOptimization(),
                   ),
-                ),
-                title: 'การประหยัดแบตเตอรี่',
-                subtitle: isBatteryIgnored
-                    ? 'ไม่จำกัดการทำงานเบื้องหลัง (พร้อมดักจับตลอดเวลา)'
-                    : 'แนะนำให้ตั้งเป็น "ไม่จำกัด" เพื่อไม่ให้ Android ฆ่าระบบตรวจจับ',
-                badgeText: isBatteryIgnored ? 'ไม่จำกัด ✅' : 'แนะนำตั้งค่า ⚡',
-                badgeColor: isBatteryIgnored
-                    ? AppColors.success
-                    : const Color(0xFFF59E0B),
-                onTap: () => context
-                    .read<AutoSyncCubit>()
-                    .requestIgnoreBatteryOptimization(),
-              ),
-              const SizedBox(height: 14),
+                  const SizedBox(height: 12),
 
-              // 3. ปุ่ม: ซ่อมแซม / รีเฟรชการเชื่อมต่อ Service
-              _buildMenuItem(
-                isDark: isDark,
-                cardColor: cardColor,
-                textColor: textColor,
-                subtextColor: subtextColor,
-                borderColor: borderColor,
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: (isGranted && isConnected)
-                        ? AppColors.income.withAlpha(25)
-                        : AppColors.primary.withAlpha(25),
-                    borderRadius: BorderRadius.circular(14),
+                  // 4. เมนู: เลือกธนาคารตรวจจับ
+                  _buildMenuItem(
+                    isDark: isDark,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    borderColor: borderColor,
+                    leading: bankIconWidget,
+                    title: 'เลือกธนาคารตรวจจับ',
+                    subtitle: connectedCount == 0
+                        ? 'แตะเพื่อเพิ่มบัญชีธนาคารและเปิดระบบตรวจจับ'
+                        : 'จัดการบัญชีและเปิด/ปิดตรวจจับรายธนาคาร',
+                    badgeText: bankBadgeText,
+                    badgeColor: bankBadgeColor,
+                    onTap: () => context.push('/bank-selection'),
                   ),
-                  child: Icon(
-                    Icons.sync_problem_rounded,
-                    color: (isGranted && isConnected)
-                        ? AppColors.income
-                        : AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-                title: 'ซ่อมแซมการเชื่อมต่อ',
-                subtitle:
-                    'กดเพื่อบังคับ Rebind Service หากระบบ Android ตัดการทำงาน',
-                badgeText: (isGranted && isConnected)
-                    ? 'เชื่อมต่อปกติ 🟢'
-                    : 'กดเชื่อมต่อใหม่ 🔄',
-                badgeColor: (isGranted && isConnected)
-                    ? AppColors.income
-                    : AppColors.primary,
-                onTap: () async {
-                  final scaffold = ScaffoldMessenger.of(context);
-                  final success = await context
-                      .read<AutoSyncCubit>()
-                      .forceRebindService();
-                  scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? '🔄 สั่ง Rebind Service ดักจับแจ้งเตือนใหม่สำเร็จแล้ว!'
-                            : '⚠️ ไม่สามารถ Rebind ได้ กรุณาตรวจสอบสิทธิ์',
-                      ),
-                      backgroundColor: success
-                          ? const Color(0xFF059669)
-                          : Colors.red,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 14),
-
-              // 4. ปุ่ม: เลือกธนาคารตรวจจับ
-              _buildMenuItem(
-                isDark: isDark,
-                cardColor: cardColor,
-                textColor: textColor,
-                subtextColor: subtextColor,
-                borderColor: borderColor,
-                leading: bankLeadingWidget,
-                title: 'เลือกธนาคารตรวจจับ',
-                subtitle: connectedCount == 0
-                    ? 'แตะเพื่อเพิ่มบัญชีธนาคารและเปิดระบบตรวจจับ'
-                    : 'จัดการบัญชีและเปิด/ปิดตรวจจับรายธนาคาร',
-                badgeText: bankBadgeText,
-                badgeColor: bankBadgeColor,
-                onTap: () => context.push('/bank-selection'),
-              ),
-              const SizedBox(height: 14),
-
-              // 5. ปุ่ม: คำแนะนำและวิธีแก้ปัญหาการตรวจจับแต่ละรุ่นมือถือ (Troubleshooting Guide)
-              // _buildMenuItem(
-              //   isDark: isDark,
-              //   cardColor: cardColor,
-              //   textColor: textColor,
-              //   subtextColor: subtextColor,
-              //   borderColor: borderColor,
-              //   leading: Container(
-              //     width: 44,
-              //     height: 44,
-              //     decoration: BoxDecoration(
-              //       color: const Color(0xFFEC4899).withAlpha(25),
-              //       borderRadius: BorderRadius.circular(14),
-              //     ),
-              //     child: const Icon(
-              //       Icons.help_outline_rounded,
-              //       color: Color(0xFFEC4899),
-              //       size: 24,
-              //     ),
-              //   ),
-              //   title: 'คู่มือแก้ปัญหาตรวจจับ',
-              //   subtitle: 'วิธีตั้งค่า Xiaomi, Samsung, Oppo และข้อจำกัดต่างๆ',
-              //   badgeText: 'คู่มือ 📖',
-              //   badgeColor: const Color(0xFFEC4899),
-              //   onTap: () => _showDeviceTroubleshootingSheet(context, isDark),
-              // ),
-            ],
+                ],
+              );
+            },
           );
         },
-      );
-    },
-  ),
-);
-  }
-
-  // ignore: unused_element
-  void _showDeviceTroubleshootingSheet(BuildContext context, bool isDark) {
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightBackground;
-    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: subtextColor.withAlpha(80),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEC4899).withAlpha(25),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        color: Color(0xFFEC4899),
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'คู่มือตั้งค่า & แก้ไขปัญหาตรวจจับ',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: textColor,
-                            ),
-                          ),
-                          Text(
-                            'คำแนะนำเพื่อให้ระบบตรวจจับทำงานแม่นยำ 100%',
-                            style: TextStyle(fontSize: 12, color: subtextColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close_rounded, color: subtextColor),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    _buildGuideCard(
-                      title: '1. ตั้งค่าการทำงานเบื้องหลัง (สำคัญมาก)',
-                      icon: Icons.battery_charging_full_rounded,
-                      iconColor: const Color(0xFFF59E0B),
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      textColor: textColor,
-                      subtextColor: subtextColor,
-                      content:
-                          'มือถือแบรนด์ Xiaomi (HyperOS/MIUI), Samsung, Oppo, Vivo มักจะสั่งหยุดการทำงานของแอปเมื่อปิดหน้าจอ\n\n'
-                          '👉 **วิธีแก้:**\n'
-                          '• ไปที่ ตั้งค่าเครื่อง > แอป > Budget Planner > แบตเตอรี่ > เลือก **"ไม่จำกัด (Unrestricted)"**\n'
-                          '• (สำหรับ Xiaomi/Oppo) เปิดเมนู **"เริ่มทำงานอัตโนมัติ (Autostart)"** ให้แอป',
-                    ),
-                    const SizedBox(height: 14),
-                    _buildGuideCard(
-                      title: '2. การแสดงข้อความบนหน้าจอล็อก',
-                      icon: Icons.lock_open_rounded,
-                      iconColor: const Color(0xFF3B82F6),
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      textColor: textColor,
-                      subtextColor: subtextColor,
-                      content:
-                          'หากมือถือตั้งค่า **"ซ่อนเนื้อหาที่ละเอียดอ่อนบนหน้าจอล็อก"** ข้อความแจ้งเตือนจะถูกซ่อนตัวเลขยอดเงิน ทำให้ระบบไม่สามารถอ่านตัวเลขได้\n\n'
-                          '👉 **วิธีแก้:** ตั้งค่าให้แสดงเนื้อหาการแจ้งเตือนจากแอปธนาคารตามปกติ',
-                    ),
-
-                    const SizedBox(height: 14),
-                    _buildGuideCard(
-                      title: '3. แจ้งเตือนหลุดการเชื่อมต่อ?',
-                      icon: Icons.sync_problem_rounded,
-                      iconColor: const Color(0xFF10B981),
-                      cardBg: cardBg,
-                      borderColor: borderColor,
-                      textColor: textColor,
-                      subtextColor: subtextColor,
-                      content:
-                          'หากพบว่าระบบหยุดตรวจจับหลังจากรีสตาร์ทเครื่องหรือไม่ได้เปิดแอปนานๆ สามารถกดปุ่ม **"ซ่อมแซมการเชื่อมต่อระบบตรวจจับ"** ในหน้าตั้งค่านี้ เพื่อสั่ง Rebind Service ใหม่ได้ทันที',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildGuideCard({
-    required String title,
+  Widget _buildGradientIcon({
+    required Gradient gradient,
     required IconData icon,
-    required Color iconColor,
-    required Color cardBg,
-    required Color borderColor,
-    required Color textColor,
-    required Color subtextColor,
-    required String content,
+    Color iconColor = Colors.white,
+    double size = 46,
+    double iconSize = 23,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: iconColor, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(fontSize: 12.5, color: subtextColor, height: 1.45),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: (gradient.colors.first).withAlpha(70),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
+      alignment: Alignment.center,
+      child: Icon(icon, color: iconColor, size: iconSize),
     );
   }
 
@@ -567,7 +426,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             child: Row(
               children: [
                 leading,
@@ -582,7 +441,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                           Expanded(
                             child: Text(
                               title,
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: textColor,
@@ -594,8 +453,8 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2.5,
+                              horizontal: 8,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: badgeColor.withAlpha(25),
@@ -603,8 +462,8 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                             ),
                             child: Text(
                               badgeText,
-                              style: TextStyle(
-                                fontSize: 10,
+                              style: GoogleFonts.prompt(
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
                                 color: badgeColor,
                               ),
@@ -615,15 +474,19 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
-                        style: TextStyle(fontSize: 12, color: subtextColor),
+                        style: GoogleFonts.prompt(
+                          fontSize: 12,
+                          color: subtextColor,
+                        ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 6),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  size: 15,
-                  color: subtextColor,
+                  size: 14,
+                  color: subtextColor.withAlpha(160),
                 ),
               ],
             ),
