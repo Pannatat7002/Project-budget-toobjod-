@@ -15,7 +15,6 @@ import '../../../auto_sync/presentation/widgets/auto_sync_banner.dart';
 import '../../../auto_sync/presentation/widgets/notification_bell_button.dart';
 import '../../../budget/presentation/state/budget_cubit.dart';
 import '../../../budget/presentation/state/budget_state.dart';
-import '../../../spending_plan/presentation/state/spending_plan_cubit.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../../transactions/presentation/state/transaction_cubit.dart';
 import '../../../transactions/presentation/state/transaction_state.dart';
@@ -391,7 +390,6 @@ class _DashboardViewState extends State<DashboardView> {
                           initialBankId: accountState.selectedBankId,
                         ),
                         onSetBudget: () => context.push('/budgets'),
-                        onSpendingPlan: () => context.push('/spending-plan'),
                         onAnalytics: () => context.push('/analytics'),
                       ),
                       const SizedBox(height: 10),
@@ -1168,7 +1166,6 @@ class _DashboardViewState extends State<DashboardView> {
             onPressed: () async {
               final txCubit = context.read<TransactionCubit>();
               final budgetCubit = context.read<BudgetCubit>();
-              final planCubit = context.read<SpendingPlanCubit>();
               final autoSyncCubit = context.read<AutoSyncCubit>();
               final accCubit = context.read<AccountCubit>();
               final nav = Navigator.of(ctx);
@@ -1179,7 +1176,6 @@ class _DashboardViewState extends State<DashboardView> {
               await autoSyncCubit.clearAllPending();
               await txCubit.loadTransactions();
               await budgetCubit.loadBudgets();
-              await planCubit.loadPlan();
               await accCubit.loadAccounts();
               accCubit.selectBank(null);
               await autoSyncCubit.initialize();

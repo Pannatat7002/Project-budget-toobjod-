@@ -6,7 +6,6 @@ import 'config/theme/app_theme.dart';
 import 'features/accounts/presentation/state/account_cubit.dart';
 import 'features/auto_sync/presentation/state/auto_sync_cubit.dart';
 import 'features/budget/presentation/state/budget_cubit.dart';
-import 'features/spending_plan/presentation/state/spending_plan_cubit.dart';
 import 'features/transactions/presentation/state/transaction_cubit.dart';
 import 'features/transactions/presentation/state/transaction_state.dart';
 import 'injection_container.dart' as di;
@@ -23,7 +22,6 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
   late final AutoSyncCubit _autoSyncCubit;
   late final TransactionCubit _transactionCubit;
   late final BudgetCubit _budgetCubit;
-  late final SpendingPlanCubit _spendingPlanCubit;
   StreamSubscription<TransactionState>? _txSubscription;
 
   @override
@@ -33,7 +31,6 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
     _accountCubit = di.sl<AccountCubit>()..loadAccounts();
     _transactionCubit = di.sl<TransactionCubit>()..loadTransactions();
     _budgetCubit = di.sl<BudgetCubit>()..loadBudgets();
-    _spendingPlanCubit = di.sl<SpendingPlanCubit>()..loadPlan();
     _autoSyncCubit = di.sl<AutoSyncCubit>()..initialize();
 
     _txSubscription = _transactionCubit.stream.listen((txState) {
@@ -66,7 +63,6 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
         BlocProvider<AccountCubit>.value(value: _accountCubit),
         BlocProvider<TransactionCubit>.value(value: _transactionCubit),
         BlocProvider<BudgetCubit>.value(value: _budgetCubit),
-        BlocProvider<SpendingPlanCubit>.value(value: _spendingPlanCubit),
         BlocProvider<AutoSyncCubit>.value(value: _autoSyncCubit),
       ],
       child: MaterialApp.router(

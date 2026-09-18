@@ -8,7 +8,6 @@ class AppConstants {
   // Storage Keys (Clean Production Live v1 - No Mock Data)
   static const String transactionsStorageKey = 'bp_transactions_live_v1';
   static const String budgetsStorageKey = 'bp_budgets_live_v1';
-  static const String spendingPlanStorageKey = 'bp_spending_plan_live_v1';
   static const String userPreferencesStorageKey = 'bp_user_prefs_live_v1';
   static const String accountsStorageKey = 'bp_bank_accounts_live_v1';
   static const String accountEyeViewKey = 'bp_account_eye_view_live_v1';

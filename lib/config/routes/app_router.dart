@@ -10,7 +10,6 @@ import '../../features/auto_sync/presentation/views/bank_selection_view.dart';
 import '../../features/auto_sync/presentation/views/notification_permission_view.dart';
 import '../../features/budget/presentation/views/budget_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
-import '../../features/spending_plan/presentation/views/spending_plan_view.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
 import '../../features/transactions/presentation/views/transactions_view.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -72,11 +71,6 @@ class AppRouter {
         ],
       ),
       // Standalone Routes accessible from Dashboard (ภาพรวม)
-      GoRoute(
-        path: '/spending-plan',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const SpendingPlanView(),
-      ),
       GoRoute(
         path: '/analytics',
         parentNavigatorKey: _rootNavigatorKey,

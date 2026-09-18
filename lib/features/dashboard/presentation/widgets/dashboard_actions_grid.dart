@@ -3,15 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 
-/// Unified 2-Column Action Panel with Image-Centric Tactile Cards
+/// Unified 2x2 Action Panel with Image-Centric Tactile Cards
 /// Layout:
-/// - Left Column: ตั้งงบประมาณ, แผนใช้จ่าย, วิเคราะห์ (3 items)
+/// - Left Column: ตั้งงบประมาณ, วิเคราะห์ (2 items)
 /// - Right Column: รับเงิน, จ่ายเงิน (2 items)
 class DashboardActionsGrid extends StatelessWidget {
   final VoidCallback onAddIncome;
   final VoidCallback onAddExpense;
   final VoidCallback onSetBudget;
-  final VoidCallback onSpendingPlan;
   final VoidCallback onAnalytics;
 
   const DashboardActionsGrid({
@@ -19,7 +18,6 @@ class DashboardActionsGrid extends StatelessWidget {
     required this.onAddIncome,
     required this.onAddExpense,
     required this.onSetBudget,
-    required this.onSpendingPlan,
     required this.onAnalytics,
   });
 
@@ -31,50 +29,38 @@ class DashboardActionsGrid extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Left Column (การวางแผน & วิเคราะห์): 3 items
-          // 1. ตั้งงบประมาณ
-          // 2. แผนใช้จ่าย
-          // 3. วิเคราะห์
+          // Left Column (การวางแผน & วิเคราะห์): 2 items
           Expanded(
             child: Column(
               children: [
-                _TactileActionCard(
-                  isDark: isDark,
-                  title: 'ตั้งงบประมาณ',
-                  subtitle: 'คุมงบรายหมวด',
-                  imageAsset: 'assets/images/action_budget.png',
-                  fallbackIcon: Icons.pie_chart_rounded,
-                  accentColor: const Color.fromARGB(255, 110, 110, 110),
-                  imageSize: 42,
-                  titleFontSize: 12.5,
-                  subtitleFontSize: 10,
-                  onTap: onSetBudget,
+                Expanded(
+                  child: _TactileActionCard(
+                    isDark: isDark,
+                    title: 'ตั้งงบประมาณ',
+                    subtitle: 'คุมงบรายหมวด',
+                    imageAsset: 'assets/images/action_budget.png',
+                    fallbackIcon: Icons.pie_chart_rounded,
+                    accentColor: const Color.fromARGB(255, 110, 110, 110),
+                    imageSize: 48,
+                    titleFontSize: 14,
+                    subtitleFontSize: 11,
+                    onTap: onSetBudget,
+                  ),
                 ),
                 const SizedBox(height: 8),
-                _TactileActionCard(
-                  isDark: isDark,
-                  title: 'แผนใช้จ่าย',
-                  subtitle: 'สัดส่วน 50/30/20',
-                  imageAsset: 'assets/images/action_spending_plan.png',
-                  fallbackIcon: Icons.tune_rounded,
-                  accentColor: const Color.fromARGB(255, 110, 110, 110),
-                  imageSize: 42,
-                  titleFontSize: 12.5,
-                  subtitleFontSize: 10,
-                  onTap: onSpendingPlan,
-                ),
-                const SizedBox(height: 8),
-                _TactileActionCard(
-                  isDark: isDark,
-                  title: 'วิเคราะห์',
-                  subtitle: 'สถิติ & กราฟสรุป',
-                  imageAsset: 'assets/images/action_analytics.png',
-                  fallbackIcon: Icons.insights_rounded,
-                  accentColor: const Color.fromARGB(255, 110, 110, 110),
-                  imageSize: 42,
-                  titleFontSize: 12.5,
-                  subtitleFontSize: 10,
-                  onTap: onAnalytics,
+                Expanded(
+                  child: _TactileActionCard(
+                    isDark: isDark,
+                    title: 'วิเคราะห์',
+                    subtitle: 'สถิติ & กราฟสรุป',
+                    imageAsset: 'assets/images/action_analytics.png',
+                    fallbackIcon: Icons.insights_rounded,
+                    accentColor: const Color.fromARGB(255, 110, 110, 110),
+                    imageSize: 48,
+                    titleFontSize: 14,
+                    subtitleFontSize: 11,
+                    onTap: onAnalytics,
+                  ),
                 ),
               ],
             ),
@@ -82,8 +68,6 @@ class DashboardActionsGrid extends StatelessWidget {
           const SizedBox(width: 10),
 
           // Right Column (บันทึกรายการประจำวัน): 2 items
-          // 1. รับเงิน
-          // 2. จ่ายเงิน
           Expanded(
             child: Column(
               children: [
@@ -96,7 +80,7 @@ class DashboardActionsGrid extends StatelessWidget {
                     fallbackIcon: Icons.arrow_downward_rounded,
                     accentColor: const Color.fromARGB(255, 110, 110, 110),
                     imageSize: 48,
-                    titleFontSize: 14.5,
+                    titleFontSize: 14,
                     subtitleFontSize: 11,
                     onTap: onAddIncome,
                   ),
@@ -111,7 +95,7 @@ class DashboardActionsGrid extends StatelessWidget {
                     fallbackIcon: Icons.arrow_upward_rounded,
                     accentColor: const Color.fromARGB(255, 110, 110, 110),
                     imageSize: 48,
-                    titleFontSize: 14.5,
+                    titleFontSize: 14,
                     subtitleFontSize: 11,
                     onTap: onAddExpense,
                   ),

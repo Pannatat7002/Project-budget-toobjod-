@@ -20,14 +20,6 @@ import 'features/budget/domain/usecases/get_budgets.dart';
 import 'features/budget/domain/usecases/set_budget.dart';
 import 'features/budget/presentation/state/budget_cubit.dart';
 
-// Features - Spending Plan
-import 'features/spending_plan/data/datasources/spending_plan_local_data_source.dart';
-import 'features/spending_plan/data/repositories/spending_plan_repository_impl.dart';
-import 'features/spending_plan/domain/repositories/spending_plan_repository.dart';
-import 'features/spending_plan/domain/usecases/get_spending_plan.dart';
-import 'features/spending_plan/domain/usecases/save_spending_plan.dart';
-import 'features/spending_plan/presentation/state/spending_plan_cubit.dart';
-
 // Features - Accounts (Multi-Bank & Privacy)
 import 'features/accounts/data/datasources/account_local_data_source.dart';
 import 'features/accounts/data/repositories/account_repository_impl.dart';
@@ -93,29 +85,6 @@ Future<void> init() async {
   // DataSource
   sl.registerLazySingleton<BudgetLocalDataSource>(
     () => BudgetLocalDataSourceImpl(sharedPreferences: sl()),
-  );
-
-  //! Features - Spending Plan
-  // Cubit
-  sl.registerLazySingleton(
-    () => SpendingPlanCubit(
-      getSpendingPlanUseCase: sl(),
-      saveSpendingPlanUseCase: sl(),
-    ),
-  );
-
-  // UseCases
-  sl.registerLazySingleton(() => GetSpendingPlanUseCase(sl()));
-  sl.registerLazySingleton(() => SaveSpendingPlanUseCase(sl()));
-
-  // Repository
-  sl.registerLazySingleton<SpendingPlanRepository>(
-    () => SpendingPlanRepositoryImpl(localDataSource: sl()),
-  );
-
-  // DataSource
-  sl.registerLazySingleton<SpendingPlanLocalDataSource>(
-    () => SpendingPlanLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
   //! Features - Accounts (Multi-Bank & Privacy)
