@@ -186,4 +186,93 @@ class BankProfile {
       return null;
     }
   }
+
+  /// Resolves a BankProfile from various sources: bankId, bankName/shortName, packageName, or transaction note.
+  static BankProfile? resolveBank({
+    String? bankId,
+    String? bankName,
+    String? packageName,
+    String? note,
+  }) {
+    // 1. Exact or normalized ID match
+    if (bankId != null && bankId.trim().isNotEmpty) {
+      final normalizedId = bankId.trim().toLowerCase();
+      final found = findById(normalizedId);
+      if (found != null) return found;
+      for (final b in supportedBanks) {
+        if (b.id.toLowerCase() == normalizedId || b.shortName.toLowerCase() == normalizedId) {
+          return b;
+        }
+      }
+    }
+
+    // 2. Exact or normalized Package match
+    if (packageName != null && packageName.trim().isNotEmpty) {
+      final found = findByPackage(packageName.trim());
+      if (found != null) return found;
+    }
+
+    // 3. Match from bankName / shortName
+    if (bankName != null && bankName.trim().isNotEmpty) {
+      final lower = bankName.trim().toLowerCase();
+      for (final b in supportedBanks) {
+        if (b.shortName.toLowerCase() == lower ||
+            b.name.toLowerCase() == lower ||
+            b.id.toLowerCase() == lower ||
+            b.shortName.toLowerCase().contains(lower) ||
+            b.name.toLowerCase().contains(lower) ||
+            lower.contains(b.shortName.toLowerCase()) ||
+            lower.contains(b.name.toLowerCase()) ||
+            lower.contains(b.id.toLowerCase())) {
+          return b;
+        }
+      }
+    }
+
+    // 4. Extract from note if available
+    if (note != null && note.trim().isNotEmpty) {
+      final lower = note.toLowerCase();
+      if (lower.contains('k plus') || lower.contains('kplus') || lower.contains('kbank') || lower.contains('กสิกร')) {
+        return findById('kbank');
+      }
+      if (lower.contains('scb') || lower.contains('ไทยพาณิชย์')) {
+        return findById('scb');
+      }
+      if (lower.contains('ktb') || lower.contains('krungthai') || lower.contains('next') || lower.contains('กรุงไทย')) {
+        return findById('ktb');
+      }
+      if (lower.contains('bbl') || lower.contains('bangkok bank') || lower.contains('บัวหลวง') || lower.contains('กรุงเทพ')) {
+        return findById('bbl');
+      }
+      if (lower.contains('ttb') || lower.contains('tmb') || lower.contains('ทีทีบี')) {
+        return findById('ttb');
+      }
+      if (lower.contains('kma') || lower.contains('krungsri') || lower.contains('กรุงศรี')) {
+        return findById('kma');
+      }
+      if (lower.contains('truemoney') || lower.contains('true money') || lower.contains('ทรูมันนี่')) {
+        return findById('truemoney');
+      }
+      if (lower.contains('shopee') || lower.contains('airpay') || lower.contains('ช้อปปี้')) {
+        return findById('shopeepay');
+      }
+      if (lower.contains('mymo') || lower.contains('gsb') || lower.contains('ออมสิน')) {
+        return findById('gsb');
+      }
+      if (lower.contains('dime') || lower.contains('ไดม์')) {
+        return findById('dime');
+      }
+      if (lower.contains('paotang') || lower.contains('เป๋าตัง')) {
+        return findById('paotang');
+      }
+      if (lower.contains('make') || lower.contains('เมค')) {
+        return findById('make_kbank');
+      }
+      if (lower.contains('kept') || lower.contains('เคปท์')) {
+        return findById('kept');
+      }
+    }
+
+    return null;
+  }
 }

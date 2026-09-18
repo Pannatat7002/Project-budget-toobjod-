@@ -9,6 +9,7 @@ class CategoryIconBadge extends StatelessWidget {
   final double iconSize;
   final String? categoryId;
   final String? assetPath;
+  final bool isBankLogo;
 
   const CategoryIconBadge({
     super.key,
@@ -18,12 +19,14 @@ class CategoryIconBadge extends StatelessWidget {
     this.iconSize = 22,
     this.categoryId,
     this.assetPath,
+    this.isBankLogo = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final resolvedAsset = assetPath ?? IconHelper.getCategoryAsset(categoryId);
+    final isBank = isBankLogo || (resolvedAsset != null && resolvedAsset.contains('/banks/'));
 
     return Container(
       width: size,
@@ -32,7 +35,7 @@ class CategoryIconBadge extends StatelessWidget {
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(size * 0.30),
         border: Border.all(
-          color: color.withValues(alpha: isDark ? 0.30 : 0.18),
+          color: color.withValues(alpha: isDark ? 0.35 : 0.20),
           width: 1.2,
         ),
         boxShadow: [
@@ -45,19 +48,39 @@ class CategoryIconBadge extends StatelessWidget {
       ),
       child: Center(
         child: resolvedAsset != null
-            ? Image.asset(
-                resolvedAsset,
-                width: size * 0.90,
-                height: size * 0.90,
-                cacheWidth: (size * 3).round(),
-                cacheHeight: (size * 3).round(),
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  icon,
-                  color: color,
-                  size: iconSize,
-                ),
-              )
+            ? (isBank
+                ? Padding(
+                    padding: EdgeInsets.all(size * 0.08),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(size * 0.22),
+                      child: Image.asset(
+                        resolvedAsset,
+                        width: size * 0.84,
+                        height: size * 0.84,
+                        cacheWidth: (size * 3).round(),
+                        cacheHeight: (size * 3).round(),
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                          icon,
+                          color: color,
+                          size: iconSize,
+                        ),
+                      ),
+                    ),
+                  )
+                : Image.asset(
+                    resolvedAsset,
+                    width: size * 0.90,
+                    height: size * 0.90,
+                    cacheWidth: (size * 3).round(),
+                    cacheHeight: (size * 3).round(),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      icon,
+                      color: color,
+                      size: iconSize,
+                    ),
+                  ))
             : Icon(
                 icon,
                 color: color,

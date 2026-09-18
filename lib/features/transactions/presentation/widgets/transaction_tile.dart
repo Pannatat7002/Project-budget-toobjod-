@@ -5,6 +5,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/icon_helper.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
+import '../../../auto_sync/domain/entities/bank_profile.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 class TransactionTile extends StatefulWidget {
@@ -35,22 +36,37 @@ class _TransactionTileState extends State<TransactionTile>
     final isTransfer = widget.transaction.isTransfer;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final rawBankBadge = widget.transaction.bankShortName ?? _extractBankBadge(widget.transaction.note);
+    final resolvedBank = BankProfile.resolveBank(
+      bankId: widget.transaction.bankId,
+      bankName: rawBankBadge,
+      note: widget.transaction.note,
+    );
+
+    final bankBadge = rawBankBadge ?? resolvedBank?.shortName;
+    final bool showBankLogo = !isTransfer && widget.transaction.isUnknownCategory && resolvedBank != null;
+
     final smartIcon = isTransfer
         ? Icons.swap_horiz_rounded
-        : IconHelper.getSmartIcon(
-            categoryName: widget.transaction.categoryName,
-            title: widget.transaction.title,
-            code: widget.transaction.categoryIconCode,
-          );
+        : (showBankLogo
+            ? resolvedBank.icon
+            : IconHelper.getSmartIcon(
+                categoryName: widget.transaction.categoryName,
+                title: widget.transaction.title,
+                code: widget.transaction.categoryIconCode,
+              ));
 
     final categoryColor = isTransfer
         ? const Color(0xFF6366F1)
-        : Color(widget.transaction.categoryColorValue != 0
-            ? widget.transaction.categoryColorValue
-            : (isIncome ? 0xFF10B981 : 0xFFEF4444));
+        : (showBankLogo
+            ? Color(resolvedBank.brandColor)
+            : Color(widget.transaction.categoryColorValue != 0
+                ? widget.transaction.categoryColorValue
+                : (isIncome ? 0xFF10B981 : 0xFFEF4444)));
 
-    final bankBadge = widget.transaction.bankShortName ?? _extractBankBadge(widget.transaction.note);
-    final bankColor = _getBankColor(widget.transaction.bankId, bankBadge);
+    final bankColor = resolvedBank != null
+        ? Color(resolvedBank.brandColor)
+        : _getBankColor(widget.transaction.bankId, bankBadge);
 
     return AnimatedScale(
       scale: _isPressed ? 0.97 : 1.0,
@@ -118,7 +134,9 @@ class _TransactionTileState extends State<TransactionTile>
                     color: categoryColor,
                     size: 48,
                     iconSize: 24,
-                    categoryId: widget.transaction.categoryId,
+                    categoryId: showBankLogo ? null : widget.transaction.categoryId,
+                    assetPath: showBankLogo ? resolvedBank.logoAsset : null,
+                    isBankLogo: showBankLogo,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -251,12 +269,8 @@ class _TransactionTileState extends State<TransactionTile>
   }
 
   static Color _getBankColor(String? bankId, String? bankBadge) {
-    if (bankId == 'kbank' || (bankBadge?.contains('K') ?? false)) return const Color(0xFF138F2D);
-    if (bankId == 'scb' || (bankBadge?.contains('SCB') ?? false)) return const Color(0xFF4E2A84);
-    if (bankId == 'ktb' || (bankBadge?.contains('KTB') ?? false)) return const Color(0xFF00A3E0);
-    if (bankId == 'truemoney' || (bankBadge?.contains('True') ?? false)) return const Color(0xFFFF5B00);
-    if (bankId == 'ttb') return const Color(0xFF0056B3);
-    if (bankId == 'kma') return const Color(0xFFFDB913);
+    final profile = BankProfile.resolveBank(bankId: bankId, bankName: bankBadge);
+    if (profile != null) return Color(profile.brandColor);
     return const Color(0xFF2563EB);
   }
 

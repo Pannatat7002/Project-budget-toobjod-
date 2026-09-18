@@ -41,6 +41,27 @@ class TransactionEntity extends Equatable {
   bool get isExpense => type == TransactionType.expense;
   bool get isTransfer => type == TransactionType.transfer;
 
+  /// Returns true if the transaction's category is unknown, uncategorized, or "other"
+  bool get isUnknownCategory {
+    final cId = categoryId.toLowerCase().trim();
+    final cName = categoryName.toLowerCase().trim();
+    return cId == 'other' ||
+        cId == 'other_income' ||
+        cId == 'uncategorized' ||
+        cId == 'unknown' ||
+        cId.isEmpty ||
+        cName == 'อื่นๆ' ||
+        cName == 'รายรับอื่นๆ' ||
+        cName == 'หมวดหมู่อื่นๆ' ||
+        cName == 'ไม่ระบุ' ||
+        cName == 'other' ||
+        cName == 'other income' ||
+        cName == 'other_income' ||
+        cName == 'uncategorized' ||
+        cName == 'unknown' ||
+        cName.isEmpty;
+  }
+
   TransactionEntity copyWith({
     String? id,
     String? title,
