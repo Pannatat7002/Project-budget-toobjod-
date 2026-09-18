@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../transactions/presentation/state/transaction_cubit.dart';
@@ -15,7 +16,13 @@ class AnalyticsView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('วิเคราะห์ & รายงาน'),
+        title: Text(
+          'วิเคราะห์ & รายงาน',
+          style: GoogleFonts.prompt(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
         leading: Navigator.of(context).canPop()
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new, size: 20),
@@ -58,7 +65,7 @@ class AnalyticsView extends StatelessWidget {
                         children: [
                           Text(
                             'อัตราการออมเงิน (Savings Rate)',
-                            style: TextStyle(
+                            style: GoogleFonts.prompt(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -72,7 +79,7 @@ class AnalyticsView extends StatelessWidget {
                             ),
                             child: Text(
                               '${savingsRate.toStringAsFixed(1)}%',
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
                                 color: savingsRate >= 20 ? AppColors.income : AppColors.warning,
@@ -123,11 +130,12 @@ class AnalyticsView extends StatelessWidget {
                 // Expense Breakdown Header
                 Text(
                   'สัดส่วนรายจ่ายตามหมวดหมู่',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                        letterSpacing: -0.3,
-                      ),
+                  style: GoogleFonts.prompt(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    letterSpacing: -0.3,
+                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                  ),
                 ),
                 const SizedBox(height: 10),
 
@@ -181,7 +189,7 @@ class AnalyticsView extends StatelessWidget {
                           children: [
                             Text(
                               'คำแนะนำการเงิน (50/30/20 Rule)',
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
@@ -190,7 +198,7 @@ class AnalyticsView extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               'แบ่งสัดส่วนรายได้เป็น: 50% ค่าใช้จ่ายจำเป็น, 30% ความสุขและไลฟ์สไตล์, 20% สำหรับเงินออมและการลงทุนเพื่อความมั่นคงในระยะยาว',
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 12,
                                 height: 1.45,
                                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -232,7 +240,7 @@ class AnalyticsView extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: GoogleFonts.prompt(
               fontSize: 11,
               fontWeight: FontWeight.w500,
               color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
@@ -241,8 +249,8 @@ class AnalyticsView extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 13,
+            style: GoogleFonts.prompt(
+              fontSize: 14,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.2,
               color: color,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../transactions/presentation/state/transaction_cubit.dart';
 import '../../../transactions/presentation/state/transaction_state.dart';
@@ -14,9 +15,17 @@ class SpendingPlanView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ปรับแผนการใช้จ่าย'),
+        title: Text(
+          'ปรับแผนการใช้จ่าย',
+          style: GoogleFonts.prompt(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
         leading: Navigator.of(context).canPop()
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new, size: 20),
@@ -34,7 +43,12 @@ class SpendingPlanView extends StatelessWidget {
 
           final plan = state.plan;
           if (plan == null) {
-            return const Center(child: Text('ไม่พบข้อมูลแผนการใช้จ่าย'));
+            return Center(
+              child: Text(
+                'ไม่พบข้อมูลแผนการใช้จ่าย',
+                style: GoogleFonts.prompt(),
+              ),
+            );
           }
 
           return BlocBuilder<TransactionCubit, TransactionState>(
@@ -83,11 +97,12 @@ class SpendingPlanView extends StatelessWidget {
                       // 3. Section Title: ปรับแผนการใช้จ่าย
                       Text(
                         'ปรับแผนการใช้จ่ายรายหมวดหมู่',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 17,
-                              letterSpacing: -0.3,
-                            ),
+                        style: GoogleFonts.prompt(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                          letterSpacing: -0.3,
+                          color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                        ),
                       ),
                       const SizedBox(height: 12),
 
@@ -124,20 +139,26 @@ class SpendingPlanView extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-        title: const Text('ระบุรายรับต่อเดือน', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        title: Text(
+          'ระบุรายรับต่อเดือน',
+          style: GoogleFonts.prompt(fontSize: 17, fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          decoration: const InputDecoration(
+          style: GoogleFonts.prompt(),
+          decoration: InputDecoration(
             prefixText: '฿ ',
+            prefixStyle: GoogleFonts.prompt(),
             hintText: 'เช่น 25000',
+            hintStyle: GoogleFonts.prompt(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
+            child: Text('ยกเลิก', style: GoogleFonts.prompt()),
           ),
           ElevatedButton(
             onPressed: () {
@@ -149,7 +170,7 @@ class SpendingPlanView extends StatelessWidget {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('บันทึก'),
+            child: Text('บันทึก', style: GoogleFonts.prompt(fontWeight: FontWeight.w700)),
           ),
         ],
       ),

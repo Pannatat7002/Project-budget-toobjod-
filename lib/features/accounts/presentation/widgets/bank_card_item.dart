@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/bank_account_entity.dart';
 
@@ -132,7 +133,7 @@ class BankCardItem extends StatelessWidget {
                             ),
                             child: Text(
                               '•••• ${account!.accountMask!.replaceAll(RegExp(r'[^0-9]'), '')}',
-                              style: const TextStyle(
+                              style: GoogleFonts.prompt(
                                 color: Colors.white,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -165,14 +166,37 @@ class BankCardItem extends StatelessWidget {
                               children: [
                                 Text(
                                   'ยอดเงินคงเหลือ',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.82),
-                                    fontSize: 12,
+                                  style: GoogleFonts.prompt(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.2,
+                                    letterSpacing: 0.1,
                                   ),
                                 ),
-                                const SizedBox(width: 7),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      isEyeViewHidden
+                                          ? '******'
+                                          : CurrencyFormatter.format(balance),
+                                      style: GoogleFonts.prompt(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
                                 // Eye View Button (Privacy Mode)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -189,48 +213,12 @@ class BankCardItem extends StatelessWidget {
                                       width: 0.8,
                                     ),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isEyeViewHidden
-                                            ? Icons.visibility_off_rounded
-                                            : Icons.visibility_rounded,
-                                        color: Colors.white,
-                                        size: 13,
-                                      ),
-                                      // const SizedBox(width: 4),
-                                      // Text(
-                                      //   isEyeViewHidden
-                                      //       ? 'แสดงยอดคงเหลือ'
-                                      //       : 'ซ่อนยอดคงเหลือ',
-                                      //   style: const TextStyle(
-                                      //     color: Colors.white,
-                                      //     fontSize: 10,
-                                      //     fontWeight: FontWeight.w700,
-                                      //   ),
-                                      // ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
+                                  child: Icon(
                                     isEyeViewHidden
-                                        ? '******'
-                                        : CurrencyFormatter.format(balance),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 25,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -0.6,
-                                    ),
+                                        ? Icons.visibility_off_rounded
+                                        : Icons.visibility_rounded,
+                                    color: Colors.white,
+                                    size: 13,
                                   ),
                                 ),
                               ],
@@ -239,8 +227,98 @@ class BankCardItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 12),
 
+                    // Bottom Financial Flow Strip (Income & Expense of this month)
+                    // Row(
+                    //   children: [
+                    //     Flexible(
+                    //       child: Container(
+                    //         padding: const EdgeInsets.symmetric(
+                    //           horizontal: 8,
+                    //           vertical: 3,
+                    //         ),
+                    //         decoration: BoxDecoration(
+                    //           color: Colors.black.withValues(alpha: 0.22),
+                    //           borderRadius: BorderRadius.circular(8),
+                    //           border: Border.all(
+                    //             color: Colors.white.withValues(alpha: 0.18),
+                    //             width: 0.8,
+                    //           ),
+                    //         ),
+                    //         child: Row(
+                    //           mainAxisSize: MainAxisSize.min,
+                    //           children: [
+                    //             const Icon(
+                    //               Icons.arrow_downward_rounded,
+                    //               size: 11,
+                    //               color: Color(0xFF6EE7B7),
+                    //             ),
+                    //             const SizedBox(width: 3),
+                    //             Flexible(
+                    //               child: FittedBox(
+                    //                 fit: BoxFit.scaleDown,
+                    //                 child: Text(
+                    //                   isEyeViewHidden
+                    //                       ? '***'
+                    //                       : '+${CurrencyFormatter.format(monthlyIncome)}',
+                    //                   style: GoogleFonts.prompt(
+                    //                     color: Colors.white,
+                    //                     fontSize: 10.5,
+                    //                     fontWeight: FontWeight.w700,
+                    //                   ),
+                    //                 ),
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     const SizedBox(width: 8),
+                    //     Flexible(
+                    //       child: Container(
+                    //         padding: const EdgeInsets.symmetric(
+                    //           horizontal: 8,
+                    //           vertical: 3,
+                    //         ),
+                    //         decoration: BoxDecoration(
+                    //           color: Colors.black.withValues(alpha: 0.22),
+                    //           borderRadius: BorderRadius.circular(8),
+                    //           border: Border.all(
+                    //             color: Colors.white.withValues(alpha: 0.18),
+                    //             width: 0.8,
+                    //           ),
+                    //         ),
+                    //         child: Row(
+                    //           mainAxisSize: MainAxisSize.min,
+                    //           children: [
+                    //             const Icon(
+                    //               Icons.arrow_upward_rounded,
+                    //               size: 11,
+                    //               color: Color(0xFFFCA5A5),
+                    //             ),
+                    //             const SizedBox(width: 3),
+                    //             Flexible(
+                    //               child: FittedBox(
+                    //                 fit: BoxFit.scaleDown,
+                    //                 child: Text(
+                    //                   isEyeViewHidden
+                    //                       ? '***'
+                    //                       : '-${CurrencyFormatter.format(monthlyExpense)}',
+                    //                   style: GoogleFonts.prompt(
+                    //                     color: Colors.white,
+                    //                     fontSize: 10.5,
+                    //                     fontWeight: FontWeight.w700,
+                    //                   ),
+                    //                 ),
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
@@ -250,12 +328,12 @@ class BankCardItem extends StatelessWidget {
 
         // 2. Overhanging Mascot Dog (โผล่เกาะขอบบนขวาของการ์ด)
         Positioned(
-          right: 14,
-          top: -10,
+          right: 0,
+          top: 50,
           child: IgnorePointer(
             child: SizedBox(
-              width: 70,
-              height: 70,
+              width: 120,
+              height: 120,
               child: Image.asset(
                 'assets/images/mascot_dog_peek.png',
                 fit: BoxFit.contain,
@@ -271,69 +349,69 @@ class BankCardItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(bool isAllWallets, BankAccountEntity? account) {
-    if (isAllWallets) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
-            width: 0.6,
-          ),
-        ),
-        child: const Text(
-          '✨ รวมทุกกระเป๋า',
-          style: TextStyle(
-            color: Color(0xFFFDE68A),
-            fontSize: 9.5,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
-    }
+  // Widget _buildStatusBadge(bool isAllWallets, BankAccountEntity? account) {
+  //   if (isAllWallets) {
+  //     return Container(
+  //       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+  //       decoration: BoxDecoration(
+  //         color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
+  //         borderRadius: BorderRadius.circular(8),
+  //         border: Border.all(
+  //           color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+  //           width: 0.6,
+  //         ),
+  //       ),
+  //       child: Text(
+  //         '✨ รวมทุกกระเป๋า',
+  //         style: GoogleFonts.prompt(
+  //           color: const Color(0xFFFDE68A),
+  //           fontSize: 9.5,
+  //           fontWeight: FontWeight.w700,
+  //         ),
+  //       ),
+  //     );
+  //   }
 
-    final isAutoSync = account?.isAutoSyncActive ?? false;
+  //   final isAutoSync = account?.isAutoSyncActive ?? false;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: isAutoSync
-            ? const Color(0xFF10B981).withValues(alpha: 0.25)
-            : Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isAutoSync
-              ? const Color(0xFF34D399).withValues(alpha: 0.45)
-              : Colors.white.withValues(alpha: 0.2),
-          width: 0.6,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isAutoSync ? const Color(0xFF34D399) : Colors.white60,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isAutoSync ? 'ตรวจจับสดเปิด' : 'ปิดตรวจจับ',
-            style: TextStyle(
-              color: isAutoSync ? const Color(0xFF6EE7B7) : Colors.white70,
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+  //     decoration: BoxDecoration(
+  //       color: isAutoSync
+  //           ? const Color(0xFF10B981).withValues(alpha: 0.25)
+  //           : Colors.white.withValues(alpha: 0.1),
+  //       borderRadius: BorderRadius.circular(8),
+  //       border: Border.all(
+  //         color: isAutoSync
+  //             ? const Color(0xFF34D399).withValues(alpha: 0.45)
+  //             : Colors.white.withValues(alpha: 0.2),
+  //         width: 0.6,
+  //       ),
+  //     ),
+  //     child: Row(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         Container(
+  //           width: 6,
+  //           height: 6,
+  //           decoration: BoxDecoration(
+  //             shape: BoxShape.circle,
+  //             color: isAutoSync ? const Color(0xFF34D399) : Colors.white60,
+  //           ),
+  //         ),
+  //         const SizedBox(width: 4),
+  //         Text(
+  //           isAutoSync ? 'ตรวจจับสดเปิด' : 'ปิดตรวจจับ',
+  //           style: GoogleFonts.prompt(
+  //             color: isAutoSync ? const Color(0xFF6EE7B7) : Colors.white70,
+  //             fontSize: 9.5,
+  //             fontWeight: FontWeight.w700,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildBrandPill({
     required bool isAllWallets,
@@ -346,14 +424,14 @@ class BankCardItem extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(4, 3, 14, 3),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.28),
-          width: 0.9,
-        ),
-      ),
+      // decoration: BoxDecoration(
+      //   color: Colors.black.withValues(alpha: 0.24),
+      //   borderRadius: BorderRadius.circular(28),
+      //   border: Border.all(
+      //     color: Colors.white.withValues(alpha: 0.28),
+      //     width: 0.9,
+      //   ),
+      // ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -362,9 +440,9 @@ class BankCardItem extends StatelessWidget {
           Flexible(
             child: Text(
               displayName,
-              style: const TextStyle(
+              style: GoogleFonts.prompt(
                 color: Colors.white,
-                fontSize: 14.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.2,
               ),
@@ -402,16 +480,17 @@ class BankCardItem extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        shape: BoxShape.rectangle,
         color: Colors.white,
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.7),
-          width: 1.2,
+          width: 0.5,
         ),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: ClipOval(
         child: Padding(
-          padding: const EdgeInsets.all(3.0),
+          padding: const EdgeInsets.all(6.0),
           child: Image.asset(
             acc.logoAsset,
             fit: BoxFit.contain,
@@ -483,7 +562,7 @@ class BankCardItem extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 '+ เพิ่มบัญชี / เชื่อมต่อธนาคาร',
-                style: TextStyle(
+                style: GoogleFonts.prompt(
                   color: titleColor,
                   fontSize: 14.5,
                   fontWeight: FontWeight.w800,
@@ -492,7 +571,7 @@ class BankCardItem extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'เปิดการตรวจจับบัญชีใหม่ หรือเพิ่มธนาคารที่ใช้',
-                style: TextStyle(
+                style: GoogleFonts.prompt(
                   color: subtitleColor,
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,

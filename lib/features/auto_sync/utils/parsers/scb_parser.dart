@@ -63,7 +63,7 @@ class ScbParser extends BankParserStrategy {
     }
 
     // 2. Amount
-    final amount = extractAmountCommon(fullText);
+    final amount = extractAmountByBank(bankId: bankId, type: type, text: fullText);
     if (amount == null || amount <= 0) return null;
 
     // 3. Account Mask

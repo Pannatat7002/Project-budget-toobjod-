@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../domain/entities/bank_account_entity.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -93,12 +95,13 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 170,
+          height: 175,
           child: PageView.builder(
             controller: _pageController,
             clipBehavior: Clip.none,
             itemCount: totalCount,
             onPageChanged: (index) {
+              HapticFeedback.selectionClick();
               setState(() {
                 _currentPage = index;
               });
@@ -206,25 +209,34 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
         // Inflow / Outflow Section (below carousel)
         Builder(
           builder: (context) {
-            final isDarkSection = Theme.of(context).brightness == Brightness.dark;
+            final isDarkSection =
+                Theme.of(context).brightness == Brightness.dark;
             final income = _currentPage == 0
                 ? widget.totalMonthlyIncome
                 : (_currentPage <= widget.accounts.length
-                    ? widget.getBankIncome(widget.accounts[_currentPage - 1].bankId)
-                    : 0.0);
+                      ? widget.getBankIncome(
+                          widget.accounts[_currentPage - 1].bankId,
+                        )
+                      : 0.0);
             final expense = _currentPage == 0
                 ? widget.totalMonthlyExpense
                 : (_currentPage <= widget.accounts.length
-                    ? widget.getBankExpense(widget.accounts[_currentPage - 1].bankId)
-                    : 0.0);
+                      ? widget.getBankExpense(
+                          widget.accounts[_currentPage - 1].bankId,
+                        )
+                      : 0.0);
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isDarkSection ? AppColors.darkSurface : AppColors.lightSurface,
+                color: isDarkSection
+                    ? AppColors.darkSurface
+                    : AppColors.lightSurface,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isDarkSection ? AppColors.darkBorderSubtle : AppColors.lightBorder,
+                  color: isDarkSection
+                      ? AppColors.darkBorderSubtle
+                      : AppColors.lightBorder,
                   width: 1,
                 ),
               ),
@@ -238,16 +250,18 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: AppColors.accent.withValues(alpha: isDarkSection ? 0.15 : 0.1),
+                            color: AppColors.success.withValues(
+                              alpha: isDarkSection ? 0.15 : 0.1,
+                            ),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.accent.withValues(alpha: 0.35),
+                              color: AppColors.success.withValues(alpha: 0.35),
                               width: 1,
                             ),
                           ),
                           child: const Icon(
                             Icons.arrow_downward_rounded,
-                            color: AppColors.accent,
+                            color: AppColors.success,
                             size: 17,
                           ),
                         ),
@@ -258,9 +272,9 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                           children: [
                             Text(
                               'เข้า',
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 10.5,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                                 color: isDarkSection
                                     ? AppColors.darkTextMuted
                                     : AppColors.lightTextSecondary,
@@ -270,12 +284,12 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                               widget.isEyeViewHidden
                                   ? '••••'
                                   : CurrencyFormatter.format(income),
-                              style: TextStyle(
-                                fontSize: 13,
+                              style: GoogleFonts.prompt(
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
                                 color: isDarkSection
-                                    ? AppColors.accentLight
-                                    : AppColors.accent,
+                                    ? AppColors.successLight
+                                    : AppColors.success,
                                 letterSpacing: -0.3,
                               ),
                             ),
@@ -305,9 +319,9 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                           children: [
                             Text(
                               'ออก',
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 10.5,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                                 color: isDarkSection
                                     ? AppColors.darkTextMuted
                                     : AppColors.lightTextSecondary,
@@ -317,8 +331,8 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                               widget.isEyeViewHidden
                                   ? '••••'
                                   : CurrencyFormatter.format(expense),
-                              style: TextStyle(
-                                fontSize: 13,
+                              style: GoogleFonts.prompt(
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
                                 color: isDarkSection
                                     ? AppColors.primaryLight
@@ -333,7 +347,9 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: isDarkSection ? 0.15 : 0.1),
+                            color: AppColors.primary.withValues(
+                              alpha: isDarkSection ? 0.15 : 0.1,
+                            ),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: AppColors.primary.withValues(alpha: 0.35),

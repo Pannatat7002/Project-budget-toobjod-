@@ -21,14 +21,27 @@ class KBankParser extends BankParserStrategy {
     if (pkg.contains('kasikorn') || pkg.contains('kplus') || pkg.contains('makebykbank')) {
       return true;
     }
+    // If package belongs to another known bank app, do not handle
+    if (pkg.contains('ttb') || pkg.contains('tmb') || pkg.contains('scb') ||
+        pkg.contains('ktb') || pkg.contains('bbl') || pkg.contains('krungsri') ||
+        pkg.contains('truemoney') || pkg.contains('dime')) {
+      return false;
+    }
     final lower = text.toLowerCase();
+    // Do not match if "KBANK" is merely the external sender in an incoming transfer
+    if (lower.contains('จาก kbank') || lower.contains('จากกสิกร') || lower.contains('จาก ธ.กสิกร')) {
+      return false;
+    }
     return lower.contains('k plus') ||
         lower.contains('kbank') ||
         lower.contains('กสิกร') ||
         lower.contains('make by kbank');
   }
 
-  static final RegExp _accountMaskRegex = RegExp(r'(?:บช\.|บัญชี|จาก|เข้า)\s*x-?([0-9]{4})', caseSensitive: false);
+  static final RegExp _accountMaskRegex = RegExp(
+    r'(?:บช\.|บัญชี|จาก|เข้า)\s*([0-9xX\-]*[0-9]{3,}[0-9xX\-]*)',
+    caseSensitive: false,
+  );
   static final RegExp _merchantRegex = RegExp(
     r'(?:ให้แก่|ให้กับ|ให้|ไปยัง|ไป|ร้าน|ที่ร้าน)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:จำนวน|ยอด|เป็นจำนวน)|$|\s+[0-9])',
     caseSensitive: false,
@@ -66,14 +79,20 @@ class KBankParser extends BankParserStrategy {
     }
 
     // 2. Amount
-    final amount = extractAmountCommon(fullText);
+    final amount = extractAmountByBank(bankId: bankId, type: type, text: fullText);
     if (amount == null || amount <= 0) return null;
 
     // 3. Account Mask
     String? mask;
     final maskMatch = _accountMaskRegex.firstMatch(fullText);
     if (maskMatch != null) {
-      mask = 'x-${maskMatch.group(1)}';
+      final raw = maskMatch.group(1)?.trim() ?? '';
+      final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+      if (digits.length >= 4) {
+        mask = 'x-${digits.substring(digits.length - 4)}';
+      } else if (raw.isNotEmpty) {
+        mask = 'x-$raw';
+      }
     }
 
     // 4. Merchant / Sender
@@ -82,7 +101,7 @@ class KBankParser extends BankParserStrategy {
       final match = _senderRegex.firstMatch(fullText);
       if (match != null) {
         final raw = match.group(1)?.trim();
-        if (raw != null && raw.isNotEmpty && raw.length < 40 && !raw.startsWith('x-')) {
+        if (raw != null && raw.isNotEmpty && raw.length < 40 && !raw.startsWith('x-') && !raw.startsWith('xxx-')) {
           merchantOrSender = raw;
         }
       }
@@ -100,6 +119,8 @@ class KBankParser extends BankParserStrategy {
     String txTitle;
     if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
       txTitle = merchantOrSender;
+    } else if (title.trim() == 'รายการเงินเข้า' || lower.contains('รายการเงินเข้า')) {
+      txTitle = 'รายการเงินเข้า';
     } else if (title.trim() == 'รายการโอน/ถอน' || lower.contains('รายการโอน/ถอน')) {
       txTitle = 'รายการโอน/ถอน';
     } else if (lower.contains('ถอนเงินไม่ใช้บัตร')) {
@@ -113,7 +134,8 @@ class KBankParser extends BankParserStrategy {
     }
 
     final category = suggestCategory(fullText, type, merchantOrSender);
-    final notifTime = timestamp ?? DateTime.now();
+    final parsedTime = extractThaiDateTime(fullText);
+    final notifTime = parsedTime ?? timestamp ?? DateTime.now();
     final timeBucket = notifTime.millisecondsSinceEpoch ~/ 4000;
     final uniqueId = (id != null && id.isNotEmpty)
         ? id

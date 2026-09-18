@@ -10,8 +10,6 @@ abstract class AutoSyncLocalDataSource {
   Future<bool> isAutoSaveEnabled();
   Future<void> setAutoSaveEnabled(bool enabled);
 
-  Future<bool> isTransferDetectionEnabled();
-  Future<void> setTransferDetectionEnabled(bool enabled);
 
   Future<List<String>> getEnabledBankPackages();
   Future<void> setEnabledBankPackages(List<String> packages);
@@ -31,7 +29,6 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
 
   static const String _keyAutoSyncEnabled = 'bp_auto_sync_enabled_v1';
   static const String _keyAutoSaveEnabled = 'bp_auto_save_enabled_v1';
-  static const String _keyTransferDetectionEnabled = 'bp_transfer_detection_enabled_v1';
   static const String _keyEnabledPackages = 'bp_enabled_bank_packages_v1';
   static const String _keyPendingTxs = 'bp_pending_detected_txs_v1';
   static const String _keyHistoryTxs = 'bp_history_detected_txs_v1';
@@ -61,15 +58,6 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
     await sharedPreferences.setBool(_keyAutoSaveEnabled, enabled);
   }
 
-  @override
-  Future<bool> isTransferDetectionEnabled() async {
-    return sharedPreferences.getBool(_keyTransferDetectionEnabled) ?? true;
-  }
-
-  @override
-  Future<void> setTransferDetectionEnabled(bool enabled) async {
-    await sharedPreferences.setBool(_keyTransferDetectionEnabled, enabled);
-  }
 
   @override
   Future<List<String>> getEnabledBankPackages() async {

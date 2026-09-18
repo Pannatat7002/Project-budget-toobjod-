@@ -31,8 +31,6 @@ abstract class AutoSyncRepository {
   Future<bool> isAutoSaveEnabled();
   Future<void> setAutoSaveEnabled(bool enabled);
 
-  Future<bool> isTransferDetectionEnabled();
-  Future<void> setTransferDetectionEnabled(bool enabled);
 
   Future<List<String>> getEnabledBankPackages();
   Future<void> setEnabledBankPackages(List<String> packages);

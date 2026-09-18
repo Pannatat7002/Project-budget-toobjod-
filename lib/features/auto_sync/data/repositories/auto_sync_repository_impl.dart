@@ -258,15 +258,6 @@ class AutoSyncRepositoryImpl implements AutoSyncRepository {
     return localDataSource.setAutoSaveEnabled(enabled);
   }
 
-  @override
-  Future<bool> isTransferDetectionEnabled() {
-    return localDataSource.isTransferDetectionEnabled();
-  }
-
-  @override
-  Future<void> setTransferDetectionEnabled(bool enabled) {
-    return localDataSource.setTransferDetectionEnabled(enabled);
-  }
 
   @override
   Future<List<String>> getEnabledBankPackages() {

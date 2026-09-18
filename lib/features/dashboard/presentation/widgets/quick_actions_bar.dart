@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 
 class QuickActionsBar extends StatelessWidget {
@@ -116,7 +117,7 @@ class QuickActionsBar extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   label,
-                  style: TextStyle(
+                  style: GoogleFonts.prompt(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),

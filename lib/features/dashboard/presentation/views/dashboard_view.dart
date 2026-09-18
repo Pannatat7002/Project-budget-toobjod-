@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -20,8 +21,7 @@ import '../../../transactions/presentation/state/transaction_cubit.dart';
 import '../../../transactions/presentation/state/transaction_state.dart';
 import '../../../transactions/presentation/views/add_transaction_sheet.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
-import '../widgets/quick_actions_bar.dart';
-import '../widgets/finance_hub_section.dart';
+import '../widgets/dashboard_actions_grid.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -32,11 +32,40 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   String _dogName = AppConstants.appName;
+  bool _isMascotGreetingDismissed = false;
 
   @override
   void initState() {
     super.initState();
     _loadDogName();
+    _loadMascotGreetingState();
+  }
+
+  Future<void> _loadMascotGreetingState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed = prefs.getBool('bp_mascot_greeting_dismissed') ?? false;
+    if (dismissed && mounted) {
+      setState(() {
+        _isMascotGreetingDismissed = true;
+      });
+    }
+  }
+
+  Future<void> _dismissMascotGreeting() async {
+    setState(() {
+      _isMascotGreetingDismissed = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('bp_mascot_greeting_dismissed', true);
+  }
+
+  Future<void> _toggleMascotGreeting() async {
+    final nextState = !_isMascotGreetingDismissed;
+    setState(() {
+      _isMascotGreetingDismissed = nextState;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('bp_mascot_greeting_dismissed', nextState);
   }
 
   Future<void> _loadDogName() async {
@@ -114,10 +143,10 @@ class _DashboardViewState extends State<DashboardView> {
                           Flexible(
                             child: Text(
                               _dogName,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.4,
+                              style: GoogleFonts.prompt(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
                                 color: isDark
                                     ? AppColors.darkTextPrimary
                                     : const Color(0xFF0F172A),
@@ -151,12 +180,12 @@ class _DashboardViewState extends State<DashboardView> {
                               gradient: AppColors.yellowBadgeGradient,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
+                            child: Text(
                               'PRO',
-                              style: TextStyle(
+                              style: GoogleFonts.prompt(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFF78350F),
+                                color: const Color(0xFF78350F),
                               ),
                             ),
                           ),
@@ -165,7 +194,7 @@ class _DashboardViewState extends State<DashboardView> {
                       const SizedBox(height: 2),
                       Text(
                         'วางแผนคุมงบการเงิน 🐾',
-                        style: TextStyle(
+                        style: GoogleFonts.prompt(
                           fontSize: 11.5,
                           color: isDark
                               ? AppColors.darkTextMuted
@@ -186,7 +215,7 @@ class _DashboardViewState extends State<DashboardView> {
           const NotificationBellButton(),
           PopupMenuButton<String>(
             icon: Icon(
-              Icons.more_vert,
+              Icons.settings,
               color: isDark
                   ? AppColors.darkTextMuted
                   : AppColors.lightTextMuted,
@@ -199,18 +228,29 @@ class _DashboardViewState extends State<DashboardView> {
                 _showRenameDogDialog(context);
               } else if (val == 'auto_sync') {
                 context.push('/auto-sync-settings');
+              } else if (val == 'toggle_mascot_greeting') {
+                _toggleMascotGreeting();
               } else if (val == 'reset') {
                 _showResetConfirmDialog(context);
               }
             },
             itemBuilder: (ctx) => [
-              const PopupMenuItem(
-                value: 'rename_dog',
+              PopupMenuItem(
+                value: 'toggle_mascot_greeting',
                 child: Row(
                   children: [
-                    Icon(Icons.pets, color: Color(0xFFFDB813), size: 18),
-                    SizedBox(width: 10),
-                    Text('เปลี่ยนชื่อเจ้าตูบ', style: TextStyle(fontSize: 13)),
+                    const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: Color(0xFFFDB813),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      _isMascotGreetingDismissed
+                          ? 'แสดงคำทักทายเจ้าตูบ'
+                          : 'ซ่อนคำทักทายเจ้าตูบ',
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -313,47 +353,15 @@ class _DashboardViewState extends State<DashboardView> {
                       // Auto-Sync Detected Transaction / Setup Banner
                       const AutoSyncBanner(),
 
-                      // Swipe Hint Indicator (◄ ปัดซ้าย / ปัดขวา เพื่อเปลี่ยนบัญชี ►)
-                      // Padding(
-                      //   padding: const EdgeInsets.only(
-                      //     left: 4,
-                      //     right: 4,
-                      //     bottom: 2,
-                      //   ),
-                      //   // child: Row(
-                      //   //   mainAxisAlignment: MainAxisAlignment.center,
-                      //   //   children: [
-                      //   //     Icon(
-                      //   //       Icons.chevron_left_rounded,
-                      //   //       size: 16,
-                      //   //       color: isDark
-                      //   //           ? AppColors.darkTextMuted
-                      //   //           : const Color(0xFF94A3B8),
-                      //   //     ),
-                      //   //     // const SizedBox(width: 2),
-                      //   //     // Text(
-                      //   //     //   'ปัดซ้าย / ขวา เพื่อเปลี่ยนบัญชี',
-                      //   //     //   style: TextStyle(
-                      //   //     //     fontSize: 11.5,
-                      //   //     //     fontWeight: FontWeight.w600,
-                      //   //     //     color: isDark
-                      //   //     //         ? AppColors.darkTextMuted
-                      //   //     //         : const Color(0xFF64748B),
-                      //   //     //     letterSpacing: 0.2,
-                      //   //     //   ),
-                      //   //     // ),
-                      //   //     const SizedBox(width: 2),
-                      //   //     Icon(
-                      //   //       Icons.chevron_right_rounded,
-                      //   //       size: 16,
-                      //   //       color: isDark
-                      //   //           ? AppColors.darkTextMuted
-                      //   //           : const Color(0xFF94A3B8),
-                      //   //     ),
-                      //   //   ],
-                      //   // ),
-                      // ),
-                      // const SizedBox(height: 6),
+                      // Mascot Greeting Pill Banner (Dismissible)
+                      if (!_isMascotGreetingDismissed) ...[
+                        _buildMascotGreetingCard(
+                          context,
+                          txState.transactions.length,
+                          isDark,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
 
                       // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
                       BankCardsCarousel(
@@ -375,28 +383,10 @@ class _DashboardViewState extends State<DashboardView> {
                             context.read<AccountCubit>().selectBank(bankId),
                         onAddBankTap: () => context.push('/bank-selection'),
                       ),
-                      // const SizedBox(height: 10),
-
-                      // 2. Bank Quick Jump Bar (Pill buttons under cards)
-                      // BankQuickJumpBar(
-                      //   accounts: accountState.accounts,
-                      //   selectedBankId: accountState.selectedBankId,
-                      //   onSelectBank: (bankId) =>
-                      //       context.read<AccountCubit>().selectBank(bankId),
-                      //   onAddBankTap: () => context.push('/bank-selection'),
-                      // ),
                       const SizedBox(height: 10),
 
-                      // 3. Mascot Speech Bubble Banner
-                      _buildMascotGreetingCard(
-                        context,
-                        txState.transactions.length,
-                        isDark,
-                      ),
-                      const SizedBox(height: 10),
-
-                      // 4. Quick Actions Bar
-                      QuickActionsBar(
+                      // 2. Unified Dashboard Actions Grid (ซ้าย: ตั้งงบ, แผนใช้จ่าย, วิเคราะห์ / ขวา: รับเงินเข้า, จ่ายเงินออก)
+                      DashboardActionsGrid(
                         onAddIncome: () => AddTransactionSheet.show(
                           context,
                           initialType: TransactionType.income,
@@ -408,11 +398,9 @@ class _DashboardViewState extends State<DashboardView> {
                           initialBankId: accountState.selectedBankId,
                         ),
                         onSetBudget: () => context.push('/budgets'),
+                        onSpendingPlan: () => context.push('/spending-plan'),
+                        onAnalytics: () => context.push('/analytics'),
                       ),
-                      const SizedBox(height: 10),
-
-                      // 5. Finance Hub: แผนใช้จ่าย & วิเคราะห์
-                      const FinanceHubSection(),
                       const SizedBox(height: 10),
 
                       // 6. Budget Health Preview Widget
@@ -431,14 +419,14 @@ class _DashboardViewState extends State<DashboardView> {
                                     recentHeaderTitle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 16,
-                                          letterSpacing: -0.3,
-                                        ),
+                                    style: GoogleFonts.prompt(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16,
+                                      letterSpacing: -0.3,
+                                      color: isDark
+                                          ? AppColors.darkTextPrimary
+                                          : const Color(0xFF0F172A),
+                                    ),
                                   ),
                                 ),
                                 if (selectedBankId != null) ...[
@@ -463,18 +451,18 @@ class _DashboardViewState extends State<DashboardView> {
                                               : AppColors.lightBorder,
                                         ),
                                       ),
-                                      child: const Row(
+                                      child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
                                             'ล้าง',
-                                            style: TextStyle(
+                                            style: GoogleFonts.prompt(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          SizedBox(width: 2),
-                                          Icon(Icons.close, size: 10),
+                                          const SizedBox(width: 2),
+                                          const Icon(Icons.close, size: 10),
                                         ],
                                       ),
                                     ),
@@ -483,30 +471,38 @@ class _DashboardViewState extends State<DashboardView> {
                               ],
                             ),
                           ),
-                          TextButton(
-                            onPressed: () {
+                          InkWell(
+                            onTap: () {
                               context
                                   .read<TransactionCubit>()
                                   .setSelectedBankId(selectedBankId);
                               context.go('/transactions');
                             },
-                            style: TextButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              foregroundColor: AppColors.primary,
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'ดูทั้งหมด',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 4,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'ดูทั้งหมด',
+                                    style: GoogleFonts.prompt(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: AppColors.primary,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(Icons.arrow_forward_ios, size: 12),
-                              ],
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 11,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -525,10 +521,10 @@ class _DashboardViewState extends State<DashboardView> {
                                   title: selectedBankId != null
                                       ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
                                       : 'ยังไม่มีรายการเลยนะโฮ่ง!',
-                                  message: selectedBankId != null
-                                      ? 'เมื่อมีรายการเข้าหรือจ่ายออกจากธนาคารนี้ จะปรากฏที่นี่ครับ'
-                                      : 'เริ่มจดบันทึกรายรับหรือรายจ่าย ให้เจ้าตูบช่วยคำนวณงบให้นะครับ',
-                                  actionText: 'จดรายการใหม่',
+                                  // message: selectedBankId != null
+                                  //     ? 'เมื่อมีรายการเข้าหรือจ่ายออกจากธนาคารนี้ จะปรากฏที่นี่ครับ'
+                                  //     : 'เริ่มจดบันทึกรายรับหรือรายจ่าย ให้เจ้าตูบช่วยคำนวณงบให้นะครับ',
+                                  // actionText: 'จดรายการใหม่',
                                   onAction: () =>
                                       AddTransactionSheet.show(context),
                                 )
@@ -572,7 +568,7 @@ class _DashboardViewState extends State<DashboardView> {
     bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6, right: 8),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF131E3A) : const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(16),
@@ -597,11 +593,8 @@ class _DashboardViewState extends State<DashboardView> {
               child: Image.asset(
                 'assets/images/mascot_dog_writing.png',
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.pets,
-                  size: 14,
-                  color: Color(0xFFEA580C),
-                ),
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.pets, size: 14, color: Color(0xFFEA580C)),
               ),
             ),
           ),
@@ -616,7 +609,7 @@ class _DashboardViewState extends State<DashboardView> {
                     txCount > 0
                         ? 'วันนี้ตูบจดให้ $txCount รายการแล้วนะโฮ่ง!'
                         : 'วันนี้มีค่าใช้จ่ายอะไร ให้ตูบช่วยจดนะ!',
-                    style: TextStyle(
+                    style: GoogleFonts.prompt(
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                       color: isDark ? Colors.white : const Color(0xFF9A3412),
@@ -637,17 +630,39 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  'คุมงบมีเงินเก็บ 🐾',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : const Color(0xFFC2410C),
+                Flexible(
+                  flex: 0,
+                  child: Text(
+                    'คุมงบมีเงินเก็บ 🐾',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.prompt(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : const Color(0xFFC2410C),
+                    ),
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 4),
+
+          // Dismiss / Close button
+          GestureDetector(
+            onTap: _dismissMascotGreeting,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(
+                Icons.close_rounded,
+                size: 15,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : const Color(0xFF9A3412).withValues(alpha: 0.6),
+              ),
             ),
           ),
         ],
@@ -679,100 +694,133 @@ class _DashboardViewState extends State<DashboardView> {
           statusColor = AppColors.warning;
         }
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/budgets'),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? AppColors.darkBorderSubtle
-                  : AppColors.lightBorderSubtle,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorderSubtle
+                      : AppColors.lightBorderSubtle,
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Image.asset(
-                        'assets/images/action_budget.png',
-                        width: 20,
-                        height: 20,
-                        fit: BoxFit.contain,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              'assets/images/action_budget.png',
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.contain,
+                            ),
+                            const SizedBox(width: 7),
+                            Flexible(
+                              child: Text(
+                                'สถานะงบประมาณรวม',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.prompt(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '$percentage%',
+                              style: GoogleFonts.prompt(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: LinearProgressIndicator(
+                      value: progress.clamp(0.0, 1.0),
+                      backgroundColor: isDark
+                          ? AppColors.darkBackground
+                          : const Color(0xFFF1F5F9),
+                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      minHeight: 6.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Text(
-                        'สถานะงบประมาณรวม',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        'ใช้ไป ${CurrencyFormatter.format(totalSpent)}',
+                        style: GoogleFonts.prompt(
+                          fontSize: 11,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                      Text(
+                        'จากงบ ${CurrencyFormatter.format(totalLimit)}',
+                        style: GoogleFonts.prompt(
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '$percentage%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
                 ],
               ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: LinearProgressIndicator(
-                  value: progress.clamp(0.0, 1.0),
-                  backgroundColor: isDark
-                      ? AppColors.darkBackground
-                      : const Color(0xFFF1F5F9),
-                  valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                  minHeight: 6,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'ใช้ไป ${CurrencyFormatter.format(totalSpent)}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                  Text(
-                    'จากงบ ${CurrencyFormatter.format(totalLimit)}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -1121,6 +1169,7 @@ class _DashboardViewState extends State<DashboardView> {
               final budgetCubit = context.read<BudgetCubit>();
               final planCubit = context.read<SpendingPlanCubit>();
               final autoSyncCubit = context.read<AutoSyncCubit>();
+              final accCubit = context.read<AccountCubit>();
               final nav = Navigator.of(ctx);
 
               final prefs = await SharedPreferences.getInstance();
@@ -1130,7 +1179,17 @@ class _DashboardViewState extends State<DashboardView> {
               await txCubit.loadTransactions();
               await budgetCubit.loadBudgets();
               await planCubit.loadPlan();
+              await accCubit.loadAccounts();
+              accCubit.selectBank(null);
               await autoSyncCubit.initialize();
+
+              if (mounted) {
+                setState(() {
+                  _dogName = AppConstants.appName;
+                  _isMascotGreetingDismissed = false;
+                });
+              }
+
               nav.pop();
             },
             style: ElevatedButton.styleFrom(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../state/auto_sync_cubit.dart';
@@ -48,7 +50,10 @@ class AutoSyncBanner extends StatelessWidget {
               ),
             ),
             child: InkWell(
-              onTap: () => NotificationDrawerSheet.show(context),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                NotificationDrawerSheet.show(context);
+              },
               child: Row(
                 children: [
                   BankLogoBadge(
@@ -67,9 +72,9 @@ class AutoSyncBanner extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 'ตรวจพบรายการจาก ${firstTx.bankShortName}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
+                                style: GoogleFonts.prompt(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
                                   color: textColor,
                                 ),
                                 maxLines: 1,
@@ -86,9 +91,9 @@ class AutoSyncBanner extends StatelessWidget {
                                 ),
                                 child: Text(
                                   '+$count',
-                                  style: const TextStyle(
+                                  style: GoogleFonts.prompt(
                                     fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -99,9 +104,10 @@ class AutoSyncBanner extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '${firstTx.isIncome ? 'รับเงิน' : 'ชำระ'} ${CurrencyFormatter.format(firstTx.amount)} - แตะเพื่อบันทึก 🐾',
-                          style: TextStyle(
+                          style: GoogleFonts.prompt(
                             fontSize: 12,
                             color: subtextColor,
+                            height: 1.4,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -154,36 +160,43 @@ class AutoSyncBanner extends StatelessWidget {
                     children: [
                       Text(
                         'ระบบจดบันทึกอัตโนมัติ 🐾',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.prompt(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
                           color: textColor,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'ตรวจจับเงินเข้า-ออกจากแอปธนาคารอัตโนมัติ',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: GoogleFonts.prompt(
+                          fontSize: 11.5,
                           color: subtextColor,
+                          height: 1.35,
                         ),
                       ),
                     ],
                   ),
                 ),
                 TextButton(
-                  onPressed: () => context.push('/auto-sync-settings'),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/notification-permission');
+                  },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'ตั้งค่า',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  child: Text(
+                    'เปิดสิทธิ์',
+                    style: GoogleFonts.prompt(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],

@@ -103,7 +103,10 @@ class AccountCubit extends Cubit<AccountState> {
       double expenseSum = 0.0;
 
       for (final tx in transactions) {
-        if (tx.bankId == acc.bankId || (tx.bankAccountId == acc.id)) {
+        final bool isMatch = (tx.bankAccountId != null && tx.bankAccountId!.isNotEmpty)
+            ? tx.bankAccountId == acc.id
+            : tx.bankId == acc.bankId;
+        if (isMatch) {
           if (tx.type == TransactionType.income) {
             incomeSum += tx.amount;
           } else if (tx.type == TransactionType.expense) {

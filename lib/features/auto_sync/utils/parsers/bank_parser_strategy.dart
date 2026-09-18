@@ -1,6 +1,7 @@
 import '../../../../core/constants/app_constants.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../domain/entities/detected_transaction.dart';
+import '../rules/bank_pattern_rules.dart';
 
 abstract class BankParserStrategy {
   String get bankId;
@@ -107,26 +108,116 @@ abstract class BankParserStrategy {
     );
   }
 
+  static final RegExp _balanceRegex = RegExp(
+    r'(?:ยอดคงเหลือ|คงเหลือ|เหลือ)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:บาท|บ\.|฿|THB)?',
+    caseSensitive: false,
+  );
+
   static final List<RegExp> commonAmountRegexes = [
-    RegExp(r'(?:จำนวน|ยอดเงิน|ยอด|เงิน|฿|THB|thb|โอน/ถอน|ถอน/โอน|โอน|รับ|จ่าย|หัก|ฝาก)?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:บาท|บ\.|THB|thb|฿|baht)', caseSensitive: false),
+    RegExp(r'(?:จำนวนเงิน|จำนวน|ยอดเงิน|ยอด|เงิน|฿|THB|thb|โอน/ถอน|ถอน/โอน|โอน|รับ|จ่าย|หัก|ฝาก)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:บาท|บ\.|THB|thb|฿|baht)?', caseSensitive: false),
+    RegExp(r'(?:โอนเงิน|มีเงิน|เงินเข้า|เงินออก)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:บาท|บ\.|THB|thb|฿|baht)', caseSensitive: false),
+    RegExp(r'([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:บาท|บ\.|THB|thb|฿|baht)', caseSensitive: false),
     RegExp(r'(?:โอน/ถอน|ถอน/โอน|โอนเงิน|รับเงิน|ชำระ|จ่าย|หัก|เงินเข้า|เงินออก|โอน|ถอน|ฝาก|ยอด|บช\.)\s*(?:จำนวน|เป็นจำนวน|ยอด)?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)', caseSensitive: false),
     RegExp(r'(?:฿|\$)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)'),
     RegExp(r'([0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2})'),
   ];
 
+  /// Extract the transaction amount specifically using the bank's own Income/Expense rules
+  double? extractAmountByBank({
+    required String bankId,
+    required TransactionType type,
+    required String text,
+  }) {
+    return BankPatternRules.extractAmount(
+      bankId: bankId,
+      type: type,
+      text: text,
+    );
+  }
+
+  /// Extract the transaction amount using general fallback
   double? extractAmountCommon(String text) {
-    for (final reg in commonAmountRegexes) {
-      final match = reg.firstMatch(text);
-      if (match != null) {
-        final rawStr = match.group(1)?.replaceAll(',', '').trim();
-        if (rawStr != null) {
-          final val = double.tryParse(rawStr);
-          if (val != null && val > 0 && val < 100000000) {
-            return val;
-          }
-        }
+    return BankPatternRules.extractCommonAmount(text);
+  }
+
+  /// Extract remaining balance if present in notification text (e.g. เหลือ371.00บ., ยอดคงเหลือ 45,650.00 บ.)
+  double? extractRemainingBalance(String text) {
+    final match = _balanceRegex.firstMatch(text);
+    if (match != null) {
+      final rawStr = match.group(1)?.replaceAll(',', '').trim();
+      if (rawStr != null) {
+        return double.tryParse(rawStr);
       }
     }
+    return null;
+  }
+
+  static const Map<String, int> _thaiMonths = {
+    'ม.ค.': 1, 'มกราคม': 1,
+    'ก.พ.': 2, 'กุมภาพันธ์': 2,
+    'มี.ค.': 3, 'มีนาคม': 3,
+    'เม.ย.': 4, 'เมษายน': 4,
+    'พ.ค.': 5, 'พฤษภาคม': 5,
+    'มิ.ย.': 6, 'มิถุนายน': 6,
+    'ก.ค.': 7, 'กรกฎาคม': 7,
+    'ส.ค.': 8, 'สิงหาคม': 8,
+    'ก.ย.': 9, 'กันยายน': 9,
+    'ต.ค.': 10, 'ตุลาคม': 10,
+    'พ.ย.': 11, 'พฤศจิกายน': 11,
+    'ธ.ค.': 12, 'ธันวาคม': 12,
+  };
+
+  static final RegExp _kplusDateRegex = RegExp(
+    r'(?:วันที่\s*)?([0-9]{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*([0-9]{2,4})\s*(?:เวลา\s*)?([0-9]{1,2}):([0-9]{2})',
+    caseSensitive: false,
+  );
+
+  static final RegExp _ttbDateRegex = RegExp(
+    r'([0-9]{1,2})/([0-9]{1,2})/([0-9]{2,4})@([0-9]{1,2}):([0-9]{2})',
+  );
+
+  /// Extract DateTime from Thai notification strings (e.g. K PLUS or ttb touch)
+  DateTime? extractThaiDateTime(String text) {
+    // Check K PLUS format: วันที่ 12 ก.ย. 69 17:39 น.
+    final kMatch = _kplusDateRegex.firstMatch(text);
+    if (kMatch != null) {
+      final day = int.tryParse(kMatch.group(1) ?? '');
+      final monthStr = kMatch.group(2);
+      final month = monthStr != null ? _thaiMonths[monthStr] : null;
+      var year = int.tryParse(kMatch.group(3) ?? '');
+      final hour = int.tryParse(kMatch.group(4) ?? '');
+      final minute = int.tryParse(kMatch.group(5) ?? '');
+
+      if (day != null && month != null && year != null && hour != null && minute != null) {
+        if (year < 100) {
+          year += 2500; // e.g. 69 -> 2569
+        }
+        if (year >= 2400) {
+          year -= 543; // Convert Buddhist Year (BE) to Common Era (CE)
+        }
+        return DateTime(year, month, day, hour, minute);
+      }
+    }
+
+    // Check ttb touch format: 12/09/26@17:39 (DD/MM/YY@HH:mm)
+    final tMatch = _ttbDateRegex.firstMatch(text);
+    if (tMatch != null) {
+      final day = int.tryParse(tMatch.group(1) ?? '');
+      final month = int.tryParse(tMatch.group(2) ?? '');
+      var year = int.tryParse(tMatch.group(3) ?? '');
+      final hour = int.tryParse(tMatch.group(4) ?? '');
+      final minute = int.tryParse(tMatch.group(5) ?? '');
+
+      if (day != null && month != null && year != null && hour != null && minute != null) {
+        if (year < 100) {
+          year += 2000; // e.g. 26 -> 2026
+        } else if (year >= 2500) {
+          year -= 543;
+        }
+        return DateTime(year, month, day, hour, minute);
+      }
+    }
+
     return null;
   }
 }

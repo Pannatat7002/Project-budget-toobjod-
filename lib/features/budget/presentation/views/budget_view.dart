@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
@@ -17,7 +18,10 @@ class BudgetView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('วางแผนงบประมาณ'),
+        title: Text(
+          'วางแผนงบประมาณ',
+          style: GoogleFonts.prompt(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
         actions: [
           IconButton(
             onPressed: () => SetBudgetDialog.show(context),
@@ -37,8 +41,7 @@ class BudgetView extends StatelessWidget {
       body: BlocBuilder<BudgetCubit, BudgetState>(
         // Rebuild only when budgets or status changes
         buildWhen: (prev, curr) =>
-            prev.status != curr.status ||
-            prev.budgets != curr.budgets,
+            prev.status != curr.status || prev.budgets != curr.budgets,
         builder: (context, state) {
           if (state.status == BudgetStatus.loading && state.budgets.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -58,103 +61,156 @@ class BudgetView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Overall Budget Summary Hero Card
-                  Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [const Color(0xFF161F36), const Color(0xFF0F1728)]
-                            : [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(26),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF283553) : Colors.white.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                  // Overall Budget Summary Hero Card with Mascot
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [
+                                    const Color(0xFF1E293B),
+                                    const Color(0xFF0F172A),
+                                  ]
+                                : [
+                                    const Color(0xFFFF7A00),
+                                    const Color(0xFFEA580C),
+                                    const Color(0xFFC2410C),
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(
+                                    0xFFEA580C,
+                                  ).withValues(alpha: 0.35)
+                                : Colors.white.withValues(alpha: 0.25),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.3)
+                                  : const Color(
+                                      0xFFEA580C,
+                                    ).withValues(alpha: 0.25),
+                              blurRadius: 14,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'งบประมาณรวมประจำเดือน',
+                                  style: GoogleFonts.prompt(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.22),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${(progress * 100).toInt()}% ใช้ไปแล้ว',
+                                    style: GoogleFonts.prompt(
+                                      color: Colors.white,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                             Text(
-                              'งบประมาณรวมประจำเดือน',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                              CurrencyFormatter.format(totalLimit),
+                              style: GoogleFonts.prompt(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.8,
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${(progress * 100).toInt()}% ใช้ไปแล้ว',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(height: 16),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: progress.clamp(0.0, 1.0),
+                                minHeight: 8,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.22,
+                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  progress > 1.0
+                                      ? const Color(0xFFEF4444)
+                                      : (progress >= 0.8
+                                            ? const Color(0xFFFBBF24)
+                                            : Colors.white),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          CurrencyFormatter.format(totalLimit),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: progress.clamp(0.0, 1.0),
-                            minHeight: 8,
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              progress > 1.0
-                                  ? AppColors.expense
-                                  : (progress >= 0.8 ? AppColors.warning : AppColors.income),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildSummaryItem(
-                              label: 'ใช้ไปแล้ว',
-                              amount: CurrencyFormatter.format(totalSpent),
-                              color: Colors.white,
-                            ),
-                            _buildSummaryItem(
-                              label: 'เหลืองบประมาณ',
-                              amount: CurrencyFormatter.format(totalRemaining),
-                              color: totalRemaining > 0 ? AppColors.incomeLight : AppColors.expenseLight,
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildSummaryItem(
+                                  label: 'ใช้ไปแล้ว',
+                                  amount: CurrencyFormatter.format(totalSpent),
+                                  color: Colors.white,
+                                ),
+                                _buildSummaryItem(
+                                  label: 'เหลืองบประมาณ',
+                                  amount: CurrencyFormatter.format(
+                                    totalRemaining,
+                                  ),
+                                  color: totalRemaining > 0
+                                      ? const Color(0xFF6EE7B7)
+                                      : const Color(0xFFFCA5A5),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Positioned(
+                        right: 14,
+                        top: -12,
+                        child: IgnorePointer(
+                          child: SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: Image.asset(
+                              'assets/images/mascot_dog_peek.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
@@ -164,16 +220,24 @@ class BudgetView extends StatelessWidget {
                     children: [
                       Text(
                         'งบประมาณตามหมวดหมู่',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 17,
-                              letterSpacing: -0.3,
-                            ),
+                        style: GoogleFonts.prompt(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                          letterSpacing: -0.3,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : const Color(0xFF0F172A),
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: () => SetBudgetDialog.show(context),
                         icon: const Icon(Icons.add, size: 16),
-                        label: const Text('เพิ่มงบ'),
+                        label: Text(
+                          'เพิ่มงบ',
+                          style: GoogleFonts.prompt(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.primary,
                           visualDensity: VisualDensity.compact,
@@ -188,8 +252,8 @@ class BudgetView extends StatelessWidget {
                     EmptyStateWidget(
                       icon: Icons.pie_chart_outline,
                       title: 'ยังไม่ได้ตั้งงบประมาณ',
-                      message: 'วางแผนและคุมค่าใช้จ่ายล่วงหน้าเพื่อไม่ให้ใช้เงินเกินตัว!',
-                      actionText: 'ตั้งงบประมาณแรก',
+                      // message: 'วางแผนและคุมค่าใช้จ่ายล่วงหน้าเพื่อไม่ให้ใช้เงินเกินตัว!',
+                      // actionText: 'ตั้งงบประมาณแรก',
                       onAction: () => SetBudgetDialog.show(context),
                     )
                   else
@@ -201,12 +265,15 @@ class BudgetView extends StatelessWidget {
                         final b = budgets[index];
                         return BudgetProgressCard(
                           budget: b,
-                          onEdit: () => SetBudgetDialog.show(context, existingBudget: b),
+                          onEdit: () =>
+                              SetBudgetDialog.show(context, existingBudget: b),
                           onDelete: () {
                             context.read<BudgetCubit>().deleteBudget(b.id);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('ลบงบประมาณ "${b.categoryName}" แล้ว'),
+                                content: Text(
+                                  'ลบงบประมาณ "${b.categoryName}" แล้ว',
+                                ),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
@@ -234,15 +301,19 @@ class BudgetView extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
+          style: GoogleFonts.prompt(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           amount,
-          style: TextStyle(
+          style: GoogleFonts.prompt(
             color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:budget_planner/features/auto_sync/utils/rules/bank_pattern_rules.dart';
 import 'package:budget_planner/features/auto_sync/utils/thai_bank_parser.dart';
 import 'package:budget_planner/features/transactions/domain/entities/transaction_entity.dart';
 
@@ -281,6 +282,210 @@ void main() {
       expect(dimeNotif!.bankShortName, 'Dime!');
       expect(dimeNotif.type, TransactionType.income);
       expect(dimeNotif.amount, 3000.00);
+    });
+
+    group('Real Screenshot Notifications (from test/ folder images)', () {
+      test('K PLUS - รายการเงินเข้า 1.00 บาท (17:39 น.)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.kasikorn.retail.mbanking.wap',
+          title: 'รายการเงินเข้า',
+          text: 'บัญชี xxx-x-x3287-x จำนวนเงิน 1.00 บาท วันที่ 12 ก.ย. 69 17:39 น.',
+        );
+
+        expect(parsed, isNotNull);
+        expect(parsed!.bankShortName, 'K PLUS');
+        expect(parsed.type, TransactionType.income);
+        expect(parsed.amount, 1.00);
+        expect(parsed.accountMask, 'x-3287');
+        expect(parsed.title, 'รายการเงินเข้า');
+        expect(parsed.timestamp.year, 2026);
+        expect(parsed.timestamp.month, 9);
+        expect(parsed.timestamp.day, 12);
+        expect(parsed.timestamp.hour, 17);
+        expect(parsed.timestamp.minute, 39);
+      });
+
+      test('K PLUS - รายการโอน/ถอน (3.00, 4.00, 5.00, 300.00 บาท)', () {
+        final items = [
+          {
+            'text': 'บัญชี xxx-x-x3287-x จำนวนเงิน 3.00 บาท วันที่ 12 ก.ย. 69 17:32 น.',
+            'amount': 3.00,
+            'hour': 17,
+            'minute': 32,
+          },
+          {
+            'text': 'บัญชี xxx-x-x3287-x จำนวนเงิน 4.00 บาท วันที่ 12 ก.ย. 69 17:27 น.',
+            'amount': 4.00,
+            'hour': 17,
+            'minute': 27,
+          },
+          {
+            'text': 'บัญชี xxx-x-x3287-x จำนวนเงิน 5.00 บาท วันที่ 12 ก.ย. 69 16:59 น.',
+            'amount': 5.00,
+            'hour': 16,
+            'minute': 59,
+          },
+          {
+            'text': 'บัญชี xxx-x-x3287-x จำนวนเงิน 300.00 บาท วันที่ 12 ก.ย. 69 16:45 น.',
+            'amount': 300.00,
+            'hour': 16,
+            'minute': 45,
+          },
+        ];
+
+        for (final item in items) {
+          final parsed = ThaiBankParser.parse(
+            packageName: 'com.kasikorn.retail.mbanking.wap',
+            title: 'รายการโอน/ถอน',
+            text: item['text'] as String,
+          );
+
+          expect(parsed, isNotNull);
+          expect(parsed!.bankShortName, 'K PLUS');
+          expect(parsed.type, TransactionType.expense);
+          expect(parsed.amount, item['amount']);
+          expect(parsed.accountMask, 'x-3287');
+          expect(parsed.title, 'รายการโอน/ถอน');
+          expect(parsed.timestamp.year, 2026);
+          expect(parsed.timestamp.month, 9);
+          expect(parsed.timestamp.day, 12);
+          expect(parsed.timestamp.hour, item['hour']);
+          expect(parsed.timestamp.minute, item['minute']);
+        }
+      });
+
+      test('ttb touch - แจ้งรายการเงินเข้าบัญชี-สำเร็จ (Full Expanded Text)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.ttbbank.oneapp',
+          title: 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ',
+          text: 'มีเงิน3.00บ.โอนเข้า/ชxx0264 จาก KBANK X2875 นาย ปัณณทัต สมา เหลือ372.00บ.12/09/26@17:32',
+        );
+
+        expect(parsed, isNotNull);
+        expect(parsed!.bankShortName, 'ttb touch');
+        expect(parsed.type, TransactionType.income);
+        expect(parsed.amount, 3.00);
+        expect(parsed.accountMask, 'x-0264');
+        expect(parsed.title, 'นาย ปัณณทัต สมา');
+        expect(parsed.merchantOrSender, contains('KBANK X2875 นาย ปัณณทัต สมา'));
+        expect(parsed.timestamp.year, 2026);
+        expect(parsed.timestamp.month, 9);
+        expect(parsed.timestamp.day, 12);
+        expect(parsed.timestamp.hour, 17);
+        expect(parsed.timestamp.minute, 32);
+      });
+
+      test('ttb touch - แจ้งรายการเงินเข้าบัญชี-สำ... (Compact / Truncated Text)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.ttbbank.oneapp',
+          title: 'แจ้งรายการเงินเข้าบัญชี-สำ...',
+          text: 'มีเงิน3.00บ.โอนเข้า/ชxx0264 จาก KBANK X2875 นาย ปัณณทัต สมา เห...',
+        );
+
+        expect(parsed, isNotNull);
+        expect(parsed!.bankShortName, 'ttb touch');
+        expect(parsed.type, TransactionType.income);
+        expect(parsed.amount, 3.00);
+        expect(parsed.accountMask, 'x-0264');
+        expect(parsed.title, 'นาย ปัณณทัต สมา');
+      });
+
+      test('ttb touch - แจ้งรายการโอนเงิน-สำเร็จ (Full Expanded Text)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.ttbbank.oneapp',
+          title: 'แจ้งรายการโอนเงิน-สำเร็จ',
+          text: 'โอนเงิน1.00บ.ไปยังบ/ช KBANK X2875 นาย ปัณณทัต สมา เหลือ371.00บ.12/09/26@17:39',
+        );
+
+        expect(parsed, isNotNull);
+        expect(parsed!.bankShortName, 'ttb touch');
+        expect(parsed.type, TransactionType.expense);
+        expect(parsed.amount, 1.00);
+        expect(parsed.title, 'นาย ปัณณทัต สมา');
+        expect(parsed.merchantOrSender, contains('KBANK X2875 นาย ปัณณทัต สมา'));
+        expect(parsed.timestamp.year, 2026);
+        expect(parsed.timestamp.month, 9);
+        expect(parsed.timestamp.day, 12);
+        expect(parsed.timestamp.hour, 17);
+        expect(parsed.timestamp.minute, 39);
+      });
+
+      test('ttb touch - แจ้งรายการโอนเงิน-สำ... (Compact / Truncated Text)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.ttbbank.oneapp',
+          title: 'แจ้งรายการโอนเงิน-สำ...',
+          text: 'โอนเงิน1.00บ.ไปยังบ/ช KBANK X2875 นาย ปัณณทัต สมา เหลือ371.0...',
+        );
+
+        expect(parsed, isNotNull);
+        expect(parsed!.bankShortName, 'ttb touch');
+        expect(parsed.type, TransactionType.expense);
+        expect(parsed.amount, 1.00);
+        expect(parsed.title, 'นาย ปัณณทัต สมา');
+      });
+
+      test('ttb touch - all other income notifications (4.00, 5.00, 300.00 บ.)', () {
+        final amounts = [
+          {
+            'text': 'มีเงิน4.00บ.โอนเข้า/ชxx0264 จาก KBANK X2875 นาย ปัณณทัต สมา เหลือ369.00บ.12/09/26@17:27',
+            'amount': 4.00,
+            'minute': 27,
+          },
+          {
+            'text': 'มีเงิน5.00บ.โอนเข้า/ชxx0264 จาก KBANK X2875 นาย ปัณณทัต สมา เหลือ365.00บ.12/09/26@16:59',
+            'amount': 5.00,
+            'minute': 59,
+          },
+          {
+            'text': 'มีเงิน300.00บ.โอนเข้า/ชxx0264 จาก KBANK X2875 นาย ปัณณทัต สมา เหลือ360.00บ.12/09/26@16:45',
+            'amount': 300.00,
+            'minute': 45,
+          },
+        ];
+
+        for (final item in amounts) {
+          final parsed = ThaiBankParser.parse(
+            packageName: 'com.ttbbank.oneapp',
+            title: 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ',
+            text: item['text'] as String,
+          );
+
+          expect(parsed, isNotNull);
+          expect(parsed!.bankShortName, 'ttb touch');
+          expect(parsed.type, TransactionType.income);
+          expect(parsed.amount, item['amount']);
+          expect(parsed.accountMask, 'x-0264');
+          expect(parsed.title, 'นาย ปัณณทัต สมา');
+          expect(parsed.timestamp.minute, item['minute']);
+        }
+      });
+    });
+
+    group('BankPatternRules Engine Tests', () {
+      test('should cleanly separate rules by bank and transaction type (income vs expense)', () {
+        final kbankRules = BankPatternRules.getRuleSet('kbank');
+        expect(kbankRules, isNotNull);
+        expect(kbankRules!.expensePatterns, isNotEmpty);
+        expect(kbankRules.incomePatterns, isNotEmpty);
+        for (final p in kbankRules.expensePatterns) {
+          expect(p.id, isNotEmpty);
+          expect(p.label, isNotEmpty);
+          expect(p.example, isNotEmpty);
+        }
+
+        final ttbRules = BankPatternRules.getRuleSet('ttb');
+        expect(ttbRules, isNotNull);
+        expect(ttbRules!.expensePatterns, isNotEmpty);
+        expect(ttbRules.incomePatterns, isNotEmpty);
+
+        final json = BankPatternRules.allRulesAsJson();
+        expect(json.containsKey('KBANK'), isTrue);
+        expect(json.containsKey('TTB'), isTrue);
+        expect(json['KBANK']['เงินออก (Expense)'], isNotEmpty);
+        expect(json['KBANK']['เงินเข้า (Income)'], isNotEmpty);
+        expect(json['TTB']['เงินออก (Expense)'], isNotEmpty);
+        expect(json['TTB']['เงินเข้า (Income)'], isNotEmpty);
+      });
     });
   });
 }

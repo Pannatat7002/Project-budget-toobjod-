@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../state/transaction_state.dart';
 
@@ -36,7 +38,7 @@ class TransactionFilterBar extends StatelessWidget {
           ),
           _buildFilterButton(
             context: context,
-            title: 'รับเงินเข้า (+)',
+            title: 'เงินเข้า (+)',
             imageAsset: 'assets/images/action_income.png',
             filter: TransactionFilterType.income,
             isSelected: currentFilter == TransactionFilterType.income,
@@ -44,7 +46,7 @@ class TransactionFilterBar extends StatelessWidget {
           ),
           _buildFilterButton(
             context: context,
-            title: 'จ่ายเงินออก (-)',
+            title: 'เงินออก (-)',
             imageAsset: 'assets/images/action_expense.png',
             filter: TransactionFilterType.expense,
             isSelected: currentFilter == TransactionFilterType.expense,
@@ -67,11 +69,16 @@ class TransactionFilterBar extends StatelessWidget {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => onFilterChanged(filter),
+        onTap: () {
+          if (!isSelected) {
+            HapticFeedback.selectionClick();
+          }
+          onFilterChanged(filter);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: isSelected
                 ? (activeColor != null
@@ -79,6 +86,12 @@ class TransactionFilterBar extends StatelessWidget {
                     : (isDark ? AppColors.darkCard : const Color(0xFFF1F5F9)))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
+            border: isSelected && activeColor != null
+                ? Border.all(
+                    color: activeColor.withValues(alpha: isDark ? 0.4 : 0.3),
+                    width: 0.8,
+                  )
+                : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -86,21 +99,27 @@ class TransactionFilterBar extends StatelessWidget {
               if (imageAsset != null) ...[
                 Image.asset(
                   imageAsset,
-                  width: 16,
-                  height: 16,
+                  width: 14,
+                  height: 14,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 4),
               ],
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected
-                      ? (activeColor ?? (isDark ? Colors.white : AppColors.lightTextPrimary))
-                      : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: GoogleFonts.prompt(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? (activeColor ?? (isDark ? Colors.white : AppColors.lightTextPrimary))
+                          : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                    ),
+                  ),
                 ),
               ),
             ],

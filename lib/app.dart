@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'config/routes/app_router.dart';
@@ -7,6 +8,7 @@ import 'features/auto_sync/presentation/state/auto_sync_cubit.dart';
 import 'features/budget/presentation/state/budget_cubit.dart';
 import 'features/spending_plan/presentation/state/spending_plan_cubit.dart';
 import 'features/transactions/presentation/state/transaction_cubit.dart';
+import 'features/transactions/presentation/state/transaction_state.dart';
 import 'injection_container.dart' as di;
 
 class BudgetPlannerApp extends StatefulWidget {
@@ -22,6 +24,7 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
   late final TransactionCubit _transactionCubit;
   late final BudgetCubit _budgetCubit;
   late final SpendingPlanCubit _spendingPlanCubit;
+  StreamSubscription<TransactionState>? _txSubscription;
 
   @override
   void initState() {
@@ -32,10 +35,18 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
     _budgetCubit = di.sl<BudgetCubit>()..loadBudgets();
     _spendingPlanCubit = di.sl<SpendingPlanCubit>()..loadPlan();
     _autoSyncCubit = di.sl<AutoSyncCubit>()..initialize();
+
+    _txSubscription = _transactionCubit.stream.listen((txState) {
+      if (txState.status == TransactionStatus.success) {
+        _budgetCubit.updateWithTransactions(txState.transactions);
+        _accountCubit.refreshBalancesFromTransactions(txState.transactions);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _txSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

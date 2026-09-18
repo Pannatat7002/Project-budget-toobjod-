@@ -68,7 +68,7 @@ class _TransactionTileState extends State<TransactionTile>
           padding: const EdgeInsets.symmetric(horizontal: 24),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: AppColors.expense.withValues(alpha: 0.9),
+            color: AppColors.error.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(16),
           ),
           child: const Row(

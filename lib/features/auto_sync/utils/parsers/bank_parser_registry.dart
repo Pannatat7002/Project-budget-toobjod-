@@ -1,3 +1,4 @@
+import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
 import 'bank_parser_strategy.dart';
 import 'bbl_parser.dart';
@@ -40,7 +41,26 @@ class BankParserRegistry {
     final fullText = '$title $text ${subText ?? ''}'.trim();
     if (fullText.isEmpty) return null;
 
-    // 1. First attempt to match by packageName and text
+    // 1. First priority: Direct package match via BankProfile (e.g. ttb touch, K PLUS)
+    final profile = BankProfile.findByPackage(packageName);
+    if (profile != null) {
+      final strategy = getStrategy(profile.id);
+      if (strategy != null) {
+        final result = strategy.parse(
+          id: id,
+          packageName: packageName,
+          title: title,
+          text: text,
+          subText: subText,
+          timestamp: timestamp,
+        );
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+
+    // 2. Second priority: Fallback to canHandle (for SMS apps, ADB shell, or unmapped aliases)
     for (final strategy in _strategies) {
       if (strategy.canHandle(packageName, fullText)) {
         final result = strategy.parse(

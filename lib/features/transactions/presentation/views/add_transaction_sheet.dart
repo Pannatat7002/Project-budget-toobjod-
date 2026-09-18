@@ -57,6 +57,7 @@ class AddTransactionSheet extends StatefulWidget {
 
 class _AddTransactionSheetState extends State<AddTransactionSheet> {
   final _formKey = GlobalKey<FormState>();
+  final FocusNode _amountFocusNode = FocusNode();
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late TextEditingController _noteController;
@@ -94,6 +95,21 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     } else {
       _selectedCategory = initialList.first;
     }
+
+    // Auto-focus amount field so user can type immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 120), () {
+        if (mounted && _amountFocusNode.canRequestFocus) {
+          _amountFocusNode.requestFocus();
+          if (_amountController.text.isNotEmpty) {
+            _amountController.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: _amountController.text.length,
+            );
+          }
+        }
+      });
+    });
   }
 
   @override
@@ -135,6 +151,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   @override
   void dispose() {
+    _amountFocusNode.dispose();
     _titleController.dispose();
     _amountController.dispose();
     _noteController.dispose();
@@ -369,9 +386,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           Expanded(
                             child: TextFormField(
                               controller: _amountController,
+                              focusNode: _amountFocusNode,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                              autofocus: false,
+                              autofocus: true,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                               style: TextStyle(

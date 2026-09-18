@@ -21,20 +21,32 @@ class TtbParser extends BankParserStrategy {
     if (pkg.contains('ttb') || pkg.contains('tmb')) {
       return true;
     }
+    // If package belongs to another known bank app, do not handle
+    if (pkg.contains('kasikorn') || pkg.contains('kplus') || pkg.contains('scb') ||
+        pkg.contains('ktb') || pkg.contains('bbl') || pkg.contains('krungsri') ||
+        pkg.contains('truemoney') || pkg.contains('dime')) {
+      return false;
+    }
     final lower = text.toLowerCase();
+    if (lower.contains('จาก ttb') || lower.contains('จาก tmb') || lower.contains('จาก ทีทีบี')) {
+      return false;
+    }
     return lower.contains('ttb') ||
         lower.contains('tmb') ||
         lower.contains('ทีทีบี') ||
         lower.contains('ทหารไทยธนชาต');
   }
 
-  static final RegExp _accountMaskRegex = RegExp(r'(?:บช\.|บัญชี|จาก|เข้า)\s*([0-9xX\-]+)', caseSensitive: false);
+  static final RegExp _accountMaskRegex = RegExp(
+    r'(?:บ\/ช|บช\.|บัญชี|เข้า\/ช|เข้าบ\/ช|โอนเข้า\/ช|เข้า|จาก|ไปยังบ\/ช|ไปยัง)\s*([0-9xX\-]*[0-9]{3,}[0-9xX\-]*)',
+    caseSensitive: false,
+  );
   static final RegExp _merchantRegex = RegExp(
-    r'(?:ให้แก่|ให้กับ|ให้|ไปยัง|ไป|ที่ร้าน|ชำระค่าสินค้าที่|ชำระให้)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:ยอดคงเหลือ|จำนวน|ยอด|ผ่าน|สำเร็จ|เข้า)|$|\s+[0-9])',
+    r'(?:ให้แก่|ให้กับ|ให้|ไปยังบ\/ช|ไปยังบช\.|ไปยัง|ไป|ที่ร้าน|ชำระค่าสินค้าที่|ชำระให้)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?=\s*(?:ยอดคงเหลือ|คงเหลือ|เหลือ|เห\.\.\.|\.\.\.|จำนวน|ยอด|ผ่าน|สำเร็จ|เข้า)|$)',
     caseSensitive: false,
   );
   static final RegExp _senderRegex = RegExp(
-    r'(?:จาก|โอนจาก|รับจาก|ผู้โอน)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:ยอดคงเหลือ|จำนวน|ยอด|เข้า)|$|\s+[0-9])',
+    r'(?:จาก|โอนจาก|รับจาก|ผู้โอน)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?=\s*(?:ยอดคงเหลือ|คงเหลือ|เหลือ|เห\.\.\.|\.\.\.|จำนวน|ยอด|เข้า)|$)',
     caseSensitive: false,
   );
 
@@ -67,44 +79,66 @@ class TtbParser extends BankParserStrategy {
     }
 
     // 2. Amount
-    final amount = extractAmountCommon(fullText);
+    final amount = extractAmountByBank(bankId: bankId, type: type, text: fullText);
     if (amount == null || amount <= 0) return null;
 
     // 3. Account Mask
     String? mask;
     final maskMatch = _accountMaskRegex.firstMatch(fullText);
     if (maskMatch != null) {
-      final raw = maskMatch.group(1)?.replaceAll('-', '').trim();
-      if (raw != null && raw.length >= 4) {
-        mask = 'x-${raw.substring(raw.length - 4)}';
+      final raw = maskMatch.group(1)?.replaceAll('-', '').trim() ?? '';
+      final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+      if (digits.length >= 4) {
+        mask = 'x-${digits.substring(digits.length - 4)}';
+      } else if (raw.isNotEmpty) {
+        mask = 'x-$raw';
       }
     }
 
-    // 4. Counterparty
+    // 4. Counterparty (Merchant or Sender)
     String? merchantOrSender;
     if (type == TransactionType.income) {
       final match = _senderRegex.firstMatch(fullText);
       if (match != null) {
-        final raw = match.group(1)?.trim();
-        if (raw != null && raw.isNotEmpty && raw.length < 40 && !raw.startsWith('x-')) {
-          merchantOrSender = raw;
+        var raw = match.group(1)?.trim();
+        if (raw != null && raw.isNotEmpty) {
+          raw = raw.replaceAll(RegExp(r'\s*(?:เห\.\.\.|\.\.\.|เห).*$'), '').trim();
+          raw = raw.replaceAll(RegExp(r'^(?:บ\/ช|บช\.)\s*'), '').trim();
+          if (raw.isNotEmpty && raw.length < 60 && !raw.startsWith('x-') && !raw.startsWith('xx')) {
+            merchantOrSender = raw;
+          }
         }
       }
     } else {
       final match = _merchantRegex.firstMatch(fullText);
       if (match != null) {
-        final raw = match.group(1)?.trim();
-        if (raw != null && raw.isNotEmpty && raw.length < 40) {
-          merchantOrSender = raw;
+        var raw = match.group(1)?.trim();
+        if (raw != null && raw.isNotEmpty) {
+          raw = raw.replaceAll(RegExp(r'\s*(?:เห\.\.\.|\.\.\.|เห).*$'), '').trim();
+          raw = raw.replaceAll(RegExp(r'^(?:บ\/ช|บช\.)\s*'), '').trim();
+          if (raw.isNotEmpty && raw.length < 60) {
+            merchantOrSender = raw;
+          }
         }
+      }
+    }
+
+    // Extract clean display title if bank prefix exists (e.g. "KBANK X2875 นาย ปัณณทัต สมา" -> "นาย ปัณณทัต สมา")
+    String? cleanName;
+    if (merchantOrSender != null) {
+      final nameMatch = RegExp(r'^(?:[A-Za-z0-9]+\s+[A-Za-z0-9\-]+\s+)(.*)$').firstMatch(merchantOrSender);
+      if (nameMatch != null && nameMatch.group(1)!.trim().isNotEmpty) {
+        cleanName = nameMatch.group(1)!.trim();
+      } else {
+        cleanName = merchantOrSender;
       }
     }
 
     // 5. Title
     String txTitle;
-    if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
-      txTitle = merchantOrSender;
-    } else if (lower.contains('โอนเงินออก') || lower.contains('โอนเงิน')) {
+    if (cleanName != null && cleanName.isNotEmpty) {
+      txTitle = cleanName;
+    } else if (lower.contains('โอนเงินออก') || lower.contains('โอนเงิน') || lower.contains('แจ้งรายการโอนเงิน')) {
       txTitle = 'โอนเงิน';
     } else if (type == TransactionType.income) {
       txTitle = 'เงินเข้า (ttb touch)';
@@ -113,7 +147,8 @@ class TtbParser extends BankParserStrategy {
     }
 
     final category = suggestCategory(fullText, type, merchantOrSender);
-    final notifTime = timestamp ?? DateTime.now();
+    final parsedTime = extractThaiDateTime(fullText);
+    final notifTime = parsedTime ?? timestamp ?? DateTime.now();
     final timeBucket = notifTime.millisecondsSinceEpoch ~/ 4000;
     final uniqueId = (id != null && id.isNotEmpty)
         ? id

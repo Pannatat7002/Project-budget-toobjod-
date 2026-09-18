@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../spending_plan/presentation/state/spending_plan_cubit.dart';
@@ -30,11 +32,12 @@ class FinanceHubSection extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'วางแผน & วิเคราะห์การเงิน',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15.5,
-                      letterSpacing: -0.3,
-                    ),
+                style: GoogleFonts.prompt(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15.5,
+                  letterSpacing: -0.3,
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                ),
               ),
             ],
           ),
@@ -168,7 +171,10 @@ class FinanceHubSection extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
           borderRadius: BorderRadius.circular(16),
           splashColor: actionColor.withValues(alpha: 0.12),
           child: Padding(
@@ -184,7 +190,7 @@ class FinanceHubSection extends StatelessWidget {
                       height: 26,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: iconGradient,
+                           colors: iconGradient,
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -196,7 +202,7 @@ class FinanceHubSection extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title,
-                        style: TextStyle(
+                        style: GoogleFonts.prompt(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -213,7 +219,7 @@ class FinanceHubSection extends StatelessWidget {
                 // Main Value & Label
                 Text(
                   mainLabel,
-                  style: TextStyle(
+                  style: GoogleFonts.prompt(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
@@ -222,7 +228,7 @@ class FinanceHubSection extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   mainValue,
-                  style: TextStyle(
+                  style: GoogleFonts.prompt(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -236,7 +242,7 @@ class FinanceHubSection extends StatelessWidget {
                 // Subtitle
                 Text(
                   subLabel,
-                  style: TextStyle(
+                  style: GoogleFonts.prompt(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white60 : const Color(0xFF475569),
@@ -252,7 +258,7 @@ class FinanceHubSection extends StatelessWidget {
                   children: [
                     Text(
                       actionText,
-                      style: TextStyle(
+                      style: GoogleFonts.prompt(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         color: isDark ? actionColor.withValues(alpha: 0.9) : actionColor,

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme/app_colors.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final IconData? icon;
   final String? imageAsset;
   final String title;
-  final String message;
-  final String? actionText;
+  // final String message;
+  // final String? actionText;
   final VoidCallback? onAction;
 
   const EmptyStateWidget({
@@ -14,8 +15,8 @@ class EmptyStateWidget extends StatelessWidget {
     this.icon,
     this.imageAsset = 'assets/images/mascot_dog_writing.png',
     required this.title,
-    required this.message,
-    this.actionText,
+    // required this.message,
+    // this.actionText,
     this.onAction,
   });
 
@@ -49,7 +50,11 @@ class EmptyStateWidget extends StatelessWidget {
                         color: AppColors.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(icon ?? Icons.inbox, size: 48, color: AppColors.primary),
+                      child: Icon(
+                        icon ?? Icons.inbox,
+                        size: 48,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -76,15 +81,19 @@ class EmptyStateWidget extends StatelessWidget {
                 color: isDark ? AppColors.darkSurface : const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: isDark ? AppColors.darkBorder : const Color(0xFFFDE68A),
+                  color: isDark
+                      ? AppColors.darkBorder
+                      : const Color(0xFFFDE68A),
                 ),
               ),
               child: Text(
                 title,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
+                style: GoogleFonts.prompt(
+                  fontWeight: FontWeight.w700,
                   fontSize: 15,
-                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF92400E),
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : const Color(0xFF92400E),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -92,32 +101,43 @@ class EmptyStateWidget extends StatelessWidget {
             const SizedBox(height: 10),
 
             // Message
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                height: 1.4,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (actionText != null && onAction != null) ...[
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: onAction,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(actionText!),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ],
+            // Text(
+            //   message,
+            //   style: GoogleFonts.prompt(
+            //     fontSize: 13,
+            //     color: isDark
+            //         ? AppColors.darkTextSecondary
+            //         : AppColors.lightTextSecondary,
+            //     height: 1.45,
+            //   ),
+            //   textAlign: TextAlign.center,
+            // ),
+            // if (actionText != null && onAction != null) ...[
+            //   const SizedBox(height: 20),
+            //   ElevatedButton.icon(
+            //     onPressed: onAction,
+            //     icon: const Icon(Icons.add, size: 18),
+            //     label: Text(
+            //       actionText!,
+            //       style: GoogleFonts.prompt(
+            //         fontWeight: FontWeight.w600,
+            //         fontSize: 13.5,
+            //       ),
+            //     ),
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: AppColors.primary,
+            //       foregroundColor: Colors.white,
+            //       padding: const EdgeInsets.symmetric(
+            //         horizontal: 22,
+            //         vertical: 12,
+            //       ),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(16),
+            //       ),
+            //       elevation: 0,
+            //     ),
+            //   ),
+            // ],
           ],
         ),
       ),

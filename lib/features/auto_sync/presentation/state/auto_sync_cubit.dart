@@ -8,7 +8,6 @@ import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
 import '../../domain/repositories/auto_sync_repository.dart';
-import '../../utils/thai_bank_parser.dart';
 import 'auto_sync_state.dart';
 
 class AutoSyncCubit extends Cubit<AutoSyncState> {
@@ -35,11 +34,10 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       final isBatteryIgnored = await repository.isBatteryOptimizationIgnored();
       final isAutoSync = await repository.isAutoSyncEnabled();
       final isAutoSave = await repository.isAutoSaveEnabled();
-      final isTransferDetection = await repository.isTransferDetectionEnabled();
       final packages = await repository.getEnabledBankPackages();
       final pending = await repository.getPendingTransactions();
 
-      debugPrint('[AutoSyncCubit] Initialized. isGranted=$isGranted, isConnected=$isConnected, isBatteryIgnored=$isBatteryIgnored, isAutoSync=$isAutoSync, isTransferDetection=$isTransferDetection, pendingCount=${pending.length}');
+      debugPrint('[AutoSyncCubit] Initialized. isGranted=$isGranted, isConnected=$isConnected, isBatteryIgnored=$isBatteryIgnored, isAutoSync=$isAutoSync, pendingCount=${pending.length}');
 
       emit(state.copyWith(
         isPermissionGranted: isGranted,
@@ -47,7 +45,6 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
         isBatteryOptimizationIgnored: isBatteryIgnored,
         isAutoSyncEnabled: isAutoSync,
         isAutoSaveEnabled: isAutoSave,
-        isTransferDetectionEnabled: isTransferDetection,
         enabledBankPackages: packages,
         pendingTransactions: pending,
         isLoading: false,
@@ -116,45 +113,6 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     );
   }
 
-  /// Check if the incoming transaction matches an opposite counterpart in pending queue
-  /// (e.g. KBank expense 500 & SCB income 500 within 90s, or same bank sub-accounts)
-  DetectedTransaction? _findMatchingInternalTransferInPending(DetectedTransaction detected) {
-    // If incoming transaction is an explicit merchant or bill payment, do not treat as self-transfer
-    final isDetectedMerchant = ThaiBankParser.isExplicitMerchantOrBill('${detected.title} ${detected.rawText ?? ''}');
-    if (isDetectedMerchant) return null;
-
-    for (final tx in state.pendingTransactions) {
-      if (tx.id != detected.id &&
-          (tx.amount - detected.amount).abs() < 0.01 &&
-          tx.type != detected.type &&
-          tx.timestamp.difference(detected.timestamp).abs().inSeconds <= 90) {
-        final isTxMerchant = ThaiBankParser.isExplicitMerchantOrBill('${tx.title} ${tx.rawText ?? ''}');
-        if (!isTxMerchant) {
-          return tx;
-        }
-      }
-    }
-    return null;
-  }
-
-  /// Check if the incoming transaction matches an opposite counterpart in saved transactions
-  TransactionEntity? _findMatchingInternalTransferInCubit(DetectedTransaction detected) {
-    final isDetectedMerchant = ThaiBankParser.isExplicitMerchantOrBill('${detected.title} ${detected.rawText ?? ''}');
-    if (isDetectedMerchant) return null;
-
-    for (final entity in transactionCubit.state.transactions) {
-      if (entity.id != detected.id &&
-          (entity.amount - detected.amount).abs() < 0.01 &&
-          entity.type != detected.type &&
-          entity.date.difference(detected.timestamp).abs().inSeconds <= 90) {
-        final isEntityMerchant = ThaiBankParser.isExplicitMerchantOrBill('${entity.title} ${entity.note ?? ''}');
-        if (!isEntityMerchant) {
-          return entity;
-        }
-      }
-    }
-    return null;
-  }
 
   Future<void> _handleIncomingDetectedTransaction(
     DetectedTransaction detected, {
@@ -207,40 +165,6 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       bankId: account.bankId,
     );
 
-    // 🔁 Smart Internal Transfer Detection (โอนเงินข้ามบัญชีตัวเอง)
-    if (state.isTransferDetectionEnabled) {
-      final matchedPending = _findMatchingInternalTransferInPending(enrichedDetected);
-      final matchedEntity = matchedPending != null ? null : _findMatchingInternalTransferInCubit(enrichedDetected);
-
-      if (matchedPending != null || matchedEntity != null) {
-        final counterpartName = matchedPending?.bankShortName ?? matchedEntity!.title;
-        debugPrint('[AutoSyncCubit] 🔁 Transfer Detected: ${enrichedDetected.bankShortName} ➔ $counterpartName (${enrichedDetected.amount} THB). Marking as paired transfer.');
-
-        // Save as transfer item linked to target account
-        final transferTx = enrichedDetected.toTransactionEntity().copyWith(
-          type: TransactionType.transfer,
-          targetAccountId: matchedPending?.bankAccountId ?? matchedEntity?.bankAccountId,
-          note: 'โอนข้ามบัญชีระหว่าง ${enrichedDetected.bankShortName} และ $counterpartName',
-        );
-        await transactionCubit.addTransaction(transferTx);
-
-        // Update counterpart in database if needed
-        if (matchedEntity != null) {
-          final updatedCounterpart = matchedEntity.copyWith(
-            type: TransactionType.transfer,
-            targetAccountId: account.id,
-          );
-          await transactionCubit.updateTransaction(updatedCounterpart);
-        }
-
-        accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
-
-        emit(state.copyWith(
-          lastTransferNotice: 'ตรวจพบการโอนข้ามบัญชี ฿${enrichedDetected.amount.toStringAsFixed(2)} ระบบจัดเป็นโอนเงินข้ามบัญชี',
-        ));
-        return;
-      }
-    }
 
     // ⚡ Always auto-save transaction to database immediately
     debugPrint('[AutoSyncCubit] ⚡ Auto-saved transaction: ${enrichedDetected.bankShortName} ${enrichedDetected.amount} THB (Account: ${account.accountName})');
@@ -262,64 +186,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     try {
       final buffered = await repository.syncPendingFromNativeBuffer();
       if (buffered.isNotEmpty) {
-        final remainingBuffer = <DetectedTransaction>[];
-        final matchedBufferIds = <String>{};
-
-        // Filter out internal transfer pairs in the incoming buffer
-        if (state.isTransferDetectionEnabled) {
-          for (int i = 0; i < buffered.length; i++) {
-            if (matchedBufferIds.contains(buffered[i].id)) continue;
-            bool isPair = false;
-            final t1 = buffered[i];
-            final isT1Merchant = ThaiBankParser.isExplicitMerchantOrBill('${t1.title} ${t1.rawText ?? ''}');
-
-            if (!isT1Merchant) {
-              for (int j = i + 1; j < buffered.length; j++) {
-                if (matchedBufferIds.contains(buffered[j].id)) continue;
-                final t2 = buffered[j];
-                final isT2Merchant = ThaiBankParser.isExplicitMerchantOrBill('${t2.title} ${t2.rawText ?? ''}');
-
-                if (!isT2Merchant &&
-                    (t1.amount - t2.amount).abs() < 0.01 &&
-                    t1.type != t2.type &&
-                    t1.timestamp.difference(t2.timestamp).abs().inSeconds <= 90) {
-                  debugPrint('[AutoSyncCubit] 🔁 Matched transfer pair in native buffer: ${t1.bankShortName} & ${t2.bankShortName} (${t1.amount} THB)');
-                  matchedBufferIds.add(t1.id);
-                  matchedBufferIds.add(t2.id);
-                  await repository.markAsDiscarded(t1);
-                  await repository.markAsDiscarded(t2);
-                  isPair = true;
-                  break;
-                }
-              }
-            }
-            if (!isPair) {
-              remainingBuffer.add(buffered[i]);
-            }
-          }
-        } else {
-          remainingBuffer.addAll(buffered);
-        }
-
-        for (final tx in remainingBuffer) {
-          // Check for transfer match with existing pending or saved transactions
-          if (state.isTransferDetectionEnabled) {
-            final matchedPending = _findMatchingInternalTransferInPending(tx);
-            final matchedEntity = matchedPending != null ? null : _findMatchingInternalTransferInCubit(tx);
-
-            if (matchedPending != null || matchedEntity != null) {
-              final matchedId = matchedPending?.id ?? matchedEntity!.id;
-              debugPrint('[AutoSyncCubit] 🔁 Buffer item matched existing transfer: ${tx.bankShortName} (${tx.amount} THB)');
-              await transactionCubit.deleteTransaction(matchedId);
-              if (matchedPending != null) {
-                await repository.removePendingTransaction(matchedId);
-                await repository.markAsDiscarded(matchedPending);
-              }
-              await repository.markAsDiscarded(tx);
-              continue;
-            }
-          }
-
+        for (final tx in buffered) {
           final isAlreadyPending = state.pendingTransactions.any((t) =>
               t.id == tx.id ||
               (t.packageName == tx.packageName &&
@@ -328,17 +195,29 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
                   t.timestamp.difference(tx.timestamp).abs().inSeconds < 10));
 
           if (!isAlreadyPending) {
-            await transactionCubit.addTransaction(tx.toTransactionEntity());
-            await repository.addPendingTransaction(tx);
+            final acc = await accountCubit.ensureAccountForBank(
+              tx.bankId,
+              accountMask: tx.accountMask,
+              bankName: tx.bankName,
+              brandColor: tx.bankColorValue,
+            );
+            final enriched = tx.copyWith(
+              bankAccountId: acc.id,
+              bankId: acc.bankId,
+            );
+            await transactionCubit.addTransaction(enriched.toTransactionEntity());
+            await repository.addPendingTransaction(enriched);
           } else {
             debugPrint('[AutoSyncCubit] ⏭️ Duplicate transaction ignored in buffer sync: ${tx.title} ${tx.amount} THB');
           }
         }
 
+        accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
+
         final updatedPending = await repository.getPendingTransactions();
         emit(state.copyWith(
           pendingTransactions: updatedPending,
-          latestDetected: remainingBuffer.isNotEmpty ? remainingBuffer.last : null,
+          latestDetected: buffered.isNotEmpty ? buffered.last : null,
         ));
       }
     } catch (e) {
@@ -407,14 +286,6 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     emit(state.copyWith(isAutoSaveEnabled: enabled));
   }
 
-  Future<void> toggleTransferDetection(bool enabled) async {
-    await repository.setTransferDetectionEnabled(enabled);
-    emit(state.copyWith(isTransferDetectionEnabled: enabled));
-  }
-
-  void clearLastTransferNotice() {
-    emit(state.copyWith(clearLastTransferNotice: true));
-  }
 
   Future<void> toggleBankPackage(String packageName, bool enabled) async {
     final current = List<String>.from(state.enabledBankPackages);

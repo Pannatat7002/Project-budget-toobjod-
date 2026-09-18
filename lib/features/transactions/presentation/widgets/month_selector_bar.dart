@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/date_formatter.dart';
 
@@ -39,12 +41,14 @@ class MonthSelectorBar extends StatelessWidget {
 
     void goToPreviousMonth() {
       if (canGoEarlier) {
+        HapticFeedback.lightImpact();
         onMonthChanged(effectiveMonths[currentIndex - 1]);
       }
     }
 
     void goToNextMonth() {
       if (canGoLater) {
+        HapticFeedback.lightImpact();
         onMonthChanged(effectiveMonths[currentIndex + 1]);
       }
     }
@@ -115,7 +119,7 @@ class MonthSelectorBar extends StatelessWidget {
                                 key: ValueKey('${selectedMonth.year}-${selectedMonth.month}'),
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: GoogleFonts.prompt(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w800,
                                   color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -268,7 +272,7 @@ class _AvailableMonthsBottomSheet extends StatelessWidget {
                   children: [
                     Text(
                       'เลือกเดือนที่มีรายการ 🐾',
-                      style: TextStyle(
+                      style: GoogleFonts.prompt(
                         fontSize: 16.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3,
@@ -277,7 +281,7 @@ class _AvailableMonthsBottomSheet extends StatelessWidget {
                     ),
                     Text(
                       'แตะเพื่อสลับดูรายการในแต่ละเดือน',
-                      style: TextStyle(
+                      style: GoogleFonts.prompt(
                         fontSize: 11.5,
                         color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                       ),
@@ -293,7 +297,7 @@ class _AvailableMonthsBottomSheet extends StatelessWidget {
                   ),
                   child: Text(
                     '${reversedMonths.length} เดือน',
-                    style: const TextStyle(
+                    style: GoogleFonts.prompt(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
                       color: AppColors.primary,
@@ -370,7 +374,7 @@ class _AvailableMonthsBottomSheet extends StatelessWidget {
                                     children: [
                                       Text(
                                         DateFormatter.formatMonthYear(month),
-                                        style: TextStyle(
+                                        style: GoogleFonts.prompt(
                                           fontSize: 14.5,
                                           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                           color: isSelected
@@ -387,9 +391,9 @@ class _AvailableMonthsBottomSheet extends StatelessWidget {
                                             gradient: AppColors.orangeBadgeGradient,
                                             borderRadius: BorderRadius.circular(6),
                                           ),
-                                          child: const Text(
+                                          child: Text(
                                             'เดือนนี้ 🐾',
-                                            style: TextStyle(
+                                            style: GoogleFonts.prompt(
                                               fontSize: 9.5,
                                               fontWeight: FontWeight.w900,
                                               color: Colors.white,
@@ -404,7 +408,7 @@ class _AvailableMonthsBottomSheet extends StatelessWidget {
                                       padding: const EdgeInsets.only(top: 2),
                                       child: Text(
                                         '$count รายการ',
-                                        style: TextStyle(
+                                        style: GoogleFonts.prompt(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                           color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
