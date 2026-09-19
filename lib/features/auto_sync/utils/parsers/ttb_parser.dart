@@ -25,26 +25,7 @@ class TtbParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('ttb') || pkg.contains('tmb')) {
-      return true;
-    }
-    // If package belongs to another known bank app, do not handle
-    if (pkg.contains('kasikorn') || pkg.contains('kplus') || pkg.contains('scb') ||
-        pkg.contains('ktb') || pkg.contains('bbl') || pkg.contains('krungsri') ||
-        pkg.contains('truemoney') || pkg.contains('dime')) {
-      return false;
-    }
-    final lower = text.toLowerCase();
-    if (lower.contains('จาก ttb') || lower.contains('จาก tmb') || lower.contains('จาก ทีทีบี')) {
-      return false;
-    }
-    return lower.contains('ttb') ||
-        lower.contains('tmb') ||
-        lower.contains('ทีทีบี') ||
-        lower.contains('ทหารไทยธนชาต');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _accountMaskRegex = RegExp(

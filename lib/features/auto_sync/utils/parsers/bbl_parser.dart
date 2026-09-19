@@ -25,18 +25,7 @@ class BblParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('bbl') || pkg.contains('bangkokbank')) {
-      return true;
-    }
-    final lower = text.toLowerCase();
-    return lower.contains('bangkok bank') ||
-        lower.contains('กรุงเทพ') ||
-        lower.contains('bbl') ||
-        lower.contains('บัวหลวง') ||
-        lower.contains('bualuang');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _accountMaskRegex = RegExp(r'(?:บช\.|บัญชี|จาก|เข้า)\s*([0-9xX\-]+)', caseSensitive: false);

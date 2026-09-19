@@ -25,26 +25,7 @@ class KBankParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('kasikorn') || pkg.contains('kplus')) {
-      return true;
-    }
-    // If package belongs to another known bank app, do not handle
-    if (pkg.contains('ttb') || pkg.contains('tmb') || pkg.contains('scb') ||
-        pkg.contains('ktb') || pkg.contains('bbl') || pkg.contains('krungsri') ||
-        pkg.contains('truemoney') || pkg.contains('dime') || pkg.contains('makebykbank')) {
-      return false;
-    }
-    final lower = text.toLowerCase();
-    // Do not match if "KBANK" is merely the external sender in an incoming transfer
-    if (lower.contains('จาก kbank') || lower.contains('จากกสิกร') || lower.contains('จาก ธ.กสิกร')) {
-      return false;
-    }
-    return lower.contains('k plus') ||
-        lower.contains('kbank') ||
-        lower.contains('กสิกร');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _accountMaskRegex = RegExp(

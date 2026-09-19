@@ -32,24 +32,7 @@ class OtherBanksParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final profile = BankProfile.findByPackage(packageName);
-    if (profile != null && profile.id == _bankId) return true;
-    final lower = text.toLowerCase();
-    switch (_bankId) {
-      case 'bbl':
-        return lower.contains('bangkok bank') || lower.contains('กรุงเทพ') || lower.contains('bbl');
-      case 'ttb':
-        return lower.contains('ttb') || lower.contains('tmb') || lower.contains('ทีทีบี');
-      case 'kma':
-        return lower.contains('kma') || lower.contains('krungsri') || lower.contains('กรุงศรี') || lower.contains('kept');
-      case 'shopeepay':
-        return lower.contains('shopeepay') || lower.contains('airpay') || lower.contains('ช้อปปี้เพย์');
-      case 'gsb':
-        return lower.contains('mymo') || lower.contains('gsb') || lower.contains('ออมสิน');
-      case 'dime':
-        return lower.contains('dime') || lower.contains('ไดม์');
-      default:
-        return false;
-    }
+    return profile != null && profile.id == _bankId;
   }
 
   static final RegExp _merchantRegex = RegExp(

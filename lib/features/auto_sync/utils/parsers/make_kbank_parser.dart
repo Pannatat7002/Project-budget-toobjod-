@@ -25,14 +25,7 @@ class MakeKbankParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('makebykbank')) {
-      return true;
-    }
-    final lower = text.toLowerCase();
-    return lower.contains('make by kbank') || lower.contains('เมค บาย เคแบงก์');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _merchantRegex = RegExp(

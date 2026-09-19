@@ -159,7 +159,8 @@ class _BankSelectionViewState extends State<BankSelectionView> {
 
                               // Check if auto-sync package is enabled
                               final isSyncEnabled = syncState.enabledBankPackages.isEmpty ||
-                                  syncState.enabledBankPackages.contains(bank.packageName);
+                                  syncState.enabledBankPackages.contains(bank.packageName) ||
+                                  bank.packageAliases.any((a) => syncState.enabledBankPackages.contains(a));
 
                               final brandColor = Color(bank.brandColor);
 
@@ -292,6 +293,9 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                                               activeThumbColor: brandColor,
                                               onChanged: (val) {
                                                 autoCubit.toggleBankPackage(bank.packageName, val);
+                                                for (final alias in bank.packageAliases) {
+                                                  autoCubit.toggleBankPackage(alias, val);
+                                                }
                                                 accCubit.addOrUpdateAccount(
                                                   existingAcc!.copyWith(isAutoSyncActive: val),
                                                 );

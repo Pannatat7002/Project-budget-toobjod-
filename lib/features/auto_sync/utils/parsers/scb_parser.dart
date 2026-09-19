@@ -24,12 +24,7 @@ class ScbParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('scb')) return true;
-    final lower = text.toLowerCase();
-    return lower.contains('scb') || lower.contains('ไทยพาณิชย์') || lower.contains('แม่มณี');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _accountMaskRegex = RegExp(r'(?:บัญชี|บช\.)\s*([0-9xX\-]+)', caseSensitive: false);

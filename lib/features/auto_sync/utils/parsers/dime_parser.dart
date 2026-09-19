@@ -25,14 +25,7 @@ class DimeParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('dime')) {
-      return true;
-    }
-    final lower = text.toLowerCase();
-    return lower.contains('dime') || lower.contains('ไดม์');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _merchantRegex = RegExp(

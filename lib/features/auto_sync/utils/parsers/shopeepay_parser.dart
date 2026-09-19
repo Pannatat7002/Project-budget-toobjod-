@@ -25,14 +25,7 @@ class ShopeePayParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('shopeepay') || pkg.contains('airpay')) {
-      return true;
-    }
-    final lower = text.toLowerCase();
-    return lower.contains('shopeepay') || lower.contains('airpay') || lower.contains('ช้อปปี้เพย์');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _merchantRegex = RegExp(

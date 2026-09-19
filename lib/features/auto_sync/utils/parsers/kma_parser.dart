@@ -24,17 +24,7 @@ class KmaParser extends BankParserStrategy {
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
-    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
-      return true;
-    }
-    if (pkg.contains('krungsri') || pkg.contains('bay')) {
-      return true;
-    }
-    final lower = text.toLowerCase();
-    return lower.contains('kma') ||
-        lower.contains('krungsri') ||
-        lower.contains('กรุงศรี') ||
-        lower.contains('bay');
+    return supportedPackages.any((p) => p.toLowerCase() == pkg);
   }
 
   static final RegExp _accountMaskRegex = RegExp(r'(?:บช\.|บัญชี|จาก|เข้า)\s*([0-9xX\-]+)', caseSensitive: false);
