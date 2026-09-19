@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -14,7 +15,7 @@ import '../state/auto_sync_state.dart';
 import '../views/swipe_history_view.dart';
 import 'bank_logo_badge.dart';
 
-class NotificationDrawerSheet extends StatelessWidget {
+class NotificationDrawerSheet extends StatefulWidget {
   const NotificationDrawerSheet({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -24,6 +25,91 @@ class NotificationDrawerSheet extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (ctx) => const NotificationDrawerSheet(),
     );
+  }
+
+  @override
+  State<NotificationDrawerSheet> createState() =>
+      _NotificationDrawerSheetState();
+}
+
+class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
+    with SingleTickerProviderStateMixin {
+  bool _isRefreshing = false;
+  late final AnimationController _refreshAnimController;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshAnimController = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    );
+    // Auto-refresh missed notifications when drawer is opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _handleRefresh(isAutoTrigger: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshAnimController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRefresh({bool isAutoTrigger = false}) async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    _refreshAnimController.repeat();
+    if (!isAutoTrigger) {
+      HapticFeedback.lightImpact();
+    }
+
+    try {
+      final cubit = context.read<AutoSyncCubit>();
+      final count = await cubit.manualSyncMissedNotifications();
+
+      if (!mounted) return;
+
+      if (count == -1) {
+        if (!isAutoTrigger) {
+          TopToast.show(
+            context,
+            message: '⚠️ กรุณาเปิดสิทธิ์การอ่านการแจ้งเตือนก่อน',
+            isSuccess: false,
+          );
+        }
+      } else if (count > 0) {
+        HapticFeedback.mediumImpact();
+        TopToast.show(
+          context,
+          message: '🎉 ดึงรายการตกหล่นสำเร็จ $count รายการ',
+          isSuccess: true,
+        );
+      } else if (!isAutoTrigger) {
+        TopToast.show(
+          context,
+          message: '🐾 ไม่พบการแจ้งเตือนตกหล่นเพิ่มเติม',
+          isSuccess: true,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (!isAutoTrigger) {
+        TopToast.show(
+          context,
+          message: '❌ ไม่สามารถดึงแจ้งเตือนได้: $e',
+          isSuccess: false,
+        );
+      }
+    } finally {
+      if (mounted) {
+        _refreshAnimController.stop();
+        _refreshAnimController.reset();
+        setState(() => _isRefreshing = false);
+      }
+    }
   }
 
   @override
@@ -40,6 +126,7 @@ class NotificationDrawerSheet extends StatelessWidget {
 
     return BlocListener<AutoSyncCubit, AutoSyncState>(
       listenWhen: (previous, current) =>
+          !_isRefreshing &&
           previous.pendingTransactions.isNotEmpty &&
           current.pendingTransactions.isEmpty,
       listener: (context, state) {
@@ -110,12 +197,16 @@ class NotificationDrawerSheet extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'รายการตรวจพบ',
-                            style: GoogleFonts.prompt(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: textColor,
+                          Flexible(
+                            child: Text(
+                              'รายการตรวจพบ',
+                              style: GoogleFonts.prompt(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: textColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (count > 0) ...[
@@ -140,6 +231,27 @@ class NotificationDrawerSheet extends StatelessWidget {
                             ),
                           ],
                           const Spacer(),
+                          // ปุ่มดึงแจ้งเตือนที่ตกหล่น (Manual Refresh)
+                          // IconButton(
+                          //   onPressed: _isRefreshing ? null : _handleRefresh,
+                          //   tooltip: 'ดึงแจ้งเตือนที่ตกหล่น',
+                          //   padding: EdgeInsets.zero,
+                          //   constraints: const BoxConstraints(
+                          //     minWidth: 32,
+                          //     minHeight: 32,
+                          //   ),
+                          //   icon: RotationTransition(
+                          //     turns: _refreshAnimController,
+                          //     child: Icon(
+                          //       Icons.refresh_rounded,
+                          //       size: 19,
+                          //       color: _isRefreshing
+                          //           ? AppColors.primary
+                          //           : subtextColor,
+                          //     ),
+                          //   ),
+                          // ),
+                          const SizedBox(width: 2),
                           // ปุ่มไปที่หน้าประวัติการตรวจจับ (คู่กับปุ่มปิด)
                           TextButton.icon(
                             onPressed: () {
@@ -266,54 +378,143 @@ class NotificationDrawerSheet extends StatelessWidget {
 
                     // Content List: shrinkWrap & Flexible to show height based on items
                     if (isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 28,
-                        ),
-                        child: Center(
-                          child: Text(
-                            'ไม่พบรายการ 🐾',
-                            style: GoogleFonts.prompt(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                              color: textColor,
+                      Flexible(
+                        child: RefreshIndicator(
+                          color: AppColors.primary,
+                          backgroundColor: isDark
+                              ? AppColors.darkCard
+                              : Colors.white,
+                          onRefresh: _handleRefresh,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 28,
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 58,
+                                    height: 58,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withAlpha(
+                                        isDark ? 35 : 20,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.notifications_none_rounded,
+                                      size: 30,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    'ไม่มีรายการตรวจพบค้างอยู่ 🐾',
+                                    style: GoogleFonts.prompt(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'หากมีแจ้งเตือนธนาคารเข้าแต่ยังไม่ตรวจพบ\nสามารถกดปุ่มด้านล่างเพื่อดึงแจ้งเตือนที่ตกหล่นได้ทันที',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.prompt(
+                                      fontSize: 12.5,
+                                      color: subtextColor,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  ElevatedButton.icon(
+                                    onPressed: _isRefreshing
+                                        ? null
+                                        : _handleRefresh,
+                                    icon: _isRefreshing
+                                        ? const SizedBox(
+                                            width: 15,
+                                            height: 15,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.sync_rounded,
+                                            size: 18,
+                                          ),
+                                    label: Text(
+                                      _isRefreshing
+                                          ? 'กำลังดึงข้อมูล...'
+                                          : 'กดดึงแจ้งเตือนที่ตกหล่น',
+                                      style: GoogleFonts.prompt(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       )
                     else
                       Flexible(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                          itemCount: list.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final item = list[index];
-                            return _DismissibleNotificationCard(
-                              key: ValueKey(item.id),
-                              transaction: item,
-                              isDark: isDark,
-                              borderColor: borderColor,
-                              textColor: textColor,
-                              subtextColor: subtextColor,
-                              onConfirm: (customEntity) {
-                                context
-                                    .read<AutoSyncCubit>()
-                                    .confirmTransaction(
-                                      item,
-                                      customEntity: customEntity,
-                                    );
-                              },
-                              onDiscard: () {
-                                context
-                                    .read<AutoSyncCubit>()
-                                    .discardTransaction(item);
-                              },
-                            );
-                          },
+                        child: RefreshIndicator(
+                          color: AppColors.primary,
+                          backgroundColor: isDark
+                              ? AppColors.darkCard
+                              : Colors.white,
+                          onRefresh: _handleRefresh,
+                          child: ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                            itemCount: list.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final item = list[index];
+                              return _DismissibleNotificationCard(
+                                key: ValueKey(item.id),
+                                transaction: item,
+                                isDark: isDark,
+                                borderColor: borderColor,
+                                textColor: textColor,
+                                subtextColor: subtextColor,
+                                onConfirm: (customEntity) {
+                                  context
+                                      .read<AutoSyncCubit>()
+                                      .confirmTransaction(
+                                        item,
+                                        customEntity: customEntity,
+                                      );
+                                },
+                                onDiscard: () {
+                                  context
+                                      .read<AutoSyncCubit>()
+                                      .discardTransaction(item);
+                                },
+                              );
+                            },
+                          ),
                         ),
                       ),
 
@@ -770,11 +971,15 @@ class _DismissibleNotificationCardState
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        DateFormatter.formatRelativeWithTime(tx.timestamp),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: widget.subtextColor,
+                      Flexible(
+                        child: Text(
+                          DateFormatter.formatRelativeWithTime(tx.timestamp),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: widget.subtextColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

@@ -145,63 +145,82 @@ class AutoSyncRepositoryImpl implements AutoSyncRepository {
     return _stream!;
   }
 
+  Future<List<DetectedTransaction>> _parseRawNotificationList(
+      List<dynamic>? rawList) async {
+    final results = <DetectedTransaction>[];
+    if (rawList == null || rawList.isEmpty) return results;
+
+    final enabledPackages = await localDataSource.getEnabledBankPackages();
+
+    for (final item in rawList) {
+      if (item is Map) {
+        final map = Map<String, dynamic>.from(item);
+        final pkg = map['packageName'] as String? ?? '';
+        final isShell = pkg == 'com.android.shell';
+        final isDirectlyEnabled = enabledPackages.contains(pkg);
+        final profile = BankProfile.findByPackage(pkg);
+        final isProfileEnabled = profile != null &&
+            (enabledPackages.contains(profile.packageName) ||
+                profile.packageAliases.any((a) => enabledPackages.contains(a)));
+
+        if (enabledPackages.isNotEmpty &&
+            !isShell &&
+            !isDirectlyEnabled &&
+            !isProfileEnabled) {
+          continue;
+        }
+
+        final id = map['id'] as String?;
+        final title = map['title'] as String? ?? '';
+        final text = map['text'] as String? ?? '';
+        final subText = map['subText'] as String?;
+        final postTime = map['postTime'] as int?;
+
+        final date = postTime != null && postTime > 0
+            ? DateTime.fromMillisecondsSinceEpoch(postTime)
+            : DateTime.now();
+
+        final parsed = ThaiBankParser.parse(
+          id: id,
+          packageName: pkg,
+          title: title,
+          text: text,
+          subText: subText,
+          timestamp: date,
+        );
+
+        if (parsed != null) {
+          results.add(parsed);
+        }
+      }
+    }
+    return results;
+  }
+
   @override
   Future<List<DetectedTransaction>> syncPendingFromNativeBuffer() async {
-    final results = <DetectedTransaction>[];
     try {
       final List<dynamic>? rawList =
           await _methodChannel.invokeMethod<List<dynamic>>('getPendingNotifications');
-
+      final results = await _parseRawNotificationList(rawList);
       if (rawList != null && rawList.isNotEmpty) {
-        final enabledPackages = await localDataSource.getEnabledBankPackages();
-
-        for (final item in rawList) {
-          if (item is Map) {
-            final map = Map<String, dynamic>.from(item);
-            final pkg = map['packageName'] as String? ?? '';
-            final isShell = pkg == 'com.android.shell';
-            final isDirectlyEnabled = enabledPackages.contains(pkg);
-            final profile = BankProfile.findByPackage(pkg);
-            final isProfileEnabled = profile != null && (
-                enabledPackages.contains(profile.packageName) ||
-                profile.packageAliases.any((a) => enabledPackages.contains(a))
-            );
-
-            if (enabledPackages.isNotEmpty && !isShell && !isDirectlyEnabled && !isProfileEnabled) {
-              continue;
-            }
-
-            final id = map['id'] as String?;
-            final title = map['title'] as String? ?? '';
-            final text = map['text'] as String? ?? '';
-            final subText = map['subText'] as String?;
-            final postTime = map['postTime'] as int?;
-
-            final date = postTime != null && postTime > 0
-                ? DateTime.fromMillisecondsSinceEpoch(postTime)
-                : DateTime.now();
-
-            final parsed = ThaiBankParser.parse(
-              id: id,
-              packageName: pkg,
-              title: title,
-              text: text,
-              subText: subText,
-              timestamp: date,
-            );
-
-            if (parsed != null) {
-              results.add(parsed);
-            }
-          }
-        }
-
-        // Clear buffer on native side once parsed
         await _methodChannel.invokeMethod('clearPendingNotifications');
       }
-    } catch (_) {}
+      return results;
+    } catch (_) {
+      return [];
+    }
+  }
 
-    return results;
+  @override
+  Future<List<DetectedTransaction>> syncMissedNotifications() async {
+    try {
+      final List<dynamic>? rawList =
+          await _methodChannel.invokeMethod<List<dynamic>>('syncMissedNotifications');
+      return await _parseRawNotificationList(rawList);
+    } catch (_) {
+      return [];
+    }
   }
 
   @override

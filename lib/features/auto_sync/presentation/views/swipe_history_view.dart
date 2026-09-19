@@ -9,6 +9,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/entities/swipe_history_record.dart';
 import '../state/auto_sync_cubit.dart';
 import '../state/auto_sync_state.dart';
+import '../widgets/bank_logo_badge.dart';
 
 class SwipeHistoryView extends StatefulWidget {
   const SwipeHistoryView({super.key});
@@ -213,11 +214,11 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
               // ── Filter Tabs ──
               _buildFilterBar(context, isDark, allHistory),
 
-              // ── Table / Empty State ──
+              // ── List / Empty State ──
               Expanded(
                 child: filtered.isEmpty
                     ? _buildEmptyState(isDark)
-                    : _buildTable(context, filtered, isDark),
+                    : _buildList(context, filtered, isDark),
               ),
             ],
           ),
@@ -238,31 +239,35 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
     int changedCat,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       color: isDark ? AppColors.darkSurface : Colors.white,
-      child: Row(
-        children: [
-          _chip(
-            icon: Icons.check_circle_rounded,
-            label: '$confirmed ยืนยัน',
-            color: AppColors.success,
-            isDark: isDark,
-          ),
-          const SizedBox(width: 8),
-          _chip(
-            icon: Icons.cancel_rounded,
-            label: '$discarded ลบ',
-            color: AppColors.error,
-            isDark: isDark,
-          ),
-          const SizedBox(width: 8),
-          _chip(
-            icon: Icons.edit_rounded,
-            label: '$changedCat เปลี่ยน Cat.',
-            color: AppColors.primary,
-            isDark: isDark,
-          ),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _chip(
+              icon: Icons.check_circle_rounded,
+              label: '$confirmed ยืนยัน',
+              color: AppColors.success,
+              isDark: isDark,
+            ),
+            const SizedBox(width: 6),
+            _chip(
+              icon: Icons.cancel_rounded,
+              label: '$discarded ลบ',
+              color: AppColors.error,
+              isDark: isDark,
+            ),
+            const SizedBox(width: 6),
+            _chip(
+              icon: Icons.edit_rounded,
+              label: '$changedCat เปลี่ยนหมวด',
+              color: AppColors.primary,
+              isDark: isDark,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -274,20 +279,20 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
     required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 11, color: color),
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.prompt(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+            style: GoogleFonts.prompt(fontSize: 10.5, fontWeight: FontWeight.w700, color: color),
           ),
         ],
       ),
@@ -330,24 +335,31 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
       child: GestureDetector(
         onTap: () => setState(() => _filterResult = result),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
                 color: isSelected ? AppColors.primary : Colors.transparent,
-                width: 2.5,
+                width: 2,
               ),
             ),
           ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.prompt(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-              color: isSelected
-                  ? AppColors.primary
-                  : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: GoogleFonts.prompt(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                ),
+              ),
             ),
           ),
         ),
@@ -355,194 +367,292 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
     );
   }
 
-  // ─── Table ───────────────────────────────────────────────────────────────────
-  Widget _buildTable(BuildContext context, List<SwipeHistoryRecord> records, bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(0),
-      child: Column(
-        children: [
-          // Table Header
-          _buildTableHeader(isDark),
-          // Table Rows
-          ...records.reversed.map((r) => _buildTableRow(r, isDark)),
-          const SizedBox(height: 80),
-        ],
+  // ─── Compact List ────────────────────────────────────────────────────────────
+  Widget _buildList(BuildContext context, List<SwipeHistoryRecord> records, bool isDark) {
+    return ListView.separated(
+      padding: const EdgeInsets.only(top: 2, bottom: 80),
+      itemCount: records.length,
+      separatorBuilder: (_, __) => Divider(
+        height: 1,
+        thickness: 0.7,
+        indent: 48,
+        color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
+      ),
+      itemBuilder: (context, index) {
+        // Most recent first
+        final r = records[records.length - 1 - index];
+        return _buildHistoryItem(r, isDark);
+      },
+    );
+  }
+
+  Widget _buildHistoryItem(SwipeHistoryRecord r, bool isDark) {
+    final isConfirmed = r.swipeResult == SwipeResult.confirmed;
+    final resultColor = isConfirmed ? AppColors.success : AppColors.error;
+    final amountColor = r.isIncome ? AppColors.income : AppColors.expense;
+    final timeStr =
+        '${r.swipedAt.day}/${r.swipedAt.month} ${r.swipedAt.hour.toString().padLeft(2, '0')}:${r.swipedAt.minute.toString().padLeft(2, '0')}';
+
+    return InkWell(
+      onTap: () => _showRecordDetailDialog(context, r, isDark),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7.5),
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Bank Logo Badge
+            BankLogoBadge(
+              fallbackShortName: r.bankShortName,
+              size: 26,
+              borderRadius: 6,
+              showBorder: false,
+            ),
+            const SizedBox(width: 10),
+
+            // Middle Column: Title & Subtitle (Date + Category + Changed Badge)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Row 1: Title
+                  Text(
+                    r.title,
+                    style: GoogleFonts.prompt(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+
+                  // Row 2: Date + Category chip + Changed tag
+                  Row(
+                    children: [
+                      Text(
+                        timeStr,
+                        style: GoogleFonts.prompt(
+                          fontSize: 10,
+                          color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '•',
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)).withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      // Category Chip
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkCard : AppColors.lightBorderSubtle,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            r.confirmedCategoryName,
+                            style: GoogleFonts.prompt(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      if (r.categoryChanged && isConfirmed) ...[
+                        const SizedBox(width: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'เปลี่ยน Cat.',
+                            style: GoogleFonts.prompt(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Right Column: Amount + Status Badge
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Amount
+                Text(
+                  '${r.isIncome ? '+' : '-'}${CurrencyFormatter.format(r.amount)} ฿',
+                  style: GoogleFonts.prompt(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: amountColor,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+
+                // Status Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: resultColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    isConfirmed ? '✅ ยืนยัน' : '❌ ลบ',
+                    style: GoogleFonts.prompt(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: resultColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTableHeader(bool isDark) {
-    final headerStyle = GoogleFonts.prompt(
-      fontSize: 10.5,
-      fontWeight: FontWeight.w800,
-      color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
-    );
-    final bg = isDark ? AppColors.darkCard : const Color(0xFFF8FAFC);
-
-    return Container(
-      color: bg,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      child: Row(
-        children: [
-          SizedBox(width: 78, child: Text('วัน-เวลาปัด', style: headerStyle)),
-          Expanded(flex: 3, child: Text('รายการ', style: headerStyle)),
-          SizedBox(width: 54, child: Text('ธนาคาร', style: headerStyle, textAlign: TextAlign.center)),
-          SizedBox(width: 72, child: Text('จำนวนเงิน', style: headerStyle, textAlign: TextAlign.right)),
-          SizedBox(width: 64, child: Text('ผล', style: headerStyle, textAlign: TextAlign.center)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableRow(SwipeHistoryRecord r, bool isDark) {
+  // ─── Record Detail BottomSheet Dialog ─────────────────────────────────────────
+  void _showRecordDetailDialog(BuildContext context, SwipeHistoryRecord r, bool isDark) {
     final isConfirmed = r.swipeResult == SwipeResult.confirmed;
     final resultColor = isConfirmed ? AppColors.success : AppColors.error;
     final amountColor = r.isIncome ? AppColors.income : AppColors.expense;
 
-    final timeStr =
-        '${r.swipedAt.day.toString().padLeft(2, '0')}/${r.swipedAt.month.toString().padLeft(2, '0')}\n${r.swipedAt.hour.toString().padLeft(2, '0')}:${r.swipedAt.minute.toString().padLeft(2, '0')}';
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  BankLogoBadge(fallbackShortName: r.bankShortName, size: 28),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      r.title,
+                      style: GoogleFonts.prompt(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: resultColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isConfirmed ? '✅ ยืนยันบันทึก' : '❌ ลบออก',
+                      style: GoogleFonts.prompt(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: resultColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
-            width: 0.8,
+              // Details
+              _detailRow('จำนวนเงิน', '${r.isIncome ? '+' : '-'}${CurrencyFormatter.format(r.amount)} บาท', valueColor: amountColor, isBold: true, isDark: isDark),
+              _detailRow('ธนาคาร', r.bankShortName, isDark: isDark),
+              _detailRow('หมวดหมู่', r.confirmedCategoryName + (r.categoryChanged ? ' (เปลี่ยนจาก: ${r.suggestedCategoryName})' : ''), isDark: isDark),
+              _detailRow('เวลาที่ปัด', '${r.swipedAt.day}/${r.swipedAt.month}/${r.swipedAt.year} ${r.swipedAt.hour.toString().padLeft(2, '0')}:${r.swipedAt.minute.toString().padLeft(2, '0')} น.', isDark: isDark),
+              if (r.rawText != null && r.rawText!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'ข้อความแจ้งเตือนดิบ:',
+                  style: GoogleFonts.prompt(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    r.rawText!,
+                    style: GoogleFonts.prompt(
+                      fontSize: 11,
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    );
+  }
+
+  Widget _detailRow(String label, String value, {Color? valueColor, bool isBold = false, required bool isDark}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.5),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // วันเวลา
           SizedBox(
-            width: 78,
+            width: 80,
             child: Text(
-              timeStr,
+              label,
               style: GoogleFonts.prompt(
-                fontSize: 10,
+                fontSize: 11.5,
                 color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
-                height: 1.4,
               ),
             ),
           ),
-
-          // ชื่อรายการ + ข้อมูลเพิ่มเติม
           Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  r.title,
-                  style: GoogleFonts.prompt(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    // Category suggested
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: (isDark ? AppColors.darkCard : AppColors.lightBorderSubtle),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        r.confirmedCategoryName,
-                        style: GoogleFonts.prompt(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    // Badge "เปลี่ยน Cat." ถ้า user เปลี่ยน
-                    if (r.categoryChanged && isConfirmed) ...[
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'เปลี่ยน Cat.',
-                          style: GoogleFonts.prompt(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // ธนาคาร
-          SizedBox(
-            width: 54,
             child: Text(
-              r.bankShortName,
+              value,
               style: GoogleFonts.prompt(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // จำนวนเงิน
-          SizedBox(
-            width: 72,
-            child: Text(
-              '${r.isIncome ? '+' : '-'}${CurrencyFormatter.format(r.amount)}',
-              style: GoogleFonts.prompt(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: amountColor,
-                letterSpacing: -0.3,
-              ),
-              textAlign: TextAlign.right,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // ผลการปัด
-          SizedBox(
-            width: 64,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: resultColor.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                isConfirmed ? '✅ ยืนยัน' : '❌ ลบ',
-                style: GoogleFonts.prompt(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: resultColor,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
+                fontSize: 11.5,
+                fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+                color: valueColor ?? (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A)),
               ),
             ),
           ),
@@ -558,28 +668,28 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.primary.withValues(alpha: 0.08),
             ),
-            child: const Icon(Icons.history_rounded, size: 30, color: AppColors.primary),
+            child: const Icon(Icons.history_rounded, size: 28, color: AppColors.primary),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
-            'ยังไม่มีประวัติการปัด',
+            'ยังไม่มีประวัติการตรวจสอบ',
             style: GoogleFonts.prompt(
-              fontSize: 15,
+              fontSize: 14.5,
               fontWeight: FontWeight.w700,
               color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'ประวัติจะปรากฏหลังจากปัดรายการตรวจพบ',
             style: GoogleFonts.prompt(
-              fontSize: 12,
+              fontSize: 11.5,
               color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
             ),
           ),
@@ -591,13 +701,13 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
   // ─── Export Footer ────────────────────────────────────────────────────────────
   Widget _buildExportFooter(BuildContext context, List<SwipeHistoryRecord> records, bool isDark) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
         border: Border(
           top: BorderSide(
             color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
-            width: 1,
+            width: 0.8,
           ),
         ),
       ),
@@ -605,26 +715,26 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
         top: false,
         child: SizedBox(
           width: double.infinity,
-          height: 48,
+          height: 38,
           child: ElevatedButton.icon(
             onPressed: _isExporting ? null : () => _exportCsv(context, records),
             icon: _isExporting
                 ? const SizedBox(
-                    width: 16,
-                    height: 16,
+                    width: 14,
+                    height: 14,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Icon(Icons.download_rounded, size: 18),
+                : const Icon(Icons.download_rounded, size: 16),
             label: Text(
               _isExporting
                   ? 'กำลัง Export...'
                   : 'Export CSV (${records.length} รายการ)',
-              style: GoogleFonts.prompt(fontWeight: FontWeight.w700, fontSize: 14),
+              style: GoogleFonts.prompt(fontWeight: FontWeight.w700, fontSize: 13),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               elevation: 0,
             ),
           ),

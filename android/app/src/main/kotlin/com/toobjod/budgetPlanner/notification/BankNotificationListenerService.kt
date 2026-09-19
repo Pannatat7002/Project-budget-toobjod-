@@ -23,6 +23,7 @@ class BankNotificationListenerService : NotificationListenerService() {
 
         var eventSink: EventChannel.EventSink? = null
         var isServiceConnected: Boolean = false
+        var instance: BankNotificationListenerService? = null
 
         // Cache recent notifications to debounce rapid multi-dispatch from Android OS
         private val recentNotifCache = object : LinkedHashMap<String, Long>(50, 0.75f, true) {
@@ -194,122 +195,188 @@ class BankNotificationListenerService : NotificationListenerService() {
                 Log.e(TAG, "Error buffering notification", e)
             }
         }
+        @Synchronized
+        fun fetchActiveAndPendingNotifications(context: Context): List<Map<String, Any>> {
+            val combined = mutableListOf<Map<String, Any>>()
+            val seenKeys = mutableSetOf<String>()
+
+            // 1. First, retrieve any notifications previously stored in the SharedPreferences buffer
+            val pending = getPendingNotifications(context)
+            for (item in pending) {
+                val pkg = item["packageName"] as? String ?: ""
+                val title = item["title"] as? String ?: ""
+                val text = item["text"] as? String ?: ""
+                val postTime = item["postTime"] ?: 0L
+                val key = "$pkg|$title|$text|$postTime"
+                if (seenKeys.add(key)) {
+                    combined.add(item)
+                }
+            }
+
+            // 2. Query active notifications currently posted in Android status bar tray
+            val currentInstance = instance
+            if (currentInstance != null) {
+                try {
+                    val activeSbns = currentInstance.activeNotifications
+                    if (activeSbns != null) {
+                        Log.i(TAG, "🔍 [BankNotifListener] Scanning ${activeSbns.size} active notifications in status bar...")
+                        for (sbn in activeSbns) {
+                            val data = extractNotificationData(sbn)
+                            if (data != null) {
+                                val pkg = data["packageName"] as? String ?: ""
+                                val title = data["title"] as? String ?: ""
+                                val text = data["text"] as? String ?: ""
+                                val postTime = data["postTime"] ?: 0L
+                                val key = "$pkg|$title|$text|$postTime"
+                                if (seenKeys.add(key)) {
+                                    combined.add(data)
+                                    Log.i(TAG, "📥 [BankNotifListener] Found active bank notification in status bar: pkg=$pkg, title='$title'")
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ [BankNotifListener] Error querying activeNotifications", e)
+                }
+            } else {
+                Log.w(TAG, "⚠️ [BankNotifListener] Service instance is not connected. Rebind might be needed.")
+            }
+
+            // 3. Clear buffer on native side now that we collected them
+            clearPendingNotifications(context)
+            Log.i(TAG, "✅ [BankNotifListener] Total ${combined.size} notification(s) prepared for Flutter.")
+            return combined
+        }
+
+        @JvmStatic
+        fun extractNotificationData(sbn: StatusBarNotification?): Map<String, Any>? {
+            if (sbn == null) return null
+            val packageName = sbn.packageName ?: return null
+
+            val extras = sbn.notification?.extras
+
+            val title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim()
+                ?: extras?.getCharSequence(Notification.EXTRA_TITLE_BIG)?.toString()?.trim()
+                ?: ""
+
+            // Extract bigText, regularText, or multi-line textLines
+            val bigText = extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.trim() ?: ""
+            val regularText = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim() ?: ""
+            val subText = extras?.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()?.trim() ?: ""
+            val summaryText = extras?.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString()?.trim() ?: ""
+
+            val textLines = extras?.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
+                ?.joinToString(" ") { it.toString().trim() } ?: ""
+
+            val text = when {
+                bigText.isNotEmpty() -> bigText
+                regularText.isNotEmpty() -> regularText
+                textLines.isNotEmpty() -> textLines
+                summaryText.isNotEmpty() -> summaryText
+                else -> ""
+            }
+
+            // Check if notification is from an SMS messaging app containing financial keywords
+            val isSmsApp = packageName.contains("messaging", ignoreCase = true) ||
+                packageName.contains(".mms", ignoreCase = true) ||
+                packageName.contains("sms", ignoreCase = true)
+
+            val isSmsBank = isSmsApp && (
+                title.contains("kbank", ignoreCase = true) ||
+                title.contains("k plus", ignoreCase = true) ||
+                title.contains("scb", ignoreCase = true) ||
+                title.contains("ktb", ignoreCase = true) ||
+                title.contains("ttb", ignoreCase = true) ||
+                title.contains("bbl", ignoreCase = true) ||
+                title.contains("krungsri", ignoreCase = true) ||
+                title.contains("bay", ignoreCase = true) ||
+                title.contains("gsb", ignoreCase = true) ||
+                title.contains("uob", ignoreCase = true) ||
+                title.contains("cimb", ignoreCase = true) ||
+                title.contains("truemoney", ignoreCase = true) ||
+                text.contains("บช.", ignoreCase = true) ||
+                text.contains("บัญชี", ignoreCase = true) ||
+                text.contains("เงินเข้า", ignoreCase = true) ||
+                text.contains("เงินออก", ignoreCase = true) ||
+                text.contains("ใช้จ่าย", ignoreCase = true) ||
+                text.contains("ยอดคงเหลือ", ignoreCase = true) ||
+                text.contains("บาท", ignoreCase = true)
+            )
+
+            // Filter: check if package belongs to supported Thai banking, e-wallet, SMS, or ADB test package
+            val isSupported = isSmsBank ||
+                SUPPORTED_PACKAGES.contains(packageName) ||
+                packageName.contains("kasikorn", ignoreCase = true) ||
+                packageName.contains("kplus", ignoreCase = true) ||
+                packageName.contains("scb", ignoreCase = true) ||
+                packageName.contains("ktb", ignoreCase = true) ||
+                packageName.contains("truemoney", ignoreCase = true) ||
+                packageName.contains("ttb", ignoreCase = true) ||
+                packageName.contains("krungsri", ignoreCase = true) ||
+                packageName.contains("bbl", ignoreCase = true) ||
+                packageName.contains("mymo", ignoreCase = true) ||
+                packageName.contains("dime", ignoreCase = true) ||
+                packageName.contains("shell", ignoreCase = true)
+
+            // 📝 [ALL DEVICE NOTIFICATIONS LOG] Detailed log for inspection and debugging
+            Log.i(
+                TAG,
+                "🔔 [DEVICE_NOTIF] pkg='$packageName' | isBank=$isSupported | title='$title' | text='$text' | subText='$subText'"
+            )
+
+            if (!isSupported) {
+                return null
+            }
+
+            if (title.isEmpty() && text.isEmpty()) {
+                Log.d(TAG, "⚠️ [BankNotifListener] Empty title and text from $packageName, skipping.")
+                return null
+            }
+
+            return mapOf(
+                "id" to "${packageName}_${sbn.postTime}_${sbn.id}",
+                "packageName" to packageName,
+                "title" to title,
+                "text" to text,
+                "subText" to subText,
+                "postTime" to sbn.postTime
+            )
+        }
     }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        instance = this
         isServiceConnected = true
         Log.i(TAG, "🟢 [BankNotifListener] Notification Listener Service CONNECTED and ACTIVE!")
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        instance = null
         isServiceConnected = false
         Log.w(TAG, "🔴 [BankNotifListener] Notification Listener Service DISCONNECTED!")
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        instance = null
+        isServiceConnected = false
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         if (sbn == null) return
-        val packageName = sbn.packageName ?: return
-
-        val extras = sbn.notification?.extras
-
-        val title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim()
-            ?: extras?.getCharSequence(Notification.EXTRA_TITLE_BIG)?.toString()?.trim()
-            ?: ""
-
-        // Extract bigText, regularText, or multi-line textLines
-        val bigText = extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.trim() ?: ""
-        val regularText = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim() ?: ""
-        val subText = extras?.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()?.trim() ?: ""
-        val summaryText = extras?.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString()?.trim() ?: ""
-
-        val textLines = extras?.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
-            ?.joinToString(" ") { it.toString().trim() } ?: ""
-
-        val text = when {
-            bigText.isNotEmpty() -> bigText
-            regularText.isNotEmpty() -> regularText
-            textLines.isNotEmpty() -> textLines
-            summaryText.isNotEmpty() -> summaryText
-            else -> ""
-        }
-
-        // Check if notification is from an SMS messaging app containing financial keywords
-        val isSmsApp = packageName.contains("messaging", ignoreCase = true) ||
-            packageName.contains(".mms", ignoreCase = true) ||
-            packageName.contains("sms", ignoreCase = true)
-
-        val isSmsBank = isSmsApp && (
-            title.contains("kbank", ignoreCase = true) ||
-            title.contains("k plus", ignoreCase = true) ||
-            title.contains("scb", ignoreCase = true) ||
-            title.contains("ktb", ignoreCase = true) ||
-            title.contains("ttb", ignoreCase = true) ||
-            title.contains("bbl", ignoreCase = true) ||
-            title.contains("krungsri", ignoreCase = true) ||
-            title.contains("bay", ignoreCase = true) ||
-            title.contains("gsb", ignoreCase = true) ||
-            title.contains("uob", ignoreCase = true) ||
-            title.contains("cimb", ignoreCase = true) ||
-            title.contains("truemoney", ignoreCase = true) ||
-            text.contains("บช.", ignoreCase = true) ||
-            text.contains("บัญชี", ignoreCase = true) ||
-            text.contains("เงินเข้า", ignoreCase = true) ||
-            text.contains("เงินออก", ignoreCase = true) ||
-            text.contains("ใช้จ่าย", ignoreCase = true) ||
-            text.contains("ยอดคงเหลือ", ignoreCase = true) ||
-            text.contains("บาท", ignoreCase = true)
-        )
-
-        // Filter: check if package belongs to supported Thai banking, e-wallet, SMS, or ADB test package
-        val isSupported = isSmsBank ||
-            SUPPORTED_PACKAGES.contains(packageName) ||
-            packageName.contains("kasikorn", ignoreCase = true) ||
-            packageName.contains("kplus", ignoreCase = true) ||
-            packageName.contains("scb", ignoreCase = true) ||
-            packageName.contains("ktb", ignoreCase = true) ||
-            packageName.contains("truemoney", ignoreCase = true) ||
-            packageName.contains("ttb", ignoreCase = true) ||
-            packageName.contains("krungsri", ignoreCase = true) ||
-            packageName.contains("bbl", ignoreCase = true) ||
-            packageName.contains("mymo", ignoreCase = true) ||
-            packageName.contains("dime", ignoreCase = true) ||
-            packageName.contains("shell", ignoreCase = true)
-
-        // 📝 [ALL DEVICE NOTIFICATIONS LOG] Detailed log for inspection and debugging
-        Log.i(
-            TAG,
-            "🔔 [DEVICE_NOTIF] pkg='$packageName' | isBank=$isSupported | title='$title' | text='$text' | subText='$subText'"
-        )
-
-        if (!isSupported) {
-            return
-        }
-
-        if (title.isEmpty() && text.isEmpty()) {
-            Log.d(TAG, "⚠️ [BankNotifListener] Empty title and text from $packageName, skipping.")
-            return
-        }
+        val notifMap = extractNotificationData(sbn) ?: return
 
         // Debounce multi-firing of the exact same notification from Android OS within 4s
-        val dedupeKey = "${packageName}|${title}|${text}"
+        val dedupeKey = "${notifMap["packageName"]}|${notifMap["title"]}|${notifMap["text"]}"
         val now = System.currentTimeMillis()
         if (isDuplicateRecent(dedupeKey, now)) {
-            Log.i(TAG, "⏭️ [BankNotifListener] Ignored duplicate rapid notification: pkg=$packageName | title='$title'")
+            Log.i(TAG, "⏭️ [BankNotifListener] Ignored duplicate rapid notification: pkg=${notifMap["packageName"]} | title='${notifMap["title"]}'")
             return
         }
 
-        val notifMap = mapOf(
-            "id" to "${packageName}_${sbn.postTime}_${sbn.id}",
-            "packageName" to packageName,
-            "title" to title,
-            "text" to text,
-            "subText" to subText,
-            "postTime" to sbn.postTime
-        )
-
-        Log.i(TAG, "🎯 [BankNotifListener] MATCHED: pkg=$packageName | title='$title' | text='$text' | subText='$subText'")
+        Log.i(TAG, "🎯 [BankNotifListener] MATCHED: pkg=${notifMap["packageName"]} | title='${notifMap["title"]}' | text='${notifMap["text"]}' | subText='${notifMap["subText"]}'")
 
         // Save to buffer for background resilience
         saveToBuffer(applicationContext, notifMap)

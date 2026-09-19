@@ -185,46 +185,136 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
 
   Future<void> syncNativeBuffer() async {
     try {
-      final buffered = await repository.syncPendingFromNativeBuffer();
-      if (buffered.isNotEmpty) {
-        for (final tx in buffered) {
-          final isAlreadyPending = state.pendingTransactions.any((t) =>
-              t.id == tx.id ||
-              (t.packageName == tx.packageName &&
-                  t.amount == tx.amount &&
-                  t.type == tx.type &&
-                  t.timestamp.difference(tx.timestamp).abs().inSeconds < 10));
-
-          if (!isAlreadyPending) {
-            final acc = await accountCubit.ensureAccountForBank(
-              tx.bankId,
-              accountMask: tx.accountMask,
-              bankName: tx.bankName,
-              brandColor: tx.bankColorValue,
-            );
-            final enriched = tx.copyWith(
-              bankAccountId: acc.id,
-              bankId: acc.bankId,
-            );
-            await transactionCubit.addTransaction(enriched.toTransactionEntity());
-            await repository.addPendingTransaction(enriched);
-          } else {
-            debugPrint('[AutoSyncCubit] ⏭️ Duplicate transaction ignored in buffer sync: ${tx.title} ${tx.amount} THB');
-          }
-        }
-
-        accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
-
-        final updatedPending = await repository.getPendingTransactions();
-        emit(state.copyWith(
-          pendingTransactions: updatedPending,
-          latestDetected: buffered.isNotEmpty ? buffered.last : null,
-        ));
-      }
+      // ดึงแจ้งเตือนที่ตกหล่นอัตโนมัติ (ทั้งจาก active notifications บนแถบสถานะ และ native buffer)
+      await manualSyncMissedNotifications();
     } catch (e) {
       debugPrint('[AutoSyncCubit] ❌ Error syncing native buffer: $e');
     }
   }
+
+  /// ดึงการแจ้งเตือนที่ตกหล่นด้วยตนเอง (Active status bar notifications + buffer)
+  /// คืนค่าจำนวนรายการใหม่ที่ดึงเข้ามาได้สำเร็จ หรือ -1 หากไม่มีสิทธิ์ Notification Access
+  Future<int> manualSyncMissedNotifications() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final isGranted = await repository.isPermissionGranted();
+      if (!isGranted) {
+        emit(state.copyWith(
+          isLoading: false,
+          isPermissionGranted: false,
+        ));
+        return -1;
+      }
+
+      // Rebind service if currently disconnected
+      final isConnected = await repository.isServiceConnected();
+      if (!isConnected) {
+        debugPrint('[AutoSyncCubit] 🔄 Service disconnected before manual sync. Forcing rebind...');
+        await repository.rebindService();
+        await Future.delayed(const Duration(milliseconds: 600));
+      }
+
+      // Fetch missed notifications from native
+      final missed = await repository.syncMissedNotifications();
+      debugPrint('[AutoSyncCubit] 📬 Native returned ${missed.length} notification(s)');
+
+      int newlyAddedCount = 0;
+
+      if (missed.isNotEmpty) {
+        for (final tx in missed) {
+          // Check bank package filter (if user configured specific banks)
+          if (state.enabledBankPackages.isNotEmpty) {
+            final isShell = tx.packageName == 'com.android.shell';
+            final isDirectlyEnabled = state.enabledBankPackages.contains(tx.packageName);
+            final profile = BankProfile.findByPackage(tx.packageName);
+            final isProfileEnabled = profile != null && (
+                state.enabledBankPackages.contains(profile.packageName) ||
+                profile.packageAliases.any((a) => state.enabledBankPackages.contains(a))
+            );
+
+            if (!isShell && !isDirectlyEnabled && !isProfileEnabled) {
+              debugPrint('[AutoSyncCubit] ⏭️ Skipping ${tx.packageName} (disabled by filter)');
+              continue;
+            }
+          }
+
+          // Deduplication:
+          // 1. Check in pendingTransactions
+          final isAlreadyPending = state.pendingTransactions.any((p) =>
+              p.id == tx.id ||
+              (p.packageName == tx.packageName &&
+               p.amount == tx.amount &&
+               p.type == tx.type &&
+               p.timestamp.difference(tx.timestamp).abs().inSeconds < 15));
+
+          if (isAlreadyPending) {
+            debugPrint('[AutoSyncCubit] ⏭️ Already pending in review: ${tx.bankShortName} ${tx.amount} THB');
+            continue;
+          }
+
+          // 2. Check in swipe history (already swiped/reviewed in this session)
+          final isAlreadySwiped = state.swipeHistory.any((h) => h.id == tx.id);
+          if (isAlreadySwiped) {
+            debugPrint('[AutoSyncCubit] ⏭️ Already swiped in history: ${tx.bankShortName} ${tx.amount} THB');
+            continue;
+          }
+
+          // 3. Check in saved transactions
+          final isAlreadySaved = transactionCubit.state.transactions.any((t) =>
+              t.id == tx.id ||
+              (t.amount == tx.amount &&
+               t.type == tx.type &&
+               t.date.difference(tx.timestamp).abs().inMinutes < 2));
+
+          final acc = await accountCubit.ensureAccountForBank(
+            tx.bankId,
+            accountMask: tx.accountMask,
+            bankName: tx.bankName,
+            brandColor: tx.bankColorValue,
+          );
+
+          final enriched = tx.copyWith(
+            bankAccountId: acc.id,
+            bankId: acc.bankId,
+          );
+
+          if (!isAlreadySaved) {
+            await transactionCubit.addTransaction(enriched.toTransactionEntity());
+          } else {
+            debugPrint('[AutoSyncCubit] ℹ️ Transaction already saved in DB, adding to pending review: ${tx.bankShortName} ${tx.amount} THB');
+          }
+
+          await repository.addPendingTransaction(enriched);
+          newlyAddedCount++;
+        }
+
+        if (newlyAddedCount > 0) {
+          accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
+        }
+      }
+
+      final updatedPending = await repository.getPendingTransactions();
+      final nowConnected = await repository.isServiceConnected();
+
+      emit(state.copyWith(
+        isLoading: false,
+        isPermissionGranted: true,
+        isServiceConnected: nowConnected,
+        pendingTransactions: updatedPending,
+        latestDetected: updatedPending.isNotEmpty ? updatedPending.first : null,
+      ));
+
+      return newlyAddedCount;
+    } catch (e) {
+      debugPrint('[AutoSyncCubit] ❌ Error in manualSyncMissedNotifications: $e');
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: 'ไม่สามารถดึงแจ้งเตือนที่ตกหล่นได้: $e',
+      ));
+      return 0;
+    }
+  }
+
   Future<void> checkPermission() async {
     final isGranted = await repository.isPermissionGranted();
     final isConnected = await repository.isServiceConnected();

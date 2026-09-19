@@ -303,6 +303,85 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                   ),
                   const SizedBox(height: 12),
 
+                  // 2.1 เมนู: ดึงแจ้งเตือนที่ตกหล่น (Manual Refresh)
+                  _buildMenuItem(
+                    isDark: isDark,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    subtextColor: subtextColor,
+                    borderColor: borderColor,
+                    leading: _buildGradientIcon(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      icon: Icons.mark_email_unread_rounded,
+                    ),
+                    title: 'ดึงแจ้งเตือนที่ตกหล่น',
+                    subtitle:
+                        'สแกนแจ้งเตือนจากแถบแจ้งเตือนเครื่องและบัฟเฟอร์ด้วยตนเอง',
+                    badgeText: 'กดดึงข้อมูล ⚡',
+                    badgeColor: const Color(0xFF8B5CF6),
+                    onTap: () async {
+                      final scaffold = ScaffoldMessenger.of(context);
+                      scaffold.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '⏳ กำลังดึงแจ้งเตือนที่ตกหล่น...',
+                            style: GoogleFonts.prompt(fontSize: 13.5),
+                          ),
+                          duration: const Duration(milliseconds: 900),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                      final count = await context
+                          .read<AutoSyncCubit>()
+                          .manualSyncMissedNotifications();
+                      if (!context.mounted) return;
+                      scaffold.hideCurrentSnackBar();
+                      scaffold.showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(
+                                count > 0
+                                    ? Icons.check_circle_rounded
+                                    : Icons.info_outline_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  count == -1
+                                      ? '⚠️ กรุณาเปิดสิทธิ์การอ่านการแจ้งเตือนก่อน'
+                                      : (count > 0
+                                          ? '🎉 ตรวจพบรายการตกหล่น $count รายการ!'
+                                          : '🐾 ไม่พบแจ้งเตือนตกหล่นเพิ่มเติม'),
+                                  style: GoogleFonts.prompt(fontSize: 13.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: count > 0
+                              ? const Color(0xFF059669)
+                              : (count == -1
+                                  ? Colors.orange
+                                  : const Color(0xFF3B82F6)),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
                   // 3. เมนู: ปิดการประหยัดแบตเตอรี่ (Battery Optimization)
                   _buildMenuItem(
                     isDark: isDark,

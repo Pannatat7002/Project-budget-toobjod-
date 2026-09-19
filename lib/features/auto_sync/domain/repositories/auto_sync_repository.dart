@@ -16,6 +16,7 @@ abstract class AutoSyncRepository {
 
   Stream<DetectedTransaction> get notificationStream;
   Future<List<DetectedTransaction>> syncPendingFromNativeBuffer();
+  Future<List<DetectedTransaction>> syncMissedNotifications();
 
   Future<List<DetectedTransaction>> getPendingTransactions();
   Future<void> addPendingTransaction(DetectedTransaction transaction);
