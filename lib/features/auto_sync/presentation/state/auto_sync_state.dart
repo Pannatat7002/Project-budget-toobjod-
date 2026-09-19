@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
 import '../../domain/entities/swipe_history_record.dart';
 
@@ -14,6 +15,13 @@ class AutoSyncState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final List<SwipeHistoryRecord> swipeHistory;
+
+  /// Check whether auto-sync is enabled for a specific bank
+  bool isBankEnabled(BankProfile bank) {
+    if (enabledBankPackages.isEmpty) return false;
+    return enabledBankPackages.contains(bank.packageName) ||
+        bank.packageAliases.any((a) => enabledBankPackages.contains(a));
+  }
 
   const AutoSyncState({
     this.isPermissionGranted = false,

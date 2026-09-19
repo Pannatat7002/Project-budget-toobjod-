@@ -18,21 +18,6 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
 
   AccountLocalDataSourceImpl({required this.sharedPreferences});
 
-  static final List<BankAccountModel> _defaultAccounts = [
-    BankAccountModel(
-      id: 'acc_kbank',
-      bankId: 'kbank',
-      bankName: 'ธนาคารกสิกรไทย (K PLUS)',
-      accountName: 'บัญชีหลัก K PLUS',
-      accountMask: '4521',
-      currentBalance: 0.0,
-      brandColor: 0xFF138F2D,
-      isAutoSyncActive: true,
-      createdAt: DateTime.now(),
-      isDefault: true,
-    ),
-  ];
-
   @override
   Future<List<BankAccountModel>> getAccounts() async {
     try {
@@ -41,17 +26,17 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
         final List<dynamic> jsonList = jsonDecode(jsonString);
         final list = jsonList
             .map((item) => BankAccountModel.fromJson(item as Map<String, dynamic>))
-            .where((acc) => acc.bankId != 'cash')
+            .where((acc) =>
+                acc.bankId != 'cash' &&
+                !acc.id.startsWith('mock_') &&
+                !(acc.id == 'acc_kbank' && acc.accountMask == '4521'))
             .toList();
-        if (list.isEmpty) {
-          await saveAccounts(_defaultAccounts);
-          return _defaultAccounts;
+        if (list.length != jsonList.length) {
+          await saveAccounts(list);
         }
         return list;
       } else {
-        // Save initial default accounts
-        await saveAccounts(_defaultAccounts);
-        return _defaultAccounts;
+        return [];
       }
     } catch (e) {
       throw CacheException(e.toString());

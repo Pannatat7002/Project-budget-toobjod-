@@ -11,6 +11,8 @@ import '../../domain/entities/transaction_entity.dart';
 class TransactionTile extends StatefulWidget {
   final TransactionEntity transaction;
   final bool isEyeViewHidden;
+  final bool isGrouped;
+  final bool showDivider;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
@@ -18,6 +20,8 @@ class TransactionTile extends StatefulWidget {
     super.key,
     required this.transaction,
     this.isEyeViewHidden = false,
+    this.isGrouped = false,
+    this.showDivider = false,
     this.onTap,
     this.onDelete,
   });
@@ -64,12 +68,162 @@ class _TransactionTileState extends State<TransactionTile>
                 ? widget.transaction.categoryColorValue
                 : (isIncome ? 0xFF10B981 : 0xFFEF4444)));
 
-    final bankColor = resolvedBank != null
-        ? Color(resolvedBank.brandColor)
-        : _getBankColor(widget.transaction.bankId, bankBadge);
+
+    final subtitleItems = <String>[];
+    if (isTransfer) {
+      subtitleItems.add('โอนข้ามบัญชี');
+    } else if (widget.transaction.title.trim() != widget.transaction.categoryName.trim()) {
+      subtitleItems.add(widget.transaction.categoryName);
+    }
+
+    if (bankBadge != null && bankBadge.isNotEmpty) {
+      subtitleItems.add(bankBadge);
+    }
+
+    final hasNote = widget.transaction.note != null &&
+        widget.transaction.note!.isNotEmpty &&
+        !widget.transaction.note!.startsWith('ตรวจจับอัตโนมัติจาก');
+    if (hasNote) {
+      subtitleItems.add(widget.transaction.note!);
+    }
+
+    if (subtitleItems.isEmpty) {
+      subtitleItems.add(widget.transaction.categoryName);
+    }
+
+    final subtitleText = subtitleItems.join(' • ');
+
+    final rowContent = Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.isGrouped ? 16 : 14,
+        vertical: widget.isGrouped ? 11 : 12,
+      ),
+      child: Row(
+        children: [
+          CategoryIconBadge(
+            icon: smartIcon,
+            color: categoryColor,
+            size: widget.isGrouped ? 40 : 48,
+            iconSize: widget.isGrouped ? 20 : 24,
+            categoryId: showBankLogo ? null : widget.transaction.categoryId,
+            assetPath: showBankLogo ? resolvedBank.logoAsset : null,
+            isBankLogo: showBankLogo,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.transaction.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: widget.isGrouped ? 14 : 14.5,
+                        letterSpacing: -0.2,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitleText,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    letterSpacing: -0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _formatAmount(isIncome, isTransfer),
+                style: TextStyle(
+                  fontSize: widget.isGrouped ? 14.5 : 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  color: isTransfer
+                      ? const Color(0xFF6366F1)
+                      : (isIncome ? AppColors.income : AppColors.expense),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                DateFormatter.formatTime(widget.transaction.date),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final interactiveRow = Material(
+      color: Colors.transparent,
+      borderRadius: widget.isGrouped ? null : BorderRadius.circular(16),
+      child: InkWell(
+        onTap: widget.onTap != null
+            ? () {
+                HapticFeedback.lightImpact();
+                widget.onTap?.call();
+              }
+            : null,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        borderRadius: widget.isGrouped ? null : BorderRadius.circular(16),
+        splashColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.06),
+        highlightColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.03),
+        child: rowContent,
+      ),
+    );
+
+    final Widget coreTile;
+    if (widget.isGrouped) {
+      coreTile = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          interactiveRow,
+          if (widget.showDivider)
+            Divider(
+              height: 1,
+              thickness: 0.6,
+              indent: 68,
+              endIndent: 0,
+              color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFF1F5F9),
+            ),
+        ],
+      );
+    } else {
+      coreTile = Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
+            width: 1,
+          ),
+        ),
+        child: interactiveRow,
+      );
+    }
 
     return AnimatedScale(
-      scale: _isPressed ? 0.97 : 1.0,
+      scale: _isPressed ? 0.98 : 1.0,
       duration: const Duration(milliseconds: 100),
       curve: Curves.easeOut,
       child: Dismissible(
@@ -82,10 +236,10 @@ class _TransactionTileState extends State<TransactionTile>
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: EdgeInsets.only(bottom: widget.isGrouped ? 0 : 8),
           decoration: BoxDecoration(
             color: AppColors.error.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: widget.isGrouped ? null : BorderRadius.circular(16),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
@@ -99,166 +253,9 @@ class _TransactionTileState extends State<TransactionTile>
             ],
           ),
         ),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
-              width: 1,
-            ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              onTap: widget.onTap != null
-                  ? () {
-                      HapticFeedback.lightImpact();
-                      widget.onTap?.call();
-                    }
-                  : null,
-              onTapDown: (_) => setState(() => _isPressed = true),
-              onTapUp: (_) => setState(() => _isPressed = false),
-              onTapCancel: () => setState(() => _isPressed = false),
-              borderRadius: BorderRadius.circular(16),
-              splashColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.06),
-              highlightColor: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.03),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                child: Row(
-                children: [
-                  CategoryIconBadge(
-                    icon: smartIcon,
-                    color: categoryColor,
-                    size: 48,
-                    iconSize: 24,
-                    categoryId: showBankLogo ? null : widget.transaction.categoryId,
-                    assetPath: showBankLogo ? resolvedBank.logoAsset : null,
-                    isBankLogo: showBankLogo,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.transaction.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14.5,
-                                letterSpacing: -0.2,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            // Show Category Tag only if title is distinct from category name (e.g. custom merchant/title)
-                            if (isTransfer || (widget.transaction.title.trim() != widget.transaction.categoryName.trim()))
-                              Padding(
-                                padding: const EdgeInsets.only(right: 5),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: categoryColor.withValues(alpha: 0.10),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    isTransfer ? 'โอนข้ามบัญชี' : widget.transaction.categoryName,
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: categoryColor,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            // Bank Tag Badge
-                            if (bankBadge != null)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: bankColor.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: bankColor.withValues(alpha: 0.3),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                child: Text(
-                                  bankBadge,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: bankColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            // Note snippet
-                            if (widget.transaction.note != null &&
-                                widget.transaction.note!.isNotEmpty &&
-                                !widget.transaction.note!.startsWith('ตรวจจับอัตโนมัติจาก')) ...[
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  widget.transaction.note!,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _formatAmount(isIncome, isTransfer),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                          color: isTransfer
-                              ? const Color(0xFF6366F1)
-                              : (isIncome ? AppColors.income : AppColors.expense),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        DateFormatter.formatTime(widget.transaction.date),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        child: coreTile,
       ),
-    ),
-  );
+    );
   }
 
   String _formatAmount(bool isIncome, bool isTransfer) {
@@ -268,11 +265,6 @@ class _TransactionTileState extends State<TransactionTile>
     return '${isIncome ? '+' : '-'}${CurrencyFormatter.format(widget.transaction.amount)}';
   }
 
-  static Color _getBankColor(String? bankId, String? bankBadge) {
-    final profile = BankProfile.resolveBank(bankId: bankId, bankName: bankBadge);
-    if (profile != null) return Color(profile.brandColor);
-    return const Color(0xFF2563EB);
-  }
 
   static String? _extractBankBadge(String? note) {
     if (note == null || note.isEmpty) return null;

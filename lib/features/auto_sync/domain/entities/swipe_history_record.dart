@@ -101,6 +101,42 @@ class SwipeHistoryRecord extends Equatable {
   static String get csvHeader =>
       'id,swipedAt,title,bankShortName,type,amount,suggestedCategory,confirmedCategory,categoryChanged,swipeResult,rawText';
 
+  /// Serialization to JSON
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'swipedAt': swipedAt.toIso8601String(),
+        'title': title,
+        'bankShortName': bankShortName,
+        'type': type.name,
+        'amount': amount,
+        'suggestedCategoryName': suggestedCategoryName,
+        'suggestedCategoryId': suggestedCategoryId,
+        'confirmedCategoryName': confirmedCategoryName,
+        'confirmedCategoryId': confirmedCategoryId,
+        'swipeResult': swipeResult.name,
+        'rawText': rawText,
+      };
+
+  /// Deserialization from JSON
+  factory SwipeHistoryRecord.fromJson(Map<String, dynamic> json) {
+    return SwipeHistoryRecord(
+      id: json['id'] as String? ?? '',
+      swipedAt: json['swipedAt'] != null
+          ? DateTime.tryParse(json['swipedAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      title: json['title'] as String? ?? '',
+      bankShortName: json['bankShortName'] as String? ?? '',
+      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      suggestedCategoryName: json['suggestedCategoryName'] as String? ?? '',
+      suggestedCategoryId: json['suggestedCategoryId'] as String? ?? '',
+      confirmedCategoryName: json['confirmedCategoryName'] as String? ?? '',
+      confirmedCategoryId: json['confirmedCategoryId'] as String? ?? '',
+      swipeResult: json['swipeResult'] == 'discarded' ? SwipeResult.discarded : SwipeResult.confirmed,
+      rawText: json['rawText'] as String?,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

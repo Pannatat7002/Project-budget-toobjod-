@@ -15,11 +15,14 @@ class SwipeHistoryView extends StatefulWidget {
   const SwipeHistoryView({super.key});
 
   static Future<void> show(BuildContext context) {
+    final autoSyncCubit = context.read<AutoSyncCubit>();
     return Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => BlocProvider.value(
-        value: context.read<AutoSyncCubit>(),
-        child: const SwipeHistoryView(),
-      )),
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: autoSyncCubit,
+          child: const SwipeHistoryView(),
+        ),
+      ),
     );
   }
 

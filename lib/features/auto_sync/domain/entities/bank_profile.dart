@@ -141,6 +141,16 @@ class BankProfile {
     ),
   ];
 
+  /// Get all supported package names including aliases
+  static List<String> get allSupportedPackages {
+    final list = <String>[];
+    for (final b in supportedBanks) {
+      list.add(b.packageName);
+      list.addAll(b.packageAliases);
+    }
+    return list;
+  }
+
   static BankProfile? findByPackage(String pkg) {
     if (pkg.isEmpty) return null;
     final lowerPkg = pkg.toLowerCase().trim();

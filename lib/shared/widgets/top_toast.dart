@@ -10,6 +10,8 @@ class TopToast {
     bool isSuccess = true,
     Duration duration = const Duration(milliseconds: 1800),
   }) {
+    if (!context.mounted) return;
+
     _currentEntry?.remove();
     _currentEntry = null;
 

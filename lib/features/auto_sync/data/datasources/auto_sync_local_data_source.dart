@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
+import '../../domain/entities/swipe_history_record.dart';
 
 abstract class AutoSyncLocalDataSource {
   Future<bool> isAutoSyncEnabled();
@@ -22,6 +23,12 @@ abstract class AutoSyncLocalDataSource {
 
   Future<List<DetectedTransaction>> getHistoryTransactions();
   Future<void> addHistoryTransaction(DetectedTransaction transaction);
+
+  Future<List<SwipeHistoryRecord>> getSwipeHistory();
+  Future<void> saveSwipeHistory(List<SwipeHistoryRecord> records);
+  Future<void> addSwipeHistoryRecord(SwipeHistoryRecord record);
+  Future<void> addSwipeHistoryRecords(List<SwipeHistoryRecord> records);
+  Future<void> clearSwipeHistory();
 }
 
 class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
@@ -32,9 +39,11 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
   static const String _keyEnabledPackages = 'bp_enabled_bank_packages_v1';
   static const String _keyPendingTxs = 'bp_pending_detected_txs_v1';
   static const String _keyHistoryTxs = 'bp_history_detected_txs_v1';
+  static const String _keySwipeHistory = 'bp_swipe_history_records_v1';
 
   List<DetectedTransaction>? _cachedPending;
   List<DetectedTransaction>? _cachedHistory;
+  List<SwipeHistoryRecord>? _cachedSwipeHistory;
 
   AutoSyncLocalDataSourceImpl({required this.sharedPreferences});
 
@@ -62,11 +71,11 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
   @override
   Future<List<String>> getEnabledBankPackages() async {
     final list = sharedPreferences.getStringList(_keyEnabledPackages);
-    if (list != null && list.isNotEmpty) {
+    if (list != null) {
       return list;
     }
-    // Default: all supported banks enabled
-    return BankProfile.supportedBanks.map((b) => b.packageName).toList();
+    // Default: all supported banks and their aliases enabled
+    return BankProfile.allSupportedPackages;
   }
 
   @override
@@ -164,5 +173,62 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
     _cachedHistory = List.from(list);
     final jsonList = list.map((t) => t.toJson()).toList();
     await sharedPreferences.setString(_keyHistoryTxs, jsonEncode(jsonList));
+  }
+
+  @override
+  Future<List<SwipeHistoryRecord>> getSwipeHistory() async {
+    if (_cachedSwipeHistory != null) return List.from(_cachedSwipeHistory!);
+    final jsonStr = sharedPreferences.getString(_keySwipeHistory);
+    if (jsonStr == null || jsonStr.isEmpty) {
+      _cachedSwipeHistory = [];
+      return [];
+    }
+    try {
+      final List<dynamic> list = jsonDecode(jsonStr);
+      final records = list
+          .map((e) => SwipeHistoryRecord.fromJson(e as Map<String, dynamic>))
+          .toList();
+      _cachedSwipeHistory = records;
+      return List.from(_cachedSwipeHistory!);
+    } catch (_) {
+      _cachedSwipeHistory = [];
+      return [];
+    }
+  }
+
+  @override
+  Future<void> saveSwipeHistory(List<SwipeHistoryRecord> records) async {
+    _cachedSwipeHistory = List.from(records);
+    final jsonList = records.map((r) => r.toJson()).toList();
+    await sharedPreferences.setString(_keySwipeHistory, jsonEncode(jsonList));
+  }
+
+  @override
+  Future<void> addSwipeHistoryRecord(SwipeHistoryRecord record) async {
+    final list = await getSwipeHistory();
+    list.removeWhere((r) => r.id == record.id);
+    list.insert(0, record);
+    if (list.length > 500) {
+      list.removeRange(500, list.length);
+    }
+    await saveSwipeHistory(list);
+  }
+
+  @override
+  Future<void> addSwipeHistoryRecords(List<SwipeHistoryRecord> records) async {
+    final list = await getSwipeHistory();
+    final newIds = records.map((r) => r.id).toSet();
+    list.removeWhere((r) => newIds.contains(r.id));
+    list.insertAll(0, records);
+    if (list.length > 500) {
+      list.removeRange(500, list.length);
+    }
+    await saveSwipeHistory(list);
+  }
+
+  @override
+  Future<void> clearSwipeHistory() async {
+    _cachedSwipeHistory = [];
+    await sharedPreferences.remove(_keySwipeHistory);
   }
 }

@@ -141,25 +141,6 @@ class _DashboardViewState extends State<DashboardView> {
                               color: Color(0xFFD97706),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: AppColors.yellowBadgeGradient,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'PRO',
-                              style: GoogleFonts.prompt(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF78350F),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -402,45 +383,11 @@ class _DashboardViewState extends State<DashboardView> {
                               ],
                             ),
                           ),
-                          InkWell(
-                            onTap: () {
-                              context
-                                  .read<TransactionCubit>()
-                                  .setSelectedBankId(selectedBankId);
-                              context.go('/transactions');
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 4,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'ดูทั้งหมด',
-                                    style: GoogleFonts.prompt(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 11,
-                                    color: AppColors.primary,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
 
-                      // 7. Recent Transactions List (Smooth AnimatedSwitcher transition when changing bank)
+                      // 7. Recent Transactions List (Grouped Apple Wallet Style)
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 250),
                         child: KeyedSubtree(
@@ -452,41 +399,61 @@ class _DashboardViewState extends State<DashboardView> {
                                   title: selectedBankId != null
                                       ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
                                       : 'ยังไม่มีรายการเลยนะโฮ่ง!',
-                                  // message: selectedBankId != null
-                                  //     ? 'เมื่อมีรายการเข้าหรือจ่ายออกจากธนาคารนี้ จะปรากฏที่นี่ครับ'
-                                  //     : 'เริ่มจดบันทึกรายรับหรือรายจ่าย ให้เจ้าตูบช่วยคำนวณงบให้นะครับ',
-                                  // actionText: 'จดรายการใหม่',
                                   onAction: () =>
                                       AddTransactionSheet.show(context),
                                 )
                               : Column(
                                   children: [
-                                    ListView.builder(
-                                      shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: recentTransactions.length,
-                                      itemBuilder: (context, index) {
-                                        final item = recentTransactions[index];
-                                        return TransactionTile(
-                                          transaction: item,
-                                          onTap: () => AddTransactionSheet.show(
-                                            context,
-                                            existingTransaction: item,
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? AppColors.darkSurface
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(18),
+                                        border: Border.all(
+                                          color: isDark
+                                              ? AppColors.darkBorderSubtle
+                                              : const Color(0xFFE2E8F0),
+                                          width: 0.9,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: isDark ? 0.12 : 0.025,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
                                           ),
-                                          onDelete: () {
-                                            context
-                                                .read<TransactionCubit>()
-                                                .deleteTransaction(item.id);
-                                          },
-                                        );
-                                      },
+                                        ],
+                                      ),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          for (int i = 0; i < recentTransactions.length; i++)
+                                            TransactionTile(
+                                              transaction: recentTransactions[i],
+                                              isGrouped: true,
+                                              showDivider: i < recentTransactions.length - 1,
+                                              onTap: () => AddTransactionSheet.show(
+                                                context,
+                                                existingTransaction: recentTransactions[i],
+                                              ),
+                                              onDelete: () {
+                                                final item = recentTransactions[i];
+                                                context
+                                                    .read<TransactionCubit>()
+                                                    .deleteTransaction(item.id);
+                                              },
+                                            ),
+                                        ],
+                                      ),
                                     ),
                                     const SizedBox(height: 10),
                                     _buildViewAllTransactionsButton(
                                       context,
                                       hasMore: hasMoreTransactions,
-                                      remainingCount:
-                                          remainingTransactionsCount,
+                                      remainingCount: remainingTransactionsCount,
                                       selectedBankId: selectedBankId,
                                       isDark: isDark,
                                     ),
@@ -1177,7 +1144,6 @@ class _DashboardViewState extends State<DashboardView> {
               if (mounted) {
                 setState(() {
                   _dogName = AppConstants.appName;
-                  _isMascotGreetingDismissed = false;
                 });
               }
 

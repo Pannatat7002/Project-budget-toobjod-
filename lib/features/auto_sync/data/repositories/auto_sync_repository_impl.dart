@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../domain/entities/bank_profile.dart';
 import '../../domain/entities/detected_transaction.dart';
+import '../../domain/entities/swipe_history_record.dart';
 import '../../domain/repositories/auto_sync_repository.dart';
 import '../../utils/thai_bank_parser.dart';
 import '../datasources/auto_sync_local_data_source.dart';
@@ -255,6 +256,26 @@ class AutoSyncRepositoryImpl implements AutoSyncRepository {
     final updated = transaction.copyWith(isDiscarded: true);
     await localDataSource.removePendingTransaction(transaction.id);
     await localDataSource.addHistoryTransaction(updated);
+  }
+
+  @override
+  Future<List<SwipeHistoryRecord>> getSwipeHistory() {
+    return localDataSource.getSwipeHistory();
+  }
+
+  @override
+  Future<void> addSwipeHistoryRecord(SwipeHistoryRecord record) {
+    return localDataSource.addSwipeHistoryRecord(record);
+  }
+
+  @override
+  Future<void> addSwipeHistoryRecords(List<SwipeHistoryRecord> records) {
+    return localDataSource.addSwipeHistoryRecords(records);
+  }
+
+  @override
+  Future<void> clearSwipeHistory() {
+    return localDataSource.clearSwipeHistory();
   }
 
   @override

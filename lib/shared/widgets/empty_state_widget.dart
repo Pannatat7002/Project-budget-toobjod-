@@ -6,8 +6,6 @@ class EmptyStateWidget extends StatelessWidget {
   final IconData? icon;
   final String? imageAsset;
   final String title;
-  // final String message;
-  // final String? actionText;
   final VoidCallback? onAction;
 
   const EmptyStateWidget({
@@ -15,8 +13,6 @@ class EmptyStateWidget extends StatelessWidget {
     this.icon,
     this.imageAsset = 'assets/images/mascot_dog_writing.png',
     required this.title,
-    // required this.message,
-    // this.actionText,
     this.onAction,
   });
 
@@ -24,7 +20,7 @@ class EmptyStateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Center(
+    Widget content = Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
         child: Column(
@@ -100,49 +96,19 @@ class EmptyStateWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 10),
-
-            // Message
-            // Text(
-            //   message,
-            //   style: GoogleFonts.prompt(
-            //     fontSize: 13,
-            //     color: isDark
-            //         ? AppColors.darkTextSecondary
-            //         : AppColors.lightTextSecondary,
-            //     height: 1.45,
-            //   ),
-            //   textAlign: TextAlign.center,
-            // ),
-            // if (actionText != null && onAction != null) ...[
-            //   const SizedBox(height: 20),
-            //   ElevatedButton.icon(
-            //     onPressed: onAction,
-            //     icon: const Icon(Icons.add, size: 18),
-            //     label: Text(
-            //       actionText!,
-            //       style: GoogleFonts.prompt(
-            //         fontWeight: FontWeight.w600,
-            //         fontSize: 13.5,
-            //       ),
-            //     ),
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: AppColors.primary,
-            //       foregroundColor: Colors.white,
-            //       padding: const EdgeInsets.symmetric(
-            //         horizontal: 22,
-            //         vertical: 12,
-            //       ),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(16),
-            //       ),
-            //       elevation: 0,
-            //     ),
-            //   ),
-            // ],
           ],
         ),
       ),
     );
+
+    if (onAction != null) {
+      return GestureDetector(
+        onTap: onAction,
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      );
+    }
+
+    return content;
   }
 }

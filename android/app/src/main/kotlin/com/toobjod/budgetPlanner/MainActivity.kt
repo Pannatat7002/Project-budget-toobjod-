@@ -61,12 +61,7 @@ class MainActivity : FlutterActivity() {
                 }
                 "syncMissedNotifications" -> {
                     if (!BankNotificationListenerService.isServiceConnected || BankNotificationListenerService.instance == null) {
-                        BankNotificationListenerService.rebindService(applicationContext, forceToggle = true)
-                        var waitCount = 0
-                        while (BankNotificationListenerService.instance == null && waitCount < 8) {
-                            try { Thread.sleep(100) } catch (_: Exception) {}
-                            waitCount++
-                        }
+                        BankNotificationListenerService.rebindService(applicationContext, forceToggle = false)
                     }
                     val list = BankNotificationListenerService.fetchActiveAndPendingNotifications(applicationContext)
                     result.success(list)

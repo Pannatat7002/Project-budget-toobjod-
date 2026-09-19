@@ -1,4 +1,5 @@
 import '../../domain/entities/detected_transaction.dart';
+import '../../domain/entities/swipe_history_record.dart';
 
 abstract class AutoSyncRepository {
   Future<bool> isPermissionGranted();
@@ -25,6 +26,11 @@ abstract class AutoSyncRepository {
 
   Future<void> markAsSaved(DetectedTransaction transaction);
   Future<void> markAsDiscarded(DetectedTransaction transaction);
+
+  Future<List<SwipeHistoryRecord>> getSwipeHistory();
+  Future<void> addSwipeHistoryRecord(SwipeHistoryRecord record);
+  Future<void> addSwipeHistoryRecords(List<SwipeHistoryRecord> records);
+  Future<void> clearSwipeHistory();
 
   Future<bool> isAutoSyncEnabled();
   Future<void> setAutoSyncEnabled(bool enabled);

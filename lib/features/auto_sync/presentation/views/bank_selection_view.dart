@@ -453,7 +453,7 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                     maxLength: 4,
                     decoration: InputDecoration(
                       counterText: '',
-                      hintText: 'เช่น 4521 (ช่วยจับคู่สลิปให้ตรงบัญชี)',
+                      hintText: 'เช่น 1234 (ช่วยจับคู่สลิปให้ตรงบัญชี)',
                       filled: true,
                       fillColor: isDark ? AppColors.darkCard : const Color(0xFFF1F5F9),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),

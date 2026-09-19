@@ -232,25 +232,25 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                           ],
                           const Spacer(),
                           // ปุ่มดึงแจ้งเตือนที่ตกหล่น (Manual Refresh)
-                          // IconButton(
-                          //   onPressed: _isRefreshing ? null : _handleRefresh,
-                          //   tooltip: 'ดึงแจ้งเตือนที่ตกหล่น',
-                          //   padding: EdgeInsets.zero,
-                          //   constraints: const BoxConstraints(
-                          //     minWidth: 32,
-                          //     minHeight: 32,
-                          //   ),
-                          //   icon: RotationTransition(
-                          //     turns: _refreshAnimController,
-                          //     child: Icon(
-                          //       Icons.refresh_rounded,
-                          //       size: 19,
-                          //       color: _isRefreshing
-                          //           ? AppColors.primary
-                          //           : subtextColor,
-                          //     ),
-                          //   ),
-                          // ),
+                          IconButton(
+                            onPressed: _isRefreshing ? null : _handleRefresh,
+                            tooltip: 'ดึงแจ้งเตือนที่ตกหล่น',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            icon: RotationTransition(
+                              turns: _refreshAnimController,
+                              child: Icon(
+                                Icons.refresh_rounded,
+                                size: 21,
+                                color: _isRefreshing
+                                    ? AppColors.primary
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 2),
                           // ปุ่มไปที่หน้าประวัติการตรวจจับ (คู่กับปุ่มปิด)
                           TextButton.icon(

@@ -37,32 +37,39 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       final isAutoSave = await repository.isAutoSaveEnabled();
       final packages = await repository.getEnabledBankPackages();
       final pending = await repository.getPendingTransactions();
+      final history = await repository.getSwipeHistory();
 
-      debugPrint('[AutoSyncCubit] Initialized. isGranted=$isGranted, isConnected=$isConnected, isBatteryIgnored=$isBatteryIgnored, isAutoSync=$isAutoSync, pendingCount=${pending.length}');
+      debugPrint(
+        '[AutoSyncCubit] Initialized. isGranted=$isGranted, isConnected=$isConnected, isBatteryIgnored=$isBatteryIgnored, isAutoSync=$isAutoSync, pendingCount=${pending.length}, historyCount=${history.length}',
+      );
 
-      emit(state.copyWith(
-        isPermissionGranted: isGranted,
-        isServiceConnected: isConnected,
-        isBatteryOptimizationIgnored: isBatteryIgnored,
-        isAutoSyncEnabled: isAutoSync,
-        isAutoSaveEnabled: isAutoSave,
-        enabledBankPackages: packages,
-        pendingTransactions: pending,
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          isPermissionGranted: isGranted,
+          isServiceConnected: isConnected,
+          isBatteryOptimizationIgnored: isBatteryIgnored,
+          isAutoSyncEnabled: isAutoSync,
+          isAutoSaveEnabled: isAutoSave,
+          enabledBankPackages: packages,
+          pendingTransactions: pending,
+          swipeHistory: history,
+          isLoading: false,
+        ),
+      );
 
       // Sync any buffered notifications from native side
       await syncNativeBuffer();
-
 
       // Start listening to real-time notification stream if enabled
       _startStreamListener();
       // Note: _startTransactionListener already called in constructor — do not call again
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        errorMessage: 'ไม่สามารถโหลดข้อมูลระบบตรวจจับ: $e',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'ไม่สามารถโหลดข้อมูลระบบตรวจจับ: $e',
+        ),
+      );
     }
   }
 
@@ -71,14 +78,17 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
   void _startTransactionListener() {
     _transactionSubscription?.cancel();
     _transactionSubscription = transactionCubit.stream.listen((txState) {
-      if (txState.status == TransactionStatus.success && state.pendingTransactions.isNotEmpty) {
+      if (txState.status == TransactionStatus.success &&
+          state.pendingTransactions.isNotEmpty) {
         final existingTxIds = txState.transactions.map((t) => t.id).toSet();
         final toRemove = state.pendingTransactions
             .where((p) => !existingTxIds.contains(p.id))
             .toList();
 
         if (toRemove.isNotEmpty) {
-          debugPrint('[AutoSyncCubit] 🔄 Syncing deletions: ${toRemove.length} transaction(s) deleted from main list.');
+          debugPrint(
+            '[AutoSyncCubit] 🔄 Syncing deletions: ${toRemove.length} transaction(s) deleted from main list.',
+          );
           for (final r in toRemove) {
             repository.removePendingTransaction(r.id);
             repository.markAsDiscarded(r);
@@ -88,13 +98,16 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
               .where((p) => existingTxIds.contains(p.id))
               .toList();
 
-          final isLatestRemoved = state.latestDetected != null &&
+          final isLatestRemoved =
+              state.latestDetected != null &&
               !existingTxIds.contains(state.latestDetected!.id);
 
-          emit(state.copyWith(
-            pendingTransactions: remaining,
-            clearLatestDetected: isLatestRemoved,
-          ));
+          emit(
+            state.copyWith(
+              pendingTransactions: remaining,
+              clearLatestDetected: isLatestRemoved,
+            ),
+          );
         }
       }
     });
@@ -102,10 +115,14 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
 
   void _startStreamListener() {
     _streamSubscription?.cancel();
-    debugPrint('[AutoSyncCubit] 📡 Listening to real-time notificationStream...');
+    debugPrint(
+      '[AutoSyncCubit] 📡 Listening to real-time notificationStream...',
+    );
     _streamSubscription = repository.notificationStream.listen(
       (detected) {
-        debugPrint('[AutoSyncCubit] 📥 Received from stream: ${detected.bankShortName} -> ${detected.title}');
+        debugPrint(
+          '[AutoSyncCubit] 📥 Received from stream: ${detected.bankShortName} -> ${detected.title}',
+        );
         _handleIncomingDetectedTransaction(detected);
       },
       onError: (error) {
@@ -114,42 +131,89 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     );
   }
 
-
   Future<void> _handleIncomingDetectedTransaction(
     DetectedTransaction detected, {
     bool bypassFilter = false,
   }) async {
     if (!bypassFilter && !state.isAutoSyncEnabled) {
-      debugPrint('[AutoSyncCubit] ⏸️ Ignored: Auto-Sync is disabled in settings.');
+      debugPrint(
+        '[AutoSyncCubit] ⏸️ Ignored: Auto-Sync is disabled in settings.',
+      );
       return;
     }
 
     // Check if package is enabled in user settings
     if (!bypassFilter && state.enabledBankPackages.isNotEmpty) {
       final isShell = detected.packageName == 'com.android.shell';
-      final isDirectlyEnabled = state.enabledBankPackages.contains(detected.packageName);
-      final profile = BankProfile.findByPackage(detected.packageName);
-      final isProfileEnabled = profile != null && (
-          state.enabledBankPackages.contains(profile.packageName) ||
-          profile.packageAliases.any((a) => state.enabledBankPackages.contains(a))
+      final isDirectlyEnabled = state.enabledBankPackages.contains(
+        detected.packageName,
       );
+      final profile = BankProfile.findByPackage(detected.packageName);
+      final isProfileEnabled =
+          profile != null &&
+          (state.enabledBankPackages.contains(profile.packageName) ||
+              profile.packageAliases.any(
+                (a) => state.enabledBankPackages.contains(a),
+              ));
 
       if (!isShell && !isDirectlyEnabled && !isProfileEnabled) {
-        debugPrint('[AutoSyncCubit] ⏸️ Ignored: Package ${detected.packageName} is disabled in bank filter.');
+        debugPrint(
+          '[AutoSyncCubit] ⏸️ Ignored: Package ${detected.packageName} is disabled in bank filter.',
+        );
         return;
       }
     }
 
-    // Prevent duplicate processing if already in pending list (per bank & per amount)
-    final isAlreadyPending = state.pendingTransactions.any((t) =>
-        t.id == detected.id ||
-        (t.bankId == detected.bankId &&
-            t.amount == detected.amount &&
-            t.type == detected.type &&
-            t.timestamp.difference(detected.timestamp).abs().inSeconds < 15));
+    // 1. Prevent duplicate processing if already in pending list
+    final isAlreadyPending = state.pendingTransactions.any(
+      (t) =>
+          t.id == detected.id ||
+          (t.bankId == detected.bankId &&
+              (t.amount - detected.amount).abs() < 0.001 &&
+              t.type == detected.type &&
+              t.timestamp.difference(detected.timestamp).abs().inSeconds < 30),
+    );
 
     if (isAlreadyPending) {
-      debugPrint('[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream: ${detected.title} ${detected.amount} THB');
+      debugPrint(
+        '[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream (already pending): ${detected.title} ${detected.amount} THB',
+      );
+      return;
+    }
+
+    // 2. Check if already swiped/reviewed in history
+    final isAlreadySwiped = state.swipeHistory.any(
+      (h) =>
+          h.id == detected.id ||
+          (h.bankShortName == detected.bankShortName &&
+              (h.amount - detected.amount).abs() < 0.001 &&
+              h.type == detected.type &&
+              (h.swipedAt.difference(detected.timestamp).abs().inHours < 48 ||
+                  (h.rawText != null &&
+                      detected.rawText != null &&
+                      h.rawText == detected.rawText))),
+    );
+
+    if (isAlreadySwiped) {
+      debugPrint(
+        '[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream (already swiped): ${detected.title} ${detected.amount} THB',
+      );
+      return;
+    }
+
+    // 3. Check if already in saved transactions
+    final isAlreadySaved = transactionCubit.state.transactions.any(
+      (t) =>
+          t.id == detected.id ||
+          ((t.amount - detected.amount).abs() < 0.001 &&
+              t.type == detected.type &&
+              t.date.difference(detected.timestamp).abs().inMinutes < 5),
+    );
+
+    if (isAlreadySaved) {
+      debugPrint(
+        '[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream (already saved in DB): ${detected.title} ${detected.amount} THB',
+      );
       return;
     }
 
@@ -166,21 +230,28 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       bankId: account.bankId,
     );
 
-
     // ⚡ Always auto-save transaction to database immediately
-    debugPrint('[AutoSyncCubit] ⚡ Auto-saved transaction: ${enrichedDetected.bankShortName} ${enrichedDetected.amount} THB (Account: ${account.accountName})');
-    await transactionCubit.addTransaction(enrichedDetected.toTransactionEntity());
+    debugPrint(
+      '[AutoSyncCubit] ⚡ Auto-saved transaction: ${enrichedDetected.bankShortName} ${enrichedDetected.amount} THB (Account: ${account.accountName})',
+    );
+    await transactionCubit.addTransaction(
+      enrichedDetected.toTransactionEntity(),
+    );
 
     // Refresh bank balances
-    accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
+    accountCubit.refreshBalancesFromTransactions(
+      transactionCubit.state.transactions,
+    );
 
     // Add to pending review queue
     await repository.addPendingTransaction(enrichedDetected);
     final updatedPending = await repository.getPendingTransactions();
-    emit(state.copyWith(
-      pendingTransactions: updatedPending,
-      latestDetected: enrichedDetected,
-    ));
+    emit(
+      state.copyWith(
+        pendingTransactions: updatedPending,
+        latestDetected: enrichedDetected,
+      ),
+    );
   }
 
   Future<void> syncNativeBuffer() async {
@@ -199,24 +270,25 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     try {
       final isGranted = await repository.isPermissionGranted();
       if (!isGranted) {
-        emit(state.copyWith(
-          isLoading: false,
-          isPermissionGranted: false,
-        ));
+        emit(state.copyWith(isLoading: false, isPermissionGranted: false));
         return -1;
       }
 
       // Rebind service if currently disconnected
       final isConnected = await repository.isServiceConnected();
       if (!isConnected) {
-        debugPrint('[AutoSyncCubit] 🔄 Service disconnected before manual sync. Forcing rebind...');
+        debugPrint(
+          '[AutoSyncCubit] 🔄 Service disconnected before manual sync. Forcing rebind...',
+        );
         await repository.rebindService();
         await Future.delayed(const Duration(milliseconds: 600));
       }
 
       // Fetch missed notifications from native
       final missed = await repository.syncMissedNotifications();
-      debugPrint('[AutoSyncCubit] 📬 Native returned ${missed.length} notification(s)');
+      debugPrint(
+        '[AutoSyncCubit] 📬 Native returned ${missed.length} notification(s)',
+      );
 
       int newlyAddedCount = 0;
 
@@ -225,46 +297,44 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
           // Check bank package filter (if user configured specific banks)
           if (state.enabledBankPackages.isNotEmpty) {
             final isShell = tx.packageName == 'com.android.shell';
-            final isDirectlyEnabled = state.enabledBankPackages.contains(tx.packageName);
-            final profile = BankProfile.findByPackage(tx.packageName);
-            final isProfileEnabled = profile != null && (
-                state.enabledBankPackages.contains(profile.packageName) ||
-                profile.packageAliases.any((a) => state.enabledBankPackages.contains(a))
+            final isDirectlyEnabled = state.enabledBankPackages.contains(
+              tx.packageName,
             );
+            final profile = BankProfile.findByPackage(tx.packageName);
+            final isProfileEnabled =
+                profile != null &&
+                (state.enabledBankPackages.contains(profile.packageName) ||
+                    profile.packageAliases.any(
+                      (a) => state.enabledBankPackages.contains(a),
+                    ));
 
             if (!isShell && !isDirectlyEnabled && !isProfileEnabled) {
-              debugPrint('[AutoSyncCubit] ⏭️ Skipping ${tx.packageName} (disabled by filter)');
+              debugPrint(
+                '[AutoSyncCubit] ⏭️ Skipping ${tx.packageName} (disabled by filter)',
+              );
               continue;
             }
           }
 
-          // Deduplication:
-          // 1. Check in pendingTransactions
-          final isAlreadyPending = state.pendingTransactions.any((p) =>
-              p.id == tx.id ||
-              (p.packageName == tx.packageName &&
-               p.amount == tx.amount &&
-               p.type == tx.type &&
-               p.timestamp.difference(tx.timestamp).abs().inSeconds < 15));
-
-          if (isAlreadyPending) {
-            debugPrint('[AutoSyncCubit] ⏭️ Already pending in review: ${tx.bankShortName} ${tx.amount} THB');
+          // Deduplication: exact ID match only.
+          // ไม่ใช้ fuzzy match (amount+type+time) เพราะอาจตัดธุรกรรมจริงที่ยอดเหมือนกันออกไปผิดพลาด
+          // 1. Pending queue
+          if (state.pendingTransactions.any((p) => p.id == tx.id)) {
+            debugPrint('[AutoSyncCubit] ⏭️ Already pending (id match): ${tx.id}');
             continue;
           }
 
-          // 2. Check in swipe history (already swiped/reviewed in this session)
-          final isAlreadySwiped = state.swipeHistory.any((h) => h.id == tx.id);
-          if (isAlreadySwiped) {
-            debugPrint('[AutoSyncCubit] ⏭️ Already swiped in history: ${tx.bankShortName} ${tx.amount} THB');
+          // 2. Swipe history
+          if (state.swipeHistory.any((h) => h.id == tx.id)) {
+            debugPrint('[AutoSyncCubit] ⏭️ Already swiped (id match): ${tx.id}');
             continue;
           }
 
-          // 3. Check in saved transactions
-          final isAlreadySaved = transactionCubit.state.transactions.any((t) =>
-              t.id == tx.id ||
-              (t.amount == tx.amount &&
-               t.type == tx.type &&
-               t.date.difference(tx.timestamp).abs().inMinutes < 2));
+          // 3. Saved transactions DB
+          if (transactionCubit.state.transactions.any((t) => t.id == tx.id)) {
+            debugPrint('[AutoSyncCubit] ⏭️ Already saved (id match): ${tx.id}');
+            continue;
+          }
 
           final acc = await accountCubit.ensureAccountForBank(
             tx.bankId,
@@ -278,39 +348,44 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
             bankId: acc.bankId,
           );
 
-          if (!isAlreadySaved) {
-            await transactionCubit.addTransaction(enriched.toTransactionEntity());
-          } else {
-            debugPrint('[AutoSyncCubit] ℹ️ Transaction already saved in DB, adding to pending review: ${tx.bankShortName} ${tx.amount} THB');
-          }
-
+          await transactionCubit.addTransaction(enriched.toTransactionEntity());
           await repository.addPendingTransaction(enriched);
           newlyAddedCount++;
         }
 
         if (newlyAddedCount > 0) {
-          accountCubit.refreshBalancesFromTransactions(transactionCubit.state.transactions);
+          accountCubit.refreshBalancesFromTransactions(
+            transactionCubit.state.transactions,
+          );
         }
       }
 
       final updatedPending = await repository.getPendingTransactions();
       final nowConnected = await repository.isServiceConnected();
 
-      emit(state.copyWith(
-        isLoading: false,
-        isPermissionGranted: true,
-        isServiceConnected: nowConnected,
-        pendingTransactions: updatedPending,
-        latestDetected: updatedPending.isNotEmpty ? updatedPending.first : null,
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isPermissionGranted: true,
+          isServiceConnected: nowConnected,
+          pendingTransactions: updatedPending,
+          latestDetected: updatedPending.isNotEmpty
+              ? updatedPending.first
+              : null,
+        ),
+      );
 
       return newlyAddedCount;
     } catch (e) {
-      debugPrint('[AutoSyncCubit] ❌ Error in manualSyncMissedNotifications: $e');
-      emit(state.copyWith(
-        isLoading: false,
-        errorMessage: 'ไม่สามารถดึงแจ้งเตือนที่ตกหล่นได้: $e',
-      ));
+      debugPrint(
+        '[AutoSyncCubit] ❌ Error in manualSyncMissedNotifications: $e',
+      );
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'ไม่สามารถดึงแจ้งเตือนที่ตกหล่นได้: $e',
+        ),
+      );
       return 0;
     }
   }
@@ -320,11 +395,13 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     final isConnected = await repository.isServiceConnected();
     final isBatteryIgnored = await repository.isBatteryOptimizationIgnored();
 
-    emit(state.copyWith(
-      isPermissionGranted: isGranted,
-      isServiceConnected: isConnected,
-      isBatteryOptimizationIgnored: isBatteryIgnored,
-    ));
+    emit(
+      state.copyWith(
+        isPermissionGranted: isGranted,
+        isServiceConnected: isConnected,
+        isBatteryOptimizationIgnored: isBatteryIgnored,
+      ),
+    );
 
     if (isGranted) {
       await syncNativeBuffer();
@@ -377,7 +454,6 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     emit(state.copyWith(isAutoSaveEnabled: enabled));
   }
 
-
   Future<void> toggleBankPackage(String packageName, bool enabled) async {
     final current = List<String>.from(state.enabledBankPackages);
     if (enabled) {
@@ -413,20 +489,26 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     final record = _buildSwipeRecord(
       detected: detected,
       result: SwipeResult.confirmed,
-      confirmedCategoryId: customEntity?.categoryId ?? detected.suggestedCategoryId,
-      confirmedCategoryName: customEntity?.categoryName ?? detected.suggestedCategoryName,
+      confirmedCategoryId:
+          customEntity?.categoryId ?? detected.suggestedCategoryId,
+      confirmedCategoryName:
+          customEntity?.categoryName ?? detected.suggestedCategoryName,
     );
 
-    emit(state.copyWith(
-      pendingTransactions: updatedPending,
-      clearLatestDetected: true,
-      swipeHistory: [...state.swipeHistory, record],
-    ));
+    emit(
+      state.copyWith(
+        pendingTransactions: updatedPending,
+        clearLatestDetected: true,
+        swipeHistory: [...state.swipeHistory, record],
+      ),
+    );
   }
 
   /// User pressed "❌ ไม่ถูกต้อง" -> Delete from database!
   Future<void> discardTransaction(DetectedTransaction detected) async {
-    debugPrint('[AutoSyncCubit] 🗑️ Discarding/Deleting transaction: ${detected.title} (${detected.id})');
+    debugPrint(
+      '[AutoSyncCubit] 🗑️ Discarding/Deleting transaction: ${detected.title} (${detected.id})',
+    );
     await transactionCubit.deleteTransaction(detected.id);
     await repository.markAsDiscarded(detected);
     final updatedPending = await repository.getPendingTransactions();
@@ -439,22 +521,28 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       confirmedCategoryName: detected.suggestedCategoryName,
     );
 
-    emit(state.copyWith(
-      pendingTransactions: updatedPending,
-      clearLatestDetected: true,
-      swipeHistory: [...state.swipeHistory, record],
-    ));
+    emit(
+      state.copyWith(
+        pendingTransactions: updatedPending,
+        clearLatestDetected: true,
+        swipeHistory: [...state.swipeHistory, record],
+      ),
+    );
   }
 
   /// User dismissed / closed dialog -> Keep auto-saved transaction
   Future<void> dismissReview(DetectedTransaction detected) async {
-    debugPrint('[AutoSyncCubit] 💾 Dismissed review: keeping auto-saved transaction: ${detected.title}');
+    debugPrint(
+      '[AutoSyncCubit] 💾 Dismissed review: keeping auto-saved transaction: ${detected.title}',
+    );
     await repository.markAsSaved(detected);
     final updatedPending = await repository.getPendingTransactions();
-    emit(state.copyWith(
-      pendingTransactions: updatedPending,
-      clearLatestDetected: true,
-    ));
+    emit(
+      state.copyWith(
+        pendingTransactions: updatedPending,
+        clearLatestDetected: true,
+      ),
+    );
   }
 
   /// Confirm / Keep all remaining pending reviews
@@ -466,18 +554,24 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     final updatedPending = await repository.getPendingTransactions();
 
     // 📋 บันทึกประวัติการปัดแบบ bulk
-    final newRecords = pending.map((tx) => _buildSwipeRecord(
-      detected: tx,
-      result: SwipeResult.confirmed,
-      confirmedCategoryId: tx.suggestedCategoryId,
-      confirmedCategoryName: tx.suggestedCategoryName,
-    )).toList();
+    final newRecords = pending
+        .map(
+          (tx) => _buildSwipeRecord(
+            detected: tx,
+            result: SwipeResult.confirmed,
+            confirmedCategoryId: tx.suggestedCategoryId,
+            confirmedCategoryName: tx.suggestedCategoryName,
+          ),
+        )
+        .toList();
 
-    emit(state.copyWith(
-      pendingTransactions: updatedPending,
-      clearLatestDetected: true,
-      swipeHistory: [...state.swipeHistory, ...newRecords],
-    ));
+    emit(
+      state.copyWith(
+        pendingTransactions: updatedPending,
+        clearLatestDetected: true,
+        swipeHistory: [...state.swipeHistory, ...newRecords],
+      ),
+    );
   }
 
   /// Discard and delete all remaining pending reviews from database
@@ -490,27 +584,30 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     final updatedPending = await repository.getPendingTransactions();
 
     // 📋 บันทึกประวัติการปัดแบบ bulk
-    final newRecords = pending.map((tx) => _buildSwipeRecord(
-      detected: tx,
-      result: SwipeResult.discarded,
-      confirmedCategoryId: tx.suggestedCategoryId,
-      confirmedCategoryName: tx.suggestedCategoryName,
-    )).toList();
+    final newRecords = pending
+        .map(
+          (tx) => _buildSwipeRecord(
+            detected: tx,
+            result: SwipeResult.discarded,
+            confirmedCategoryId: tx.suggestedCategoryId,
+            confirmedCategoryName: tx.suggestedCategoryName,
+          ),
+        )
+        .toList();
 
-    emit(state.copyWith(
-      pendingTransactions: updatedPending,
-      clearLatestDetected: true,
-      swipeHistory: [...state.swipeHistory, ...newRecords],
-    ));
+    emit(
+      state.copyWith(
+        pendingTransactions: updatedPending,
+        clearLatestDetected: true,
+        swipeHistory: [...state.swipeHistory, ...newRecords],
+      ),
+    );
   }
 
   /// Clear all pending notifications directly
   Future<void> clearAllPending() async {
     await repository.clearPendingTransactions();
-    emit(state.copyWith(
-      pendingTransactions: [],
-      clearLatestDetected: true,
-    ));
+    emit(state.copyWith(pendingTransactions: [], clearLatestDetected: true));
   }
 
   void clearLatestDetected() {
