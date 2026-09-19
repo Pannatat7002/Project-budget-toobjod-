@@ -16,8 +16,18 @@ class BblParser extends BankParserStrategy {
   int get brandColor => 0xFF1E3A8A; // BBL Deep Blue
 
   @override
+  List<String> get supportedPackages => const [
+    'com.bbl.mobilebanking', // Bangkok Bank Mobile Banking
+    'com.bbl.mBanking',
+    'com.bbl.mobilephone',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
     if (pkg.contains('bbl') || pkg.contains('bangkokbank')) {
       return true;
     }
@@ -54,16 +64,28 @@ class BblParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('โอนเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('เงินโอนเข้า') ||
-        lower.contains('ฝากเงิน') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('โอนออก') && !lower.contains('ชำระ')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เงินเข้า') || lowerTitle.contains('เงินโอนเข้า') || lowerTitle.contains('รับโอน')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('โอนเงิน') || lowerTitle.contains('ชำระเงิน') || lowerTitle.contains('ถอนเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ Bangkok Bank จาก Text
+      final isBblIncome = lowerText.contains('เงินโอนเข้า') ||
+          lowerText.contains('เงินเข้า') ||
+          lowerText.contains('รับโอน');
+      final isBblExpense = lowerText.contains('โอนเงิน') ||
+          lowerText.contains('ชำระเงิน') ||
+          lowerText.contains('ชำระค่า');
+
+      if (isBblIncome && !isBblExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 

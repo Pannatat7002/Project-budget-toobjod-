@@ -16,15 +16,25 @@ class KBankParser extends BankParserStrategy {
   int get brandColor => 0xFF138F2D; // Kasikorn Green
 
   @override
+  List<String> get supportedPackages => const [
+    'com.kasikorn.retail.mbanking.wap', // K PLUS
+    'com.kasikorn.bank',
+    'com.kasikornbank.kplus',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
-    if (pkg.contains('kasikorn') || pkg.contains('kplus') || pkg.contains('makebykbank')) {
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
+    if (pkg.contains('kasikorn') || pkg.contains('kplus')) {
       return true;
     }
     // If package belongs to another known bank app, do not handle
     if (pkg.contains('ttb') || pkg.contains('tmb') || pkg.contains('scb') ||
         pkg.contains('ktb') || pkg.contains('bbl') || pkg.contains('krungsri') ||
-        pkg.contains('truemoney') || pkg.contains('dime')) {
+        pkg.contains('truemoney') || pkg.contains('dime') || pkg.contains('makebykbank')) {
       return false;
     }
     final lower = text.toLowerCase();
@@ -34,8 +44,7 @@ class KBankParser extends BankParserStrategy {
     }
     return lower.contains('k plus') ||
         lower.contains('kbank') ||
-        lower.contains('กสิกร') ||
-        lower.contains('make by kbank');
+        lower.contains('กสิกร');
   }
 
   static final RegExp _accountMaskRegex = RegExp(
@@ -66,15 +75,34 @@ class KBankParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('โอนเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('ฝากเงิน') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('โอนออก') && !lower.contains('ชำระ')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('รายการเงินเข้า') || lowerTitle.contains('เงินเข้า')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('รายการโอน/ถอน') ||
+        lowerTitle.contains('โอน/ถอน') ||
+        lowerTitle.contains('โอนเงิน') ||
+        lowerTitle.contains('ถอนเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ K PLUS จาก Text
+      final isKBankIncome = lowerText.contains('เงินเข้า') ||
+          lowerText.contains('รับโอน') ||
+          lowerText.contains('โอนเข้า');
+      final isKBankExpense = lowerText.contains('โอนเงินไปยัง') ||
+          lowerText.contains('ชำระเงินให้') ||
+          lowerText.contains('ชำระให้') ||
+          lowerText.contains('ถอนเงินไม่ใช้บัตร') ||
+          lowerText.contains('โอนออก') ||
+          lowerText.contains('ชำระค่า');
+
+      if (isKBankIncome && !isKBankExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 
@@ -115,22 +143,34 @@ class KBankParser extends BankParserStrategy {
       }
     }
 
-    // 5. Title
+    // 5. Title (ด่านจับแปะ: ใช้ Title จาก Notification โดยตรงถ้ามีหัวข้อแจ้งเตือนจริง)
     String txTitle;
-    if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
+    final cleanTitle = title.trim();
+    final isGenericTitle = cleanTitle.isEmpty ||
+        cleanTitle.toLowerCase() == 'k plus' ||
+        cleanTitle.toLowerCase() == 'kbank' ||
+        cleanTitle.toLowerCase() == 'kasikorn' ||
+        cleanTitle.toLowerCase() == 'com.kasikorn.retail.mbanking.wap' ||
+        cleanTitle.toLowerCase() == 'com.android.shell';
+
+    if (!isGenericTitle) {
+      if (cleanTitle.contains('รายการเงินเข้า')) {
+        txTitle = 'รายการเงินเข้า';
+      } else if (cleanTitle.contains('รายการโอน/ถอน')) {
+        txTitle = 'รายการโอน/ถอน';
+      } else {
+        txTitle = cleanTitle;
+      }
+    } else if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
       txTitle = merchantOrSender;
-    } else if (title.trim() == 'รายการเงินเข้า' || lower.contains('รายการเงินเข้า')) {
-      txTitle = 'รายการเงินเข้า';
-    } else if (title.trim() == 'รายการโอน/ถอน' || lower.contains('รายการโอน/ถอน')) {
-      txTitle = 'รายการโอน/ถอน';
     } else if (lower.contains('ถอนเงินไม่ใช้บัตร')) {
       txTitle = 'ถอนเงินไม่ใช้บัตร';
     } else if (lower.contains('ถอนเงินสด') || lower.contains('atm')) {
       txTitle = 'ถอนเงินสด';
     } else if (type == TransactionType.income) {
-      txTitle = 'เงินเข้า (K PLUS)';
+      txTitle = 'รายการเงินเข้า';
     } else {
-      txTitle = 'โอนเงิน/ชำระ (K PLUS)';
+      txTitle = 'รายการโอน/ถอน';
     }
 
     final category = suggestCategory(fullText, type, merchantOrSender);

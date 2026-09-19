@@ -16,8 +16,18 @@ class TrueMoneyParser extends BankParserStrategy {
   int get brandColor => 0xFFFF5B00; // TrueMoney Orange
 
   @override
+  List<String> get supportedPackages => const [
+    'th.co.truemoney.wallet', // TrueMoney Wallet
+    'com.truemoney',
+    'th.co.cenergy.tmn.wallet',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
     if (pkg.contains('truemoney')) return true;
     final lower = text.toLowerCase();
     return lower.contains('truemoney') || lower.contains('ทรูมันนี่');
@@ -47,15 +57,36 @@ class TrueMoneyParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('คืนเงิน') ||
-        lower.contains('cashback') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('ชำระเงิน')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เติมเงินสำเร็จ') ||
+        lowerTitle.contains('ได้รับเงิน') ||
+        lowerTitle.contains('เงินเข้า')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('ชำระเงินสำเร็จ') ||
+        lowerTitle.contains('โอนเงินสำเร็จ') ||
+        lowerTitle.contains('ชำระเงิน') ||
+        lowerTitle.contains('โอนเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ TrueMoney จาก Text
+      final isTmnIncome = lowerText.contains('ได้รับเงิน') ||
+          lowerText.contains('เติมเงินสำเร็จ') ||
+          lowerText.contains('เงินเข้า') ||
+          lowerText.contains('cashback');
+      final isTmnExpense = lowerText.contains('ชำระค่าสินค้า') ||
+          lowerText.contains('ชำระเงินสำเร็จ') ||
+          lowerText.contains('ชำระเงินให้') ||
+          lowerText.contains('โอนเงินไป') ||
+          lowerText.contains('โอนเงินให้');
+
+      if (isTmnIncome && !isTmnExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 

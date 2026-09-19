@@ -366,7 +366,7 @@ void main() {
         expect(parsed.type, TransactionType.income);
         expect(parsed.amount, 3.00);
         expect(parsed.accountMask, 'x-0264');
-        expect(parsed.title, 'นาย ปัณณทัต สมา');
+        expect(parsed.title, 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ');
         expect(parsed.merchantOrSender, contains('KBANK X2875 นาย ปัณณทัต สมา'));
         expect(parsed.timestamp.year, 2026);
         expect(parsed.timestamp.month, 9);
@@ -387,7 +387,7 @@ void main() {
         expect(parsed.type, TransactionType.income);
         expect(parsed.amount, 3.00);
         expect(parsed.accountMask, 'x-0264');
-        expect(parsed.title, 'นาย ปัณณทัต สมา');
+        expect(parsed.title, 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ');
       });
 
       test('ttb touch - แจ้งรายการโอนเงิน-สำเร็จ (Full Expanded Text)', () {
@@ -401,7 +401,7 @@ void main() {
         expect(parsed!.bankShortName, 'ttb touch');
         expect(parsed.type, TransactionType.expense);
         expect(parsed.amount, 1.00);
-        expect(parsed.title, 'นาย ปัณณทัต สมา');
+        expect(parsed.title, 'แจ้งรายการโอนเงิน-สำเร็จ');
         expect(parsed.merchantOrSender, contains('KBANK X2875 นาย ปัณณทัต สมา'));
         expect(parsed.timestamp.year, 2026);
         expect(parsed.timestamp.month, 9);
@@ -421,7 +421,7 @@ void main() {
         expect(parsed!.bankShortName, 'ttb touch');
         expect(parsed.type, TransactionType.expense);
         expect(parsed.amount, 1.00);
-        expect(parsed.title, 'นาย ปัณณทัต สมา');
+        expect(parsed.title, 'แจ้งรายการโอนเงิน-สำเร็จ');
       });
 
       test('ttb touch - all other income notifications (4.00, 5.00, 300.00 บ.)', () {
@@ -455,7 +455,7 @@ void main() {
           expect(parsed.type, TransactionType.income);
           expect(parsed.amount, item['amount']);
           expect(parsed.accountMask, 'x-0264');
-          expect(parsed.title, 'นาย ปัณณทัต สมา');
+          expect(parsed.title, 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ');
           expect(parsed.timestamp.minute, item['minute']);
         }
       });
@@ -485,6 +485,85 @@ void main() {
         expect(json['KBANK']['เงินเข้า (Income)'], isNotEmpty);
         expect(json['TTB']['เงินออก (Expense)'], isNotEmpty);
         expect(json['TTB']['เงินเข้า (Income)'], isNotEmpty);
+      });
+    });
+
+    group('Exact Bank Package Name Direct Routing Tests', () {
+      test('K PLUS exact package (com.kasikorn.retail.mbanking.wap)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.kasikorn.retail.mbanking.wap',
+          title: 'รายการโอน/ถอน',
+          text: 'โอนไป 500.00 บาท',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'kbank');
+        expect(parsed.bankShortName, 'K PLUS');
+      });
+
+      test('ttb touch exact package (com.TMBTOUCH.PRODUCTION)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.TMBTOUCH.PRODUCTION',
+          title: 'แจ้งรายการโอนเงิน-สำเร็จ',
+          text: 'โอนเงิน 1,200.00 บ. ไปยัง บช. xxx-x-x1234-x',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'ttb');
+        expect(parsed.bankShortName, 'ttb touch');
+      });
+
+      test('Krungthai NEXT exact package (ktbcs.netbank)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'ktbcs.netbank',
+          title: 'โอนเงินสำเร็จ',
+          text: 'ไปยัง นาย ก 350.00 บาท',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'ktb');
+        expect(parsed.bankShortName, 'Krungthai NEXT');
+      });
+
+      test('Paotang exact package (com.ktb.customer.qr)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.ktb.customer.qr',
+          title: 'โอนเงินสำเร็จ',
+          text: 'ชำระให้ ร้านค้า 80.00 บาท สำเร็จ',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'paotang');
+        expect(parsed.bankShortName, 'เป๋าตัง');
+      });
+
+      test('MAKE by KBank exact package (com.kasikornbank.makebykbank)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.kasikornbank.makebykbank',
+          title: 'โอนเงินสำเร็จ',
+          text: 'ไปยัง นาย ข 200.00 บาท สำเร็จ',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'make_kbank');
+        expect(parsed.bankShortName, 'MAKE');
+      });
+
+      test('Kept exact package (com.krungsri.kept)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'com.krungsri.kept',
+          title: 'โอนเงินสำเร็จ',
+          text: 'ไปยัง นาย ค 300.00 บาท สำเร็จ',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'kept');
+        expect(parsed.bankShortName, 'Kept');
+      });
+
+      test('TrueMoney exact package (th.co.truemoney.wallet)', () {
+        final parsed = ThaiBankParser.parse(
+          packageName: 'th.co.truemoney.wallet',
+          title: 'ชำระเงินสำเร็จ',
+          text: 'ชำระค่าสินค้าที่ 7-Eleven จำนวน 129.00 บาท',
+        );
+        expect(parsed, isNotNull);
+        expect(parsed!.bankId, 'truemoney');
+        expect(parsed.bankShortName, 'TrueMoney');
       });
     });
   });

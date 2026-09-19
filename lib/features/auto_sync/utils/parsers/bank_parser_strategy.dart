@@ -9,6 +9,9 @@ abstract class BankParserStrategy {
   String get shortName;
   int get brandColor;
 
+  /// Exact package names associated with this bank
+  List<String> get supportedPackages => const [];
+
   /// Whether this strategy can parse notifications for the given package or content
   bool canHandle(String packageName, String text);
 

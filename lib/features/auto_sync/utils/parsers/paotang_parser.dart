@@ -2,47 +2,43 @@ import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../domain/entities/detected_transaction.dart';
 import 'bank_parser_strategy.dart';
 
-class GsbParser extends BankParserStrategy {
+class PaotangParser extends BankParserStrategy {
   @override
-  String get bankId => 'gsb';
+  String get bankId => 'paotang';
 
   @override
-  String get bankName => 'ออมสิน (MyMo)';
+  String get bankName => 'เป๋าตัง (Paotang)';
 
   @override
-  String get shortName => 'MyMo GSB';
+  String get shortName => 'เป๋าตัง';
 
   @override
-  int get brandColor => 0xFFEB008B; // GSB Pink
+  int get brandColor => 0xFF00A3E0; // Paotang Cyan Blue
 
   @override
   List<String> get supportedPackages => const [
-    'com.mobilife.gsb.mymo', // MyMo GSB
-    'com.gsb.mymo',
-    'com.my.mymo',
-    'com.dspread.mpos.mymo',
+    'com.ktb.customer.qr', // เป๋าตัง (Official)
+    'com.ktb.paotang',
   ];
 
   @override
   bool canHandle(String packageName, String text) {
     final pkg = packageName.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจชื่อ Package Name ตรงเป๊ะ (Exact Match)
     if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
       return true;
     }
-    if (pkg.contains('gsb') || pkg.contains('mymo')) {
-      return true;
-    }
-    final lower = text.toLowerCase();
-    return lower.contains('mymo') || lower.contains('gsb') || lower.contains('ออมสิน');
+
+    return false;
   }
 
-  static final RegExp _accountMaskRegex = RegExp(r'(?:บช\.|บัญชี|จาก|เข้า)\s*([0-9xX\-]+)', caseSensitive: false);
   static final RegExp _merchantRegex = RegExp(
-    r'(?:ให้แก่|ให้กับ|ให้|ไปยัง|ไป|ที่ร้าน|ชำระค่าสินค้าที่|ชำระให้)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:จำนวน|ยอด|ผ่าน|สำเร็จ|เข้า)|$|\s+[0-9])',
+    r'(?:ไปยัง|ให้แก่|ให้กับ|ชำระให้|โอนไป|ชำระค่าสินค้าที่|ที่ร้าน)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:จำนวน|ยอด|สำเร็จ)|$|\s+[0-9])',
     caseSensitive: false,
   );
   static final RegExp _senderRegex = RegExp(
-    r'(?:จาก|โอนจาก|รับจาก|ผู้โอน)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:จำนวน|ยอด|เข้า)|$|\s+[0-9])',
+    r'(?:จาก|รับจาก|โอนจาก)\s*([A-Za-z0-9\u0E00-\u0E7F\s\.\-]+?)(?:\s+(?:จำนวน|ยอด|เข้า)|$|\s+[0-9])',
     caseSensitive: false,
   );
 
@@ -66,21 +62,25 @@ class GsbParser extends BankParserStrategy {
     final lowerText = text.toLowerCase().trim();
 
     // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
-    if (lowerTitle.contains('มีเงินเข้า') || lowerTitle.contains('เงินเข้า') || lowerTitle.contains('รับเงิน')) {
+    if (lowerTitle.contains('เติมเงิน') ||
+        lowerTitle.contains('เงินเข้า') ||
+        lowerTitle.contains('รับเงิน')) {
       type = TransactionType.income;
-    } else if (lowerTitle.contains('โอนเงิน') || lowerTitle.contains('ชำระเงิน') || lowerTitle.contains('ถอนเงิน')) {
+    } else if (lowerTitle.contains('ชำระ') ||
+        lowerTitle.contains('โอนเงิน') ||
+        lowerTitle.contains('จ่ายเงิน')) {
       type = TransactionType.expense;
     } else {
-      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ MyMo GSB จาก Text
-      final isGsbIncome = lowerText.contains('มีเงินเข้า') ||
-          lowerText.contains('เงินเข้าบัญชี') ||
-          lowerText.contains('รับโอน');
-      final isGsbExpense = lowerText.contains('โอนเงิน') ||
-          lowerText.contains('ชำระสินเชื่อ') ||
-          lowerText.contains('ชำระเงิน') ||
-          lowerText.contains('ถอนเงิน');
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ เป๋าตัง จาก Text
+      final isPaotangIncome = lowerText.contains('เติมเงิน') ||
+          lowerText.contains('เงินเข้า') ||
+          lowerText.contains('รับเงิน');
+      final isPaotangExpense = lowerText.contains('ชำระให้') ||
+          lowerText.contains('ชำระค่า') ||
+          lowerText.contains('โอนไป') ||
+          lowerText.contains('โอนเงิน');
 
-      if (isGsbIncome && !isGsbExpense) {
+      if (isPaotangIncome && !isPaotangExpense) {
         type = TransactionType.income;
       } else {
         type = TransactionType.expense;
@@ -91,23 +91,13 @@ class GsbParser extends BankParserStrategy {
     final amount = extractAmountCommon(fullText);
     if (amount == null || amount <= 0) return null;
 
-    // 3. Account Mask
-    String? mask;
-    final maskMatch = _accountMaskRegex.firstMatch(fullText);
-    if (maskMatch != null) {
-      final raw = maskMatch.group(1)?.replaceAll('-', '').trim();
-      if (raw != null && raw.length >= 4) {
-        mask = 'x-${raw.substring(raw.length - 4)}';
-      }
-    }
-
-    // 4. Counterparty
+    // 3. Counterparty
     String? merchantOrSender;
     if (type == TransactionType.income) {
       final match = _senderRegex.firstMatch(fullText);
       if (match != null) {
         final raw = match.group(1)?.trim();
-        if (raw != null && raw.isNotEmpty && raw.length < 40 && !raw.startsWith('x-')) {
+        if (raw != null && raw.isNotEmpty && raw.length < 40) {
           merchantOrSender = raw;
         }
       }
@@ -121,14 +111,14 @@ class GsbParser extends BankParserStrategy {
       }
     }
 
-    // 5. Title
+    // 4. Title
     String txTitle;
     if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
       txTitle = merchantOrSender;
     } else if (type == TransactionType.income) {
-      txTitle = 'เงินเข้า (MyMo)';
+      txTitle = 'เงินเข้า ($shortName)';
     } else {
-      txTitle = 'โอนเงิน/ชำระ (MyMo)';
+      txTitle = 'โอนเงิน/ชำระ ($shortName)';
     }
 
     final category = suggestCategory(fullText, type, merchantOrSender);
@@ -136,7 +126,7 @@ class GsbParser extends BankParserStrategy {
     final timeBucket = notifTime.millisecondsSinceEpoch ~/ 4000;
     final uniqueId = (id != null && id.isNotEmpty)
         ? id
-        : 'tx_gsb_${timeBucket}_${amount.toStringAsFixed(2)}_${type.name}';
+        : 'tx_paotang_${timeBucket}_${amount.toStringAsFixed(2)}_${type.name}';
 
     return DetectedTransaction(
       id: uniqueId,
@@ -145,7 +135,6 @@ class GsbParser extends BankParserStrategy {
       bankName: bankName,
       bankShortName: shortName,
       bankColorValue: brandColor,
-      accountMask: mask,
       amount: amount,
       type: type,
       title: txTitle,

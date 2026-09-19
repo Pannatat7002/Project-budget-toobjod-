@@ -16,17 +16,25 @@ class KmaParser extends BankParserStrategy {
   int get brandColor => 0xFFFDB913; // Krungsri Yellow/Gold
 
   @override
+  List<String> get supportedPackages => const [
+    'com.krungsri.kma', // KMA Krungsri
+    'com.bay.mbanking',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
-    if (pkg.contains('krungsri') || pkg.contains('bay') || pkg.contains('kept')) {
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
+    if (pkg.contains('krungsri') || pkg.contains('bay')) {
       return true;
     }
     final lower = text.toLowerCase();
     return lower.contains('kma') ||
         lower.contains('krungsri') ||
         lower.contains('กรุงศรี') ||
-        lower.contains('bay') ||
-        lower.contains('kept');
+        lower.contains('bay');
   }
 
   static final RegExp _accountMaskRegex = RegExp(r'(?:บช\.|บัญชี|จาก|เข้า)\s*([0-9xX\-]+)', caseSensitive: false);
@@ -54,16 +62,29 @@ class KmaParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('โอนเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('มีเงินเข้า') ||
-        lower.contains('ฝากเงิน') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('โอนออก') && !lower.contains('ชำระ')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เงินเข้า') || lowerTitle.contains('รับโอน') || lowerTitle.contains('รับเงิน')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('โอนเงิน') || lowerTitle.contains('ชำระเงิน') || lowerTitle.contains('ถอนเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ KMA Krungsri จาก Text
+      final isKmaIncome = lowerText.contains('เงินเข้า') ||
+          lowerText.contains('รับเงิน') ||
+          lowerText.contains('มีเงินโอนเข้า');
+      final isKmaExpense = lowerText.contains('โอนเงินสำเร็จ') ||
+          lowerText.contains('โอนเงิน') ||
+          lowerText.contains('ชำระเงิน') ||
+          lowerText.contains('ชำระค่า');
+
+      if (isKmaIncome && !isKmaExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 

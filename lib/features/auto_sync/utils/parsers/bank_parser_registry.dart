@@ -5,9 +5,12 @@ import 'bbl_parser.dart';
 import 'dime_parser.dart';
 import 'gsb_parser.dart';
 import 'kbank_parser.dart';
+import 'kept_parser.dart';
 import 'kma_parser.dart';
 import 'ktb_parser.dart';
+import 'make_kbank_parser.dart';
 import 'other_banks_parser.dart';
+import 'paotang_parser.dart';
 import 'scb_parser.dart';
 import 'shopeepay_parser.dart';
 import 'ttb_parser.dart';
@@ -16,11 +19,14 @@ import 'truemoney_parser.dart';
 class BankParserRegistry {
   static final List<BankParserStrategy> _strategies = [
     KBankParser(),
+    MakeKbankParser(),
     ScbParser(),
     KtbParser(),
+    PaotangParser(),
     BblParser(),
     TtbParser(),
     KmaParser(),
+    KeptParser(),
     GsbParser(),
     TrueMoneyParser(),
     ShopeePayParser(),
@@ -41,7 +47,25 @@ class BankParserRegistry {
     final fullText = '$title $text ${subText ?? ''}'.trim();
     if (fullText.isEmpty) return null;
 
-    // 1. First priority: Direct package match via BankProfile (e.g. ttb touch, K PLUS)
+    // 1. Highest priority: Direct exact package match from strategy's supportedPackages
+    final pkgLower = packageName.toLowerCase().trim();
+    for (final strategy in _strategies) {
+      if (strategy.supportedPackages.any((p) => p.toLowerCase() == pkgLower)) {
+        final result = strategy.parse(
+          id: id,
+          packageName: packageName,
+          title: title,
+          text: text,
+          subText: subText,
+          timestamp: timestamp,
+        );
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+
+    // 2. Second priority: Package match via BankProfile (e.g. ttb touch, K PLUS)
     final profile = BankProfile.findByPackage(packageName);
     if (profile != null) {
       final strategy = getStrategy(profile.id);
@@ -60,7 +84,7 @@ class BankParserRegistry {
       }
     }
 
-    // 2. Second priority: Fallback to canHandle (for SMS apps, ADB shell, or unmapped aliases)
+    // 3. Fallback to canHandle (for SMS apps, ADB shell, or unmapped aliases)
     for (final strategy in _strategies) {
       if (strategy.canHandle(packageName, fullText)) {
         final result = strategy.parse(
@@ -83,7 +107,8 @@ class BankParserRegistry {
   /// Get strategy by bankId
   static BankParserStrategy? getStrategy(String bankId) {
     try {
-      return _strategies.firstWhere((s) => s.bankId == bankId);
+      final normalizedId = bankId.trim().toLowerCase();
+      return _strategies.firstWhere((s) => s.bankId == normalizedId);
     } catch (_) {
       return null;
     }

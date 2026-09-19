@@ -16,8 +16,18 @@ class TtbParser extends BankParserStrategy {
   int get brandColor => 0xFF0056B3; // ttb Blue
 
   @override
+  List<String> get supportedPackages => const [
+    'com.TMBTOUCH.PRODUCTION', // ttb touch
+    'com.ttbbank.oneapp',
+    'com.tmb.mbanking',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
     if (pkg.contains('ttb') || pkg.contains('tmb')) {
       return true;
     }
@@ -65,16 +75,43 @@ class TtbParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('โอนเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('มีเงินเข้า') ||
-        lower.contains('ฝากเงิน') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินออก') && !lower.contains('โอนออก') && !lower.contains('ชำระ')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เงินเข้าบัญชี') || lowerTitle.contains('เงินเข้า') || lowerTitle.contains('รับเงิน') || lowerTitle.contains('รับโอน')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('โอนเงิน') ||
+        lowerTitle.contains('ชำระ') ||
+        lowerTitle.contains('ถอนเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ ttb จาก Text
+      final isTtbIncome = lowerText.contains('มีเงิน') ||
+          lowerText.contains('โอนเข้า') ||
+          lowerText.contains('เงินเข้าบัญชี') ||
+          lowerText.contains('รับโอน') ||
+          lowerText.contains('รับเงิน');
+      final isTtbExpense = lowerText.contains('โอนเงินไปยัง') ||
+          lowerText.contains('ไปยังบ/ช') ||
+          lowerText.contains('โอนเงินออก') ||
+          lowerText.contains('ชำระค่าสินค้า') ||
+          lowerText.contains('ชำระให้') ||
+          lowerText.contains('ถอนเงิน') ||
+          (lowerText.contains('โอนเงิน') && !lowerText.contains('รับโอน'));
+
+      if (isTtbIncome && !isTtbExpense) {
         type = TransactionType.income;
+      } else if (isTtbIncome && isTtbExpense) {
+        // เช่น "มีเงิน...โอนเข้า/ช... จาก..."
+        if (lowerText.contains('มีเงิน') || lowerText.contains('โอนเข้า')) {
+          type = TransactionType.income;
+        } else {
+          type = TransactionType.expense;
+        }
+      } else {
+        type = TransactionType.expense;
       }
     }
 
@@ -134,16 +171,30 @@ class TtbParser extends BankParserStrategy {
       }
     }
 
-    // 5. Title
+    // 5. Title (ด่านจับแปะ: ใช้ Title จาก Notification โดยตรงถ้ามีหัวข้อแจ้งเตือนจริง)
     String txTitle;
-    if (cleanName != null && cleanName.isNotEmpty) {
+    final cleanTitle = title.trim();
+    final isGenericTitle = cleanTitle.isEmpty ||
+        cleanTitle.toLowerCase() == 'ttb touch' ||
+        cleanTitle.toLowerCase() == 'ttb' ||
+        cleanTitle.toLowerCase() == 'tmb' ||
+        cleanTitle.toLowerCase() == 'com.tmbtouch.production' ||
+        cleanTitle.toLowerCase() == 'com.android.shell';
+
+    if (!isGenericTitle) {
+      if (cleanTitle.startsWith('แจ้งรายการเงินเข้าบัญชี')) {
+        txTitle = 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ';
+      } else if (cleanTitle.startsWith('แจ้งรายการโอนเงิน')) {
+        txTitle = 'แจ้งรายการโอนเงิน-สำเร็จ';
+      } else {
+        txTitle = cleanTitle;
+      }
+    } else if (cleanName != null && cleanName.isNotEmpty) {
       txTitle = cleanName;
-    } else if (lower.contains('โอนเงินออก') || lower.contains('โอนเงิน') || lower.contains('แจ้งรายการโอนเงิน')) {
-      txTitle = 'โอนเงิน';
     } else if (type == TransactionType.income) {
-      txTitle = 'เงินเข้า (ttb touch)';
+      txTitle = 'แจ้งรายการเงินเข้าบัญชี-สำเร็จ';
     } else {
-      txTitle = 'โอนเงิน/ชำระ (ttb touch)';
+      txTitle = 'แจ้งรายการโอนเงิน-สำเร็จ';
     }
 
     final category = suggestCategory(fullText, type, merchantOrSender);

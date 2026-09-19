@@ -16,8 +16,17 @@ class ScbParser extends BankParserStrategy {
   int get brandColor => 0xFF4E2A84; // SCB Purple
 
   @override
+  List<String> get supportedPackages => const [
+    'com.scb.phone', // SCB EASY
+    'com.scb.easy',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
     if (pkg.contains('scb')) return true;
     final lower = text.toLowerCase();
     return lower.contains('scb') || lower.contains('ไทยพาณิชย์') || lower.contains('แม่มณี');
@@ -48,17 +57,31 @@ class ScbParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('เงินเข้าบัญชี') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('รับโอน') ||
-        lower.contains('มีเงินโอนเข้า') ||
-        lower.contains('เงินเดือน') ||
-        lower.contains('เงินเดือนเข้า') ||
-        lower.contains('แม่มณี')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('ชำระเงิน')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เงินเข้า') || lowerTitle.contains('รับโอน') || lowerTitle.contains('รับเงิน')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('โอนเงิน') || lowerTitle.contains('ชำระเงิน') || lowerTitle.contains('หักบัญชี')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ SCB EASY จาก Text
+      final isScbIncome = lowerText.contains('เงินเดือน') ||
+          lowerText.contains('เงินเข้า') ||
+          lowerText.contains('รับโอน') ||
+          lowerText.contains('แม่มณี');
+      final isScbExpense = lowerText.contains('โอนเงิน') ||
+          lowerText.contains('ชำระค่า') ||
+          lowerText.contains('ชำระเงิน') ||
+          lowerText.contains('หักบัญชี') ||
+          lowerText.contains('จ่ายเงิน');
+
+      if (isScbIncome && !isScbExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 

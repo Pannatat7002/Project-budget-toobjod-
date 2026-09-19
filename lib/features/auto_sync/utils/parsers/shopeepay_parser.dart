@@ -16,8 +16,18 @@ class ShopeePayParser extends BankParserStrategy {
   int get brandColor => 0xFFEE4D2D; // Shopee Red-Orange
 
   @override
+  List<String> get supportedPackages => const [
+    'com.beeasy.airpay', // ShopeePay / AirPay
+    'com.shopeepay.th',
+    'com.airpay',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
     if (pkg.contains('shopeepay') || pkg.contains('airpay')) {
       return true;
     }
@@ -49,17 +59,35 @@ class ShopeePayParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('โอนเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('เติมเงิน') ||
-        lower.contains('คืนเงิน') ||
-        lower.contains('refund') ||
-        lower.contains('cashback')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('ชำระ') && !lower.contains('ใช้จ่าย')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เติมเงิน') ||
+        lowerTitle.contains('คืนเงิน') ||
+        lowerTitle.contains('เงินเข้า') ||
+        lowerTitle.contains('refund')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('ชำระเงิน') ||
+        lowerTitle.contains('โอนเงิน') ||
+        lowerTitle.contains('ใช้จ่าย')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ ShopeePay จาก Text
+      final isShopeeIncome = lowerText.contains('เติมเงิน') ||
+          lowerText.contains('คืนเงิน') ||
+          lowerText.contains('cashback') ||
+          lowerText.contains('refund');
+      final isShopeeExpense = lowerText.contains('ชำระเงินสำเร็จ') ||
+          lowerText.contains('ชำระค่า') ||
+          lowerText.contains('ที่ shopee') ||
+          lowerText.contains('โอนเงิน');
+
+      if (isShopeeIncome && !isShopeeExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 

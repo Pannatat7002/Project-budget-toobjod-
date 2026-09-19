@@ -16,18 +16,31 @@ class KtbParser extends BankParserStrategy {
   int get brandColor => 0xFF00A3E0; // KTB Blue
 
   @override
+  List<String> get supportedPackages => const [
+    'ktbcs.netbank', // Krungthai NEXT
+    'ktb.cs.mobile.app',
+    'ktb.cs.netbank',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
-    if (pkg.contains('ktb') || pkg.contains('netbank') || pkg.contains('paotang')) {
+    final pkg = packageName.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจชื่อ Package Name ตรงเป๊ะ (Exact Match)
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
       return true;
     }
-    final lower = text.toLowerCase();
-    return lower.contains('krungthai') ||
-        lower.contains('กรุงไทย') ||
-        lower.contains('next') ||
-        lower.contains('ktb') ||
-        lower.contains('เป๋าตัง') ||
-        lower.contains('paotang');
+
+    // ด่านที่ 3: ดักจับกรณีส่งผ่าน "SMS" หรือยิงทดสอบผ่าน "ADB Shell" (comment ไว้)
+    // final lower = text.toLowerCase();
+    // return lower.contains('krungthai') ||
+    //     lower.contains('กรุงไทย') ||
+    //     lower.contains('next') ||
+    //     lower.contains('ktb') ||
+    //     lower.contains('เป๋าตัง') ||
+    //     lower.contains('paotang');
+
+    return false;
   }
 
   static final RegExp _merchantRegex = RegExp(
@@ -54,14 +67,35 @@ class KtbParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('โอนเงินเข้า') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('ชำระเงิน')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('เงินเข้า') || lowerTitle.contains('รับเงิน')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('โอนเงินสำเร็จ') ||
+        lowerTitle.contains('ชำระเงินสำเร็จ') ||
+        lowerTitle.contains('โอนเงิน') ||
+        lowerTitle.contains('ชำระเงิน') ||
+        lowerTitle.contains('ถอนเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ Krungthai NEXT จาก Text
+      final isKtbIncome = lowerText.contains('เงินเข้า') ||
+          lowerText.contains('รับโอน') ||
+          lowerText.contains('มีเงินโอนเข้า') ||
+          lowerText.contains('โอนเงินเข้า');
+      final isKtbExpense = lowerText.contains('โอนเงิน') ||
+          lowerText.contains('ชำระค่าสินค้า') ||
+          lowerText.contains('ชำระเงิน') ||
+          lowerText.contains('ไปยัง') ||
+          lowerText.contains('โอนไป');
+
+      if (isKtbIncome && !isKtbExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 
@@ -91,15 +125,12 @@ class KtbParser extends BankParserStrategy {
 
     // 4. Title
     String txTitle;
-    final isPaotang = packageName.contains('paotang') || lower.contains('เป๋าตัง');
-    final displayName = isPaotang ? 'เป๋าตัง' : shortName;
-
     if (merchantOrSender != null && merchantOrSender.isNotEmpty) {
       txTitle = merchantOrSender;
     } else if (type == TransactionType.income) {
-      txTitle = 'เงินเข้า ($displayName)';
+      txTitle = 'เงินเข้า ($shortName)';
     } else {
-      txTitle = 'โอนเงิน/ชำระ ($displayName)';
+      txTitle = 'โอนเงิน/ชำระ ($shortName)';
     }
 
     final category = suggestCategory(fullText, type, merchantOrSender);
@@ -114,7 +145,7 @@ class KtbParser extends BankParserStrategy {
       packageName: packageName,
       bankId: bankId,
       bankName: bankName,
-      bankShortName: displayName,
+      bankShortName: shortName,
       bankColorValue: brandColor,
       amount: amount,
       type: type,

@@ -16,8 +16,18 @@ class DimeParser extends BankParserStrategy {
   int get brandColor => 0xFF00C781; // Dime Teal Green
 
   @override
+  List<String> get supportedPackages => const [
+    'com.dimekkp.dimeapp', // Dime! by KKP
+    'co.th.dime',
+    'com.kkp.dime',
+  ];
+
+  @override
   bool canHandle(String packageName, String text) {
-    final pkg = packageName.toLowerCase();
+    final pkg = packageName.toLowerCase().trim();
+    if (supportedPackages.any((p) => p.toLowerCase() == pkg)) {
+      return true;
+    }
     if (pkg.contains('dime')) {
       return true;
     }
@@ -49,18 +59,30 @@ class DimeParser extends BankParserStrategy {
     final lower = fullText.toLowerCase();
 
     // 1. Transaction Type
-    TransactionType type = TransactionType.expense;
-    if (lower.contains('เงินเข้า') ||
-        lower.contains('โอนเข้า') ||
-        lower.contains('รับเงิน') ||
-        lower.contains('ได้รับเงิน') ||
-        lower.contains('ฝากเงิน') ||
-        lower.contains('เงินฝาก') ||
-        lower.contains('ดอกเบี้ย') ||
-        lower.contains('เงินปันผล') ||
-        lower.contains('รับโอน')) {
-      if (!lower.contains('โอนเงินไป') && !lower.contains('ถอนเงิน') && !lower.contains('ชำระ')) {
+    TransactionType type;
+    final lowerTitle = title.toLowerCase().trim();
+    final lowerText = text.toLowerCase().trim();
+
+    // ด่านที่ 1: ตรวจจับจาก Title โดยตรง (จับแปะ)
+    if (lowerTitle.contains('ฝากเงิน') || lowerTitle.contains('เงินเข้า') || lowerTitle.contains('รับเงิน')) {
+      type = TransactionType.income;
+    } else if (lowerTitle.contains('ถอนเงิน') || lowerTitle.contains('โอนเงิน') || lowerTitle.contains('ชำระเงิน')) {
+      type = TransactionType.expense;
+    } else {
+      // ด่านที่ 2: ตรวจจับรูปแบบเฉพาะของ Dime! จาก Text
+      final isDimeIncome = lowerText.contains('ฝากเงินเข้า') ||
+          lowerText.contains('เงินเข้า') ||
+          lowerText.contains('ดอกเบี้ย') ||
+          lowerText.contains('เงินปันผล');
+      final isDimeExpense = lowerText.contains('ถอนเงิน') ||
+          lowerText.contains('โอนเงิน') ||
+          lowerText.contains('ซื้อหุ้น') ||
+          lowerText.contains('ซื้อกองทุน');
+
+      if (isDimeIncome && !isDimeExpense) {
         type = TransactionType.income;
+      } else {
+        type = TransactionType.expense;
       }
     }
 
