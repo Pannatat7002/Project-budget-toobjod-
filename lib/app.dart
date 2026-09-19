@@ -6,6 +6,7 @@ import 'config/theme/app_theme.dart';
 import 'features/accounts/presentation/state/account_cubit.dart';
 import 'features/auto_sync/presentation/state/auto_sync_cubit.dart';
 import 'features/budget/presentation/state/budget_cubit.dart';
+import 'features/settings/presentation/state/theme_cubit.dart';
 import 'features/transactions/presentation/state/transaction_cubit.dart';
 import 'features/transactions/presentation/state/transaction_state.dart';
 import 'injection_container.dart' as di;
@@ -17,11 +18,13 @@ class BudgetPlannerApp extends StatefulWidget {
   State<BudgetPlannerApp> createState() => _BudgetPlannerAppState();
 }
 
-class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBindingObserver {
+class _BudgetPlannerAppState extends State<BudgetPlannerApp>
+    with WidgetsBindingObserver {
   late final AccountCubit _accountCubit;
   late final AutoSyncCubit _autoSyncCubit;
   late final TransactionCubit _transactionCubit;
   late final BudgetCubit _budgetCubit;
+  late final ThemeCubit _themeCubit;
   StreamSubscription<TransactionState>? _txSubscription;
 
   @override
@@ -32,6 +35,7 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
     _transactionCubit = di.sl<TransactionCubit>()..loadTransactions();
     _budgetCubit = di.sl<BudgetCubit>()..loadBudgets();
     _autoSyncCubit = di.sl<AutoSyncCubit>()..initialize();
+    _themeCubit = ThemeCubit()..loadTheme();
 
     _txSubscription = _transactionCubit.stream.listen((txState) {
       if (txState.status == TransactionStatus.success) {
@@ -44,6 +48,7 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
   @override
   void dispose() {
     _txSubscription?.cancel();
+    _themeCubit.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -64,14 +69,18 @@ class _BudgetPlannerAppState extends State<BudgetPlannerApp> with WidgetsBinding
         BlocProvider<TransactionCubit>.value(value: _transactionCubit),
         BlocProvider<BudgetCubit>.value(value: _budgetCubit),
         BlocProvider<AutoSyncCubit>.value(value: _autoSyncCubit),
+        BlocProvider<ThemeCubit>.value(value: _themeCubit),
       ],
-      child: MaterialApp.router(
-        title: 'Budget Planner',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
-        routerConfig: AppRouter.router,
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        bloc: _themeCubit,
+        builder: (context, themeMode) => MaterialApp.router(
+          title: 'Budget Planner',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
+          routerConfig: AppRouter.router,
+        ),
       ),
     );
   }

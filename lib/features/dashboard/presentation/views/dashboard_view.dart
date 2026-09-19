@@ -7,6 +7,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
+import '../../../../features/settings/presentation/state/theme_cubit.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../../accounts/presentation/state/account_state.dart';
 import '../../../accounts/presentation/widgets/bank_cards_carousel.dart';
@@ -169,8 +170,8 @@ class _DashboardViewState extends State<DashboardView> {
             icon: Icon(
               Icons.settings,
               color: isDark
-                  ? AppColors.darkTextMuted
-                  : AppColors.lightTextMuted,
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -182,40 +183,161 @@ class _DashboardViewState extends State<DashboardView> {
                 context.push('/auto-sync-settings');
               } else if (val == 'reset') {
                 _showResetConfirmDialog(context);
+              } else if (val == 'theme_light') {
+                context.read<ThemeCubit>().setTheme(ThemeMode.light);
+              } else if (val == 'theme_dark') {
+                context.read<ThemeCubit>().setTheme(ThemeMode.dark);
+              } else if (val == 'theme_system') {
+                context.read<ThemeCubit>().setTheme(ThemeMode.system);
               }
             },
-            itemBuilder: (ctx) => [
-              const PopupMenuItem(
-                value: 'auto_sync',
-                child: Row(
-                  children: [
-                    Icon(Icons.bolt, color: AppColors.primary, size: 18),
-                    SizedBox(width: 10),
-                    Text(
-                      'ตั้งค่าตรวจจับธนาคาร',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ],
+            itemBuilder: (ctx) {
+              final currentMode = ctx.read<ThemeCubit>().state;
+              return [
+                const PopupMenuItem(
+                  value: 'auto_sync',
+                  child: Row(
+                    children: [
+                      Icon(Icons.bolt, color: AppColors.primary, size: 18),
+                      SizedBox(width: 10),
+                      Text(
+                        'ตั้งค่าตรวจจับธนาคาร',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'reset',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete_outline,
-                      color: AppColors.expense,
-                      size: 18,
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'ล้างข้อมูลทั้งหมด',
-                      style: TextStyle(color: AppColors.expense, fontSize: 13),
-                    ),
-                  ],
+                // ─── Theme divider ────────────────────────────────
+                const PopupMenuDivider(),
+                // Light
+                PopupMenuItem(
+                  value: 'theme_light',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.light_mode_rounded,
+                        color: currentMode == ThemeMode.light
+                            ? AppColors.primary
+                            : Colors.grey,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'โหมดสว่าง',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: currentMode == ThemeMode.light
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: currentMode == ThemeMode.light
+                              ? AppColors.primary
+                              : null,
+                        ),
+                      ),
+                      if (currentMode == ThemeMode.light) ...[
+                        const Spacer(),
+                        const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                // Dark
+                PopupMenuItem(
+                  value: 'theme_dark',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.dark_mode_rounded,
+                        color: currentMode == ThemeMode.dark
+                            ? AppColors.primary
+                            : Colors.grey,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'โหมดมืด',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: currentMode == ThemeMode.dark
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: currentMode == ThemeMode.dark
+                              ? AppColors.primary
+                              : null,
+                        ),
+                      ),
+                      if (currentMode == ThemeMode.dark) ...[
+                        const Spacer(),
+                        const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // System
+                PopupMenuItem(
+                  value: 'theme_system',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.brightness_auto_rounded,
+                        color: currentMode == ThemeMode.system
+                            ? AppColors.primary
+                            : Colors.grey,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'ตามระบบ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: currentMode == ThemeMode.system
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: currentMode == ThemeMode.system
+                              ? AppColors.primary
+                              : null,
+                        ),
+                      ),
+                      if (currentMode == ThemeMode.system) ...[
+                        const Spacer(),
+                        const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // ─── Danger zone ──────────────────────────────────
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'reset',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_outline,
+                        color: AppColors.expense,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'ล้างข้อมูลทั้งหมด',
+                        style: TextStyle(color: AppColors.expense, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
+            },
           ),
           const SizedBox(width: 6),
         ],
@@ -430,17 +552,27 @@ class _DashboardViewState extends State<DashboardView> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          for (int i = 0; i < recentTransactions.length; i++)
+                                          for (
+                                            int i = 0;
+                                            i < recentTransactions.length;
+                                            i++
+                                          )
                                             TransactionTile(
-                                              transaction: recentTransactions[i],
+                                              transaction:
+                                                  recentTransactions[i],
                                               isGrouped: true,
-                                              showDivider: i < recentTransactions.length - 1,
-                                              onTap: () => AddTransactionSheet.show(
-                                                context,
-                                                existingTransaction: recentTransactions[i],
-                                              ),
+                                              showDivider:
+                                                  i <
+                                                  recentTransactions.length - 1,
+                                              onTap: () =>
+                                                  AddTransactionSheet.show(
+                                                    context,
+                                                    existingTransaction:
+                                                        recentTransactions[i],
+                                                  ),
                                               onDelete: () {
-                                                final item = recentTransactions[i];
+                                                final item =
+                                                    recentTransactions[i];
                                                 context
                                                     .read<TransactionCubit>()
                                                     .deleteTransaction(item.id);
@@ -453,7 +585,8 @@ class _DashboardViewState extends State<DashboardView> {
                                     _buildViewAllTransactionsButton(
                                       context,
                                       hasMore: hasMoreTransactions,
-                                      remainingCount: remainingTransactionsCount,
+                                      remainingCount:
+                                          remainingTransactionsCount,
                                       selectedBankId: selectedBankId,
                                       isDark: isDark,
                                     ),
@@ -484,9 +617,7 @@ class _DashboardViewState extends State<DashboardView> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          context
-              .read<TransactionCubit>()
-              .setSelectedBankId(selectedBankId);
+          context.read<TransactionCubit>().setSelectedBankId(selectedBankId);
           context.go('/transactions');
         },
         borderRadius: BorderRadius.circular(16),
@@ -559,8 +690,10 @@ class _DashboardViewState extends State<DashboardView> {
               onTap: () => context.push('/budgets'),
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -572,8 +705,9 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.15 : 0.03,
+                      ),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

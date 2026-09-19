@@ -190,6 +190,24 @@ class _TransactionsViewState extends State<TransactionsView> {
                     fontSize: 18,
                   ),
                 ),
+                actions: [
+                  // Search
+                  IconButton(
+                    icon: const Icon(Icons.search_rounded),
+                    tooltip: 'ค้นหา',
+                    onPressed: _toggleSearch,
+                  ),
+                  // Export
+                  IconButton(
+                    icon: const Icon(Icons.ios_share_rounded),
+                    tooltip: 'ส่งออกรายงาน',
+                    onPressed: () => _openExportSheet(
+                      context,
+                      monthAllTxs,
+                      activeMonth,
+                    ),
+                  ),
+                ],
               ),
               body: GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -212,11 +230,122 @@ class _TransactionsViewState extends State<TransactionsView> {
                       context.read<TransactionCubit>().loadTransactions(),
                   child: CustomScrollView(
                     slivers: [
+                      // Search bar — pinned just below AppBar when active
+                      if (_isSearchOpen)
+                        SliverToBoxAdapter(
+                          child: Container(
+                            margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.5,
+                                ),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: isDark ? 0.15 : 0.08,
+                                  ),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.search_rounded,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocusNode,
+                                    autofocus: true,
+                                    decoration: InputDecoration(
+                                      hintText: 'ค้นหาชื่อรายการ, ร้านค้า...',
+                                      hintStyle: GoogleFonts.prompt(
+                                        fontSize: 13,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black38,
+                                      ),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        vertical: 7,
+                                      ),
+                                    ),
+                                    style: GoogleFonts.prompt(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
+                                    ),
+                                    onChanged: (val) => context
+                                        .read<TransactionCubit>()
+                                        .setSearchQuery(val),
+                                  ),
+                                ),
+                                if (_searchController.text.isNotEmpty)
+                                  GestureDetector(
+                                    onTap: () {
+                                      _searchController.clear();
+                                      context
+                                          .read<TransactionCubit>()
+                                          .setSearchQuery('');
+                                    },
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Icon(
+                                        Icons.cancel,
+                                        size: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                TextButton(
+                                  onPressed: _toggleSearch,
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'ปิด',
+                                    style: GoogleFonts.prompt(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       SliverToBoxAdapter(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 1. Monthly Financial Overview Card
+                            // 1. Monthly Financial Overview Card (with month nav + type filter)
                             _buildMinimalSummaryBar(
                               context: context,
                               isDark: isDark,
@@ -226,10 +355,23 @@ class _TransactionsViewState extends State<TransactionsView> {
                                 availableMonths,
                                 activeMonth,
                               ),
+                              onPrev: canPrev
+                                  ? () => _changeMonth(availableMonths[currentMonthIdx - 1])
+                                  : null,
+                              onNext: canNext
+                                  ? () => _changeMonth(availableMonths[currentMonthIdx + 1])
+                                  : null,
+                              canPrev: canPrev,
+                              canNext: canNext,
                               income: monthIncome,
                               expense: monthExpense,
                               net: monthNet,
                               txCount: monthAllTxs.length,
+                              filterType: state.filterType,
+                              onFilterType: (t) {
+                                HapticFeedback.selectionClick();
+                                context.read<TransactionCubit>().setFilterType(t);
+                              },
                             ),
 
                             // 2. Active Filter Chips (Only shown when filters are active!)
@@ -374,33 +516,11 @@ class _TransactionsViewState extends State<TransactionsView> {
                                             context,
                                             existingTransaction: group.items[i],
                                           ),
-                                          onDelete: () {
-                                            final item = group.items[i];
-                                            context
-                                                .read<TransactionCubit>()
-                                                .deleteTransaction(item.id);
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'ลบ "${item.title}" แล้ว',
-                                                ),
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                action: SnackBarAction(
-                                                  label: 'เลิกทำ',
-                                                  onPressed: () {
-                                                    context
-                                                        .read<
-                                                          TransactionCubit
-                                                        >()
-                                                        .addTransaction(item);
-                                                  },
-                                                ),
+                                          onDelete: () =>
+                                              _confirmDelete(
+                                                context,
+                                                group.items[i],
                                               ),
-                                            );
-                                          },
                                         ),
                                     ],
                                   ),
@@ -415,26 +535,6 @@ class _TransactionsViewState extends State<TransactionsView> {
                 ),
               ),
 
-              // Ergonomic One-Handed Command Dock (Everything within natural thumb reach!)
-              floatingActionButtonLocation:
-                  FloatingActionButtonLocation.centerFloat,
-              floatingActionButton: _buildOneHandedBottomDock(
-                context: context,
-                isDark: isDark,
-                state: state,
-                accState: accountState,
-                activeMonth: activeMonth,
-                canPrev: canPrev,
-                canNext: canNext,
-                onPrev: canPrev
-                    ? () => _changeMonth(availableMonths[currentMonthIdx - 1])
-                    : null,
-                onNext: canNext
-                    ? () => _changeMonth(availableMonths[currentMonthIdx + 1])
-                    : null,
-                availableMonths: availableMonths,
-                monthAllTxs: monthAllTxs,
-              ),
             );
           },
         );
@@ -449,16 +549,129 @@ class _TransactionsViewState extends State<TransactionsView> {
     });
   }
 
-  /// Compact Monthly Financial Overview Card (Pure informative summary)
+  /// Confirmation dialog before deleting a transaction
+  Future<void> _confirmDelete(
+    BuildContext context,
+    TransactionEntity item,
+  ) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        icon: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.delete_outline_rounded,
+            color: Color(0xFFEF4444),
+            size: 28,
+          ),
+        ),
+        title: Text(
+          'ลบรายการ?',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.prompt(
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        content: Text(
+          '"${item.title}"\nรายการนี้จะถูกลบออกถาวร ไม่สามารถกู้คืนได้',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.prompt(
+            fontSize: 13.5,
+            color: isDark
+                ? const Color(0xFF94A3B8)
+                : const Color(0xFF64748B),
+            height: 1.5,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding:
+            const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          // Cancel
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+                ),
+              ),
+              child: Text(
+                'ยกเลิก',
+                style: GoogleFonts.prompt(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Confirm delete
+          Expanded(
+            child: FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'ลบเลย',
+                style: GoogleFonts.prompt(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      context.read<TransactionCubit>().deleteTransaction(item.id);
+    }
+  }
+
+  /// Compact Monthly Financial Overview Card — includes month stepper + type filter
   Widget _buildMinimalSummaryBar({
     required BuildContext context,
     required bool isDark,
     required DateTime activeMonth,
     required VoidCallback? onTapMonth,
+    required VoidCallback? onPrev,
+    required VoidCallback? onNext,
+    required bool canPrev,
+    required bool canNext,
     required double income,
     required double expense,
     required double net,
     required int txCount,
+    required TransactionFilterType filterType,
+    required ValueChanged<TransactionFilterType> onFilterType,
   }) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 2, 16, 6),
@@ -480,16 +693,31 @@ class _TransactionsViewState extends State<TransactionsView> {
       ),
       child: Column(
         children: [
-          // Row 1: Month title with tap-to-pick + Transaction count badge + Analytics link
+          // Row 1: Month stepper (◀ เดือน ▶) + count badge + สถิติ
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // ◀ prev
               InkWell(
-                onTap: onTapMonth,
+                onTap: onPrev,
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.chevron_left_rounded,
+                    size: 20,
+                    color: canPrev
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark ? Colors.white24 : Colors.black26),
+                  ),
+                ),
+              ),
+              // Month label (tappable → picker)
+              Expanded(
+                child: InkWell(
+                  onTap: onTapMonth,
+                  borderRadius: BorderRadius.circular(8),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
@@ -502,88 +730,86 @@ class _TransactionsViewState extends State<TransactionsView> {
                         ),
                         child: const Icon(
                           Icons.calendar_month_rounded,
-                          size: 14,
+                          size: 13,
                           color: AppColors.primary,
                         ),
                       ),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 6),
                       Text(
                         DateFormatter.formatMonthYear(activeMonth),
                         style: GoogleFonts.prompt(
-                          fontSize: 14.5,
+                          fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 2),
                       Icon(
                         Icons.arrow_drop_down_rounded,
                         size: 16,
-                        color: isDark
-                            ? Colors.white60
-                            : const Color(0xFF64748B),
+                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
                       ),
                     ],
                   ),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkCard
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '$txCount รายการ',
-                      style: GoogleFonts.prompt(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
+              // count badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '$txCount รายการ',
+                  style: GoogleFonts.prompt(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
                   ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: () => context.push('/analytics'),
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
+                ),
+              ),
+              const SizedBox(width: 6),
+              // สถิติ link
+              InkWell(
+                onTap: () => context.push('/analytics'),
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'สถิติ',
+                        style: GoogleFonts.prompt(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'สถิติ',
-                            style: GoogleFonts.prompt(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            size: 14,
-                            color: AppColors.primary,
-                          ),
-                        ],
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 13,
+                        color: AppColors.primary,
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
+              ),
+              // ▶ next
+              InkWell(
+                onTap: onNext,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: canNext
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark ? Colors.white24 : Colors.black26),
+                  ),
+                ),
               ),
             ],
           ),
@@ -678,6 +904,55 @@ class _TransactionsViewState extends State<TransactionsView> {
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 6),
+
+          // Row 3: Type filter tabs [ทั้งหมด | รายรับ | รายจ่าย]
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark
+                    ? AppColors.darkBorderSubtle
+                    : const Color(0xFFE2E8F0),
+                width: 0.8,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildBottomTypeTab(
+                    title: 'ทั้งหมด',
+                    isSelected: filterType == TransactionFilterType.all,
+                    onTap: () => onFilterType(TransactionFilterType.all),
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _buildBottomTypeTab(
+                    title: 'รายรับ',
+                    isSelected: filterType == TransactionFilterType.income,
+                    activeColor: AppColors.income,
+                    onTap: () => onFilterType(TransactionFilterType.income),
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _buildBottomTypeTab(
+                    title: 'รายจ่าย',
+                    isSelected: filterType == TransactionFilterType.expense,
+                    activeColor: AppColors.expense,
+                    onTap: () => onFilterType(TransactionFilterType.expense),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
