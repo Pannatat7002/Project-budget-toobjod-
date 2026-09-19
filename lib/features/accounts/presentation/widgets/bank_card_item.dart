@@ -14,6 +14,7 @@ class BankCardItem extends StatelessWidget {
   final bool isSelected;
   final bool isAddAccountCard;
   final VoidCallback? onAddAccountTap;
+  final VoidCallback? onReconcileTap;
 
   const BankCardItem({
     super.key,
@@ -26,6 +27,7 @@ class BankCardItem extends StatelessWidget {
     this.isSelected = false,
     this.isAddAccountCard = false,
     this.onAddAccountTap,
+    this.onReconcileTap,
   });
 
   @override
@@ -109,40 +111,87 @@ class BankCardItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Flexible(
+                        Expanded(
                           child: _buildBrandPill(
                             isAllWallets: isAllWallets,
                             account: account,
                           ),
                         ),
-                        // Account Mask Pill (•••• 1234) if available
-                        if (account?.accountMask != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.22),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.22),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: Text(
-                              '•••• ${account!.accountMask!.replaceAll(RegExp(r'[^0-9]'), '')}',
-                              style: GoogleFonts.prompt(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
                         const SizedBox(width: 6),
+                        // Right Side Actions: Account Mask Pill & Reconcile Action Button
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (account?.accountMask != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.22),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.22),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  '•••• ${account!.accountMask!.replaceAll(RegExp(r'[^0-9]'), '')}',
+                                  style: GoogleFonts.prompt(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                            ],
+                            if (!isAllWallets && account != null) ...[
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  onReconcileTap?.call();
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.22),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.35),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.tune_rounded,
+                                        color: Colors.white,
+                                        size: 11,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        'กระทบยอด',
+                                        style: GoogleFonts.prompt(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -427,26 +476,18 @@ class BankCardItem extends StatelessWidget {
         : (account?.shortName ?? 'ธนาคาร');
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 3, 14, 3),
-      // decoration: BoxDecoration(
-      //   color: Colors.black.withValues(alpha: 0.24),
-      //   borderRadius: BorderRadius.circular(28),
-      //   border: Border.all(
-      //     color: Colors.white.withValues(alpha: 0.28),
-      //     width: 0.9,
-      //   ),
-      // ),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildBankLogo(isAllWallets, account),
-          const SizedBox(width: 9),
+          const SizedBox(width: 8),
           Flexible(
             child: Text(
               displayName,
               style: GoogleFonts.prompt(
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.2,
               ),
@@ -462,8 +503,8 @@ class BankCardItem extends StatelessWidget {
   Widget _buildBankLogo(bool isAllWallets, BankAccountEntity? acc) {
     if (isAllWallets || acc == null) {
       return Container(
-        width: 42,
-        height: 42,
+        width: 38,
+        height: 38,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white,
@@ -475,14 +516,14 @@ class BankCardItem extends StatelessWidget {
         child: const Icon(
           Icons.account_balance_wallet_rounded,
           color: Color(0xFFEA580C),
-          size: 22,
+          size: 20,
         ),
       );
     }
 
     return Container(
-      width: 42,
-      height: 42,
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
         shape: BoxShape.rectangle,
         color: Colors.white,

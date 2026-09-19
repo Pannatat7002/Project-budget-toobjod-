@@ -31,40 +31,10 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   String _dogName = AppConstants.appName;
-  bool _isMascotGreetingDismissed = false;
-
   @override
   void initState() {
     super.initState();
     _loadDogName();
-    _loadMascotGreetingState();
-  }
-
-  Future<void> _loadMascotGreetingState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final dismissed = prefs.getBool('bp_mascot_greeting_dismissed') ?? false;
-    if (dismissed && mounted) {
-      setState(() {
-        _isMascotGreetingDismissed = true;
-      });
-    }
-  }
-
-  Future<void> _dismissMascotGreeting() async {
-    setState(() {
-      _isMascotGreetingDismissed = true;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('bp_mascot_greeting_dismissed', true);
-  }
-
-  Future<void> _toggleMascotGreeting() async {
-    final nextState = !_isMascotGreetingDismissed;
-    setState(() {
-      _isMascotGreetingDismissed = nextState;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('bp_mascot_greeting_dismissed', nextState);
   }
 
   Future<void> _loadDogName() async {
@@ -229,32 +199,11 @@ class _DashboardViewState extends State<DashboardView> {
                 _showRenameDogDialog(context);
               } else if (val == 'auto_sync') {
                 context.push('/auto-sync-settings');
-              } else if (val == 'toggle_mascot_greeting') {
-                _toggleMascotGreeting();
               } else if (val == 'reset') {
                 _showResetConfirmDialog(context);
               }
             },
             itemBuilder: (ctx) => [
-              PopupMenuItem(
-                value: 'toggle_mascot_greeting',
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      color: Color(0xFFFDB813),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      _isMascotGreetingDismissed
-                          ? 'แสดงคำทักทายเจ้าตูบ'
-                          : 'ซ่อนคำทักทายเจ้าตูบ',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
               const PopupMenuItem(
                 value: 'auto_sync',
                 child: Row(
@@ -309,12 +258,14 @@ class _DashboardViewState extends State<DashboardView> {
               }
 
               final selectedBankId = accountState.selectedBankId;
-              final recentTransactions =
-                  (selectedBankId == null
-                          ? txState.transactions
-                          : txState.getTransactionsForBank(selectedBankId))
-                      .take(6)
-                      .toList();
+              final bankTransactions = selectedBankId == null
+                  ? txState.transactions
+                  : txState.getTransactionsForBank(selectedBankId);
+              final recentTransactions = bankTransactions.take(6).toList();
+              final hasMoreTransactions =
+                  bankTransactions.length > recentTransactions.length;
+              final remainingTransactionsCount =
+                  bankTransactions.length - recentTransactions.length;
 
               final recentHeaderTitle = selectedBankId == null
                   ? 'รายการล่าสุด (ทุกบัญชี)'
@@ -344,16 +295,6 @@ class _DashboardViewState extends State<DashboardView> {
 
                       // Auto-Sync Detected Transaction / Setup Banner
                       const AutoSyncBanner(),
-
-                      // Mascot Greeting Pill Banner (Dismissible)
-                      if (!_isMascotGreetingDismissed) ...[
-                        _buildMascotGreetingCard(
-                          context,
-                          txState.transactions.length,
-                          isDark,
-                        ),
-                        const SizedBox(height: 8),
-                      ],
 
                       // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
                       BankCardsCarousel(
@@ -518,25 +459,38 @@ class _DashboardViewState extends State<DashboardView> {
                                   onAction: () =>
                                       AddTransactionSheet.show(context),
                                 )
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: recentTransactions.length,
-                                  itemBuilder: (context, index) {
-                                    final item = recentTransactions[index];
-                                    return TransactionTile(
-                                      transaction: item,
-                                      onTap: () => AddTransactionSheet.show(
-                                        context,
-                                        existingTransaction: item,
-                                      ),
-                                      onDelete: () {
-                                        context
-                                            .read<TransactionCubit>()
-                                            .deleteTransaction(item.id);
+                              : Column(
+                                  children: [
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      itemCount: recentTransactions.length,
+                                      itemBuilder: (context, index) {
+                                        final item = recentTransactions[index];
+                                        return TransactionTile(
+                                          transaction: item,
+                                          onTap: () => AddTransactionSheet.show(
+                                            context,
+                                            existingTransaction: item,
+                                          ),
+                                          onDelete: () {
+                                            context
+                                                .read<TransactionCubit>()
+                                                .deleteTransaction(item.id);
+                                          },
+                                        );
                                       },
-                                    );
-                                  },
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _buildViewAllTransactionsButton(
+                                      context,
+                                      hasMore: hasMoreTransactions,
+                                      remainingCount:
+                                          remainingTransactionsCount,
+                                      selectedBankId: selectedBankId,
+                                      isDark: isDark,
+                                    ),
+                                  ],
                                 ),
                         ),
                       ),
@@ -552,112 +506,69 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildMascotGreetingCard(
-    BuildContext context,
-    int txCount,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6, right: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131E3A) : const Color(0xFFFFF7ED),
+  Widget _buildViewAllTransactionsButton(
+    BuildContext context, {
+    required bool hasMore,
+    required int remainingCount,
+    required String? selectedBankId,
+    required bool isDark,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          context
+              .read<TransactionCubit>()
+              .setSelectedBankId(selectedBankId);
+          context.go('/transactions');
+        },
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF22355E) : const Color(0xFFFED7AA),
-          width: 0.9,
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.28),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.receipt_long_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  hasMore
+                      ? 'ดูรายการทั้งหมด (ยังมีอีก $remainingCount รายการ)'
+                      : 'ดูรายการทั้งหมด',
+                  style: GoogleFonts.prompt(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Mascot Mini Avatar
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFFEA580C).withValues(alpha: 0.2)
-                  : Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: ClipOval(
-              child: Image.asset(
-                'assets/images/mascot_dog_writing.png',
-                cacheWidth: 78,
-                cacheHeight: 78,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.pets, size: 14, color: Color(0xFFEA580C)),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Speech Text
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    txCount > 0
-                        ? 'วันนี้ตูบจดให้ $txCount รายการแล้วนะโฮ่ง!'
-                        : 'วันนี้มีค่าใช้จ่ายอะไร ให้ตูบช่วยจดนะ!',
-                    style: GoogleFonts.prompt(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: isDark ? Colors.white : const Color(0xFF9A3412),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  width: 3,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark
-                        ? Colors.white38
-                        : const Color(0xFFC2410C).withValues(alpha: 0.5),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  flex: 0,
-                  child: Text(
-                    'คุมงบมีเงินเก็บ 🐾',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.prompt(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextMuted
-                          : const Color(0xFFC2410C),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 4),
-
-          // Dismiss / Close button
-          GestureDetector(
-            onTap: _dismissMascotGreeting,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Icon(
-                Icons.close_rounded,
-                size: 15,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : const Color(0xFF9A3412).withValues(alpha: 0.6),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

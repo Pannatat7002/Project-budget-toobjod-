@@ -70,6 +70,12 @@ class AppConstants {
       iconCode: 0xe41d, // more_horiz
       colorValue: 0xFF64748B, // Slate
     ),
+    CategoryItem(
+      id: 'reconciliation_expense',
+      name: 'ปรับปรุงยอดเงินลด',
+      iconCode: 0xe8af, // tune
+      colorValue: 0xFF64748B, // Slate
+    ),
   ];
 
   // Default Categories for Income
@@ -103,6 +109,12 @@ class AppConstants {
       name: 'รายรับอื่นๆ',
       iconCode: 0xe41d, // more_horiz
       colorValue: 0xFF64748B, // Slate
+    ),
+    CategoryItem(
+      id: 'reconciliation_income',
+      name: 'ปรับปรุงยอดเงินเพิ่ม',
+      iconCode: 0xe8af, // tune
+      colorValue: 0xFF10B981, // Emerald
     ),
   ];
 }

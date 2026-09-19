@@ -5,6 +5,7 @@ import '../../domain/entities/bank_account_entity.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import 'bank_card_item.dart';
+import 'reconciliation_bottom_sheet.dart';
 
 class BankCardsCarousel extends StatefulWidget {
   final List<BankAccountEntity> accounts;
@@ -19,6 +20,7 @@ class BankCardsCarousel extends StatefulWidget {
   final VoidCallback onToggleEyeView;
   final ValueChanged<String?> onBankSelected;
   final VoidCallback? onAddBankTap;
+  final void Function(BankAccountEntity account)? onReconcileAccount;
   final PageController? externalPageController;
 
   const BankCardsCarousel({
@@ -35,6 +37,7 @@ class BankCardsCarousel extends StatefulWidget {
     required this.onToggleEyeView,
     required this.onBankSelected,
     this.onAddBankTap,
+    this.onReconcileAccount,
     this.externalPageController,
   });
 
@@ -145,6 +148,13 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                 isEyeViewHidden: widget.isEyeViewHidden,
                 onToggleEyeView: widget.onToggleEyeView,
                 isSelected: widget.selectedBankId == acc.bankId,
+                onReconcileTap: () {
+                  if (widget.onReconcileAccount != null) {
+                    widget.onReconcileAccount!(acc);
+                  } else {
+                    ReconciliationBottomSheet.show(context, account: acc);
+                  }
+                },
               );
             },
           ),
