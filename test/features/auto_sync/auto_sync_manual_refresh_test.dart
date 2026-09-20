@@ -107,6 +107,26 @@ class FakeAutoSyncRepository implements AutoSyncRepository {
 
   @override
   Future<void> setEnabledBankPackages(List<String> packages) async {}
+
+  final List<SwipeHistoryRecord> _swipeHistory = [];
+
+  @override
+  Future<List<SwipeHistoryRecord>> getSwipeHistory() async => List.from(_swipeHistory);
+
+  @override
+  Future<void> addSwipeHistoryRecord(SwipeHistoryRecord record) async {
+    _swipeHistory.add(record);
+  }
+
+  @override
+  Future<void> addSwipeHistoryRecords(List<SwipeHistoryRecord> records) async {
+    _swipeHistory.addAll(records);
+  }
+
+  @override
+  Future<void> clearSwipeHistory() async {
+    _swipeHistory.clear();
+  }
 }
 
 class FakeTransactionRepository implements TransactionRepository {

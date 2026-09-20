@@ -516,11 +516,14 @@ class _TransactionsViewState extends State<TransactionsView> {
                                             context,
                                             existingTransaction: group.items[i],
                                           ),
-                                          onDelete: () =>
+                                          confirmDelete: () =>
                                               _confirmDelete(
                                                 context,
                                                 group.items[i],
                                               ),
+                                          onDelete: () {
+                                            context.read<TransactionCubit>().deleteTransaction(group.items[i].id);
+                                          },
                                         ),
                                     ],
                                   ),
@@ -550,7 +553,7 @@ class _TransactionsViewState extends State<TransactionsView> {
   }
 
   /// Confirmation dialog before deleting a transaction
-  Future<void> _confirmDelete(
+  Future<bool> _confirmDelete(
     BuildContext context,
     TransactionEntity item,
   ) async {
@@ -651,9 +654,7 @@ class _TransactionsViewState extends State<TransactionsView> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      context.read<TransactionCubit>().deleteTransaction(item.id);
-    }
+    return confirmed == true;
   }
 
   /// Compact Monthly Financial Overview Card — includes month stepper + type filter

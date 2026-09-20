@@ -15,6 +15,7 @@ class TransactionTile extends StatefulWidget {
   final bool showDivider;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final Future<bool> Function()? confirmDelete;
 
   const TransactionTile({
     super.key,
@@ -24,6 +25,7 @@ class TransactionTile extends StatefulWidget {
     this.showDivider = false,
     this.onTap,
     this.onDelete,
+    this.confirmDelete,
   });
 
   @override
@@ -229,6 +231,9 @@ class _TransactionTileState extends State<TransactionTile>
       child: Dismissible(
         key: Key('tx_${widget.transaction.id}'),
         direction: DismissDirection.endToStart,
+        confirmDismiss: widget.confirmDelete != null
+            ? (direction) => widget.confirmDelete!()
+            : null,
         onDismissed: (direction) {
           HapticFeedback.mediumImpact();
           widget.onDelete?.call();

@@ -135,6 +135,10 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     DetectedTransaction detected, {
     bool bypassFilter = false,
   }) async {
+    debugPrint(
+      '[AutoSyncCubit] 📲 Incoming: pkg=${detected.packageName} | bank=${detected.bankShortName} | amount=${detected.amount} | type=${detected.type.name} | id=${detected.id}',
+    );
+
     if (!bypassFilter && !state.isAutoSyncEnabled) {
       debugPrint(
         '[AutoSyncCubit] ⏸️ Ignored: Auto-Sync is disabled in settings.',
@@ -156,12 +160,20 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
                 (a) => state.enabledBankPackages.contains(a),
               ));
 
+      debugPrint(
+        '[AutoSyncCubit] 🔍 PackageFilter: enabledList=${state.enabledBankPackages} | isShell=$isShell | isDirectlyEnabled=$isDirectlyEnabled | profile=${profile?.id} | isProfileEnabled=$isProfileEnabled',
+      );
+
       if (!isShell && !isDirectlyEnabled && !isProfileEnabled) {
         debugPrint(
-          '[AutoSyncCubit] ⏸️ Ignored: Package ${detected.packageName} is disabled in bank filter.',
+          '[AutoSyncCubit] ❌ BLOCKED by PackageFilter: pkg=${detected.packageName} not in enabledBankPackages=${state.enabledBankPackages}',
         );
         return;
       }
+    } else if (!bypassFilter) {
+      debugPrint(
+        '[AutoSyncCubit] ✅ PackageFilter: skipped (enabledBankPackages is empty = allow all)',
+      );
     }
 
     // 1. Prevent duplicate processing if already in pending list
@@ -176,7 +188,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
 
     if (isAlreadyPending) {
       debugPrint(
-        '[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream (already pending): ${detected.title} ${detected.amount} THB',
+        '[AutoSyncCubit] ⏭️ BLOCKED: already in pending queue: ${detected.title} ${detected.amount} THB (id=${detected.id})',
       );
       return;
     }
@@ -195,8 +207,16 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     );
 
     if (isAlreadySwiped) {
+      final match = state.swipeHistory.firstWhere(
+        (h) =>
+            h.id == detected.id ||
+            (h.bankShortName == detected.bankShortName &&
+                (h.amount - detected.amount).abs() < 0.001 &&
+                h.type == detected.type),
+        orElse: () => state.swipeHistory.first,
+      );
       debugPrint(
-        '[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream (already swiped): ${detected.title} ${detected.amount} THB',
+        '[AutoSyncCubit] ⏭️ BLOCKED: already in swipeHistory: ${detected.title} ${detected.amount} THB | matchedSwipeId=${match.id} swipedAt=${match.swipedAt}',
       );
       return;
     }
@@ -212,7 +232,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
 
     if (isAlreadySaved) {
       debugPrint(
-        '[AutoSyncCubit] ⏭️ Duplicate transaction ignored in stream (already saved in DB): ${detected.title} ${detected.amount} THB',
+        '[AutoSyncCubit] ⏭️ BLOCKED: already saved in DB: ${detected.title} ${detected.amount} THB (id=${detected.id})',
       );
       return;
     }
