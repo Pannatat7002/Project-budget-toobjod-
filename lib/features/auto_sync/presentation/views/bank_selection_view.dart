@@ -158,9 +158,12 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                               final existingAcc = isAccountAdded ? existingAccounts.first : null;
 
                               // Check if auto-sync package is enabled
-                              final isSyncEnabled = syncState.enabledBankPackages.isEmpty ||
+                              final isPackageEnabled = syncState.enabledBankPackages.isEmpty ||
                                   syncState.enabledBankPackages.contains(bank.packageName) ||
                                   bank.packageAliases.any((a) => syncState.enabledBankPackages.contains(a));
+                              final isSyncEnabled = isAccountAdded
+                                  ? (existingAcc?.isAutoSyncActive ?? false)
+                                  : isPackageEnabled;
 
                               final brandColor = Color(bank.brandColor);
 
@@ -292,10 +295,7 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                                               value: isSyncEnabled,
                                               activeThumbColor: brandColor,
                                               onChanged: (val) {
-                                                autoCubit.toggleBankPackage(bank.packageName, val);
-                                                for (final alias in bank.packageAliases) {
-                                                  autoCubit.toggleBankPackage(alias, val);
-                                                }
+                                                autoCubit.toggleBankProfile(bank, val);
                                                 accCubit.addOrUpdateAccount(
                                                   existingAcc!.copyWith(isAutoSyncActive: val),
                                                 );
@@ -529,7 +529,7 @@ class _BankSelectionViewState extends State<BankSelectionView> {
 
                         await accCubit.addOrUpdateAccount(newAccount);
                         if (enableAutoSync) {
-                          autoCubit.toggleBankPackage(bank.packageName, true);
+                          autoCubit.toggleBankProfile(bank, true);
                         }
                         accCubit.selectBank(bank.id);
 

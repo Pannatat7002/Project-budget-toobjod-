@@ -34,7 +34,7 @@ class MainActivity : FlutterActivity() {
                     result.success(enabled)
                 }
                 "isServiceConnected" -> {
-                    result.success(BankNotificationListenerService.isServiceConnected)
+                    result.success(BankNotificationListenerService.isServiceConnected && BankNotificationListenerService.instance != null)
                 }
                 "rebindService" -> {
                     val success = BankNotificationListenerService.rebindService(applicationContext, forceToggle = true)
@@ -248,7 +248,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun tryRebindNotificationListener() {
-        if (!BankNotificationListenerService.isServiceConnected) {
+        if (!BankNotificationListenerService.isServiceConnected || BankNotificationListenerService.instance == null) {
             BankNotificationListenerService.rebindService(this, forceToggle = true)
         }
     }

@@ -175,7 +175,7 @@ void main() {
     test('ensureAccountForBank creates new account when not found and reuses existing', () async {
       final created = await cubit.ensureAccountForBank('ttb', accountMask: '9876');
       expect(created.bankId, 'ttb');
-      expect(created.accountMask, '9876');
+      expect(created.accountMask, isNull);
       expect(cubit.state.accounts.length, 1);
 
       // Call again for same bank

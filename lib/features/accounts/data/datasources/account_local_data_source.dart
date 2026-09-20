@@ -28,13 +28,23 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
             .map((item) => BankAccountModel.fromJson(item as Map<String, dynamic>))
             .where((acc) =>
                 acc.bankId != 'cash' &&
-                !acc.id.startsWith('mock_') &&
-                !(acc.id == 'acc_kbank' && acc.accountMask == '4521'))
+                !acc.id.startsWith('mock_'))
             .toList();
-        if (list.length != jsonList.length) {
-          await saveAccounts(list);
+
+        // 🛡️ Deduplicate accounts with the same bankId
+        final Map<String, BankAccountModel> uniqueAccounts = {};
+        for (final acc in list) {
+          final key = acc.bankId;
+          if (!uniqueAccounts.containsKey(key)) {
+            uniqueAccounts[key] = acc;
+          }
         }
-        return list;
+        final deduplicatedList = uniqueAccounts.values.toList();
+
+        if (deduplicatedList.length != jsonList.length) {
+          await saveAccounts(deduplicatedList);
+        }
+        return deduplicatedList;
       } else {
         return [];
       }

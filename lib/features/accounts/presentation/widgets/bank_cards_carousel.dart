@@ -94,6 +94,12 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
     final totalCount = 1 + widget.accounts.length;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    debugPrint(
+      '[BankCardsCarousel] 💳 Rendering $totalCount cards (selectedBankId: ${widget.selectedBankId}):\n'
+      '  - [Card 0] 🌐 บัตรภาพรวมทุกบัญชี (Net Worth)\n'
+      '${widget.accounts.asMap().entries.map((e) => '  - [Card ${e.key + 1}] ID: ${e.value.id} | bankId: ${e.value.bankId} | name: ${e.value.accountName} | mask: ${e.value.accountMask ?? "-"} | autoSync: ${e.value.isAutoSyncActive}').join('\n')}',
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

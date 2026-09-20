@@ -60,4 +60,31 @@ class BankAccountModel extends BankAccountEntity {
       isDefault: entity.isDefault,
     );
   }
+
+  @override
+  BankAccountModel copyWith({
+    String? id,
+    String? bankId,
+    String? bankName,
+    String? accountName,
+    String? accountMask,
+    double? currentBalance,
+    int? brandColor,
+    bool? isAutoSyncActive,
+    DateTime? createdAt,
+    bool? isDefault,
+  }) {
+    return BankAccountModel(
+      id: id ?? this.id,
+      bankId: bankId ?? this.bankId,
+      bankName: bankName ?? this.bankName,
+      accountName: accountName ?? this.accountName,
+      accountMask: accountMask ?? this.accountMask,
+      currentBalance: currentBalance ?? this.currentBalance,
+      brandColor: brandColor ?? this.brandColor,
+      isAutoSyncActive: isAutoSyncActive ?? this.isAutoSyncActive,
+      createdAt: createdAt ?? this.createdAt,
+      isDefault: isDefault ?? this.isDefault,
+    );
+  }
 }

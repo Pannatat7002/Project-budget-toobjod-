@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/bank_account_entity.dart';
 import '../../domain/repositories/account_repository.dart';
@@ -15,6 +16,9 @@ class AccountCubit extends Cubit<AccountState> {
     try {
       final accounts = await repository.getAccounts();
       final isEyeHidden = await repository.getEyeViewPrivacy();
+      debugPrint(
+        '[AccountCubit] 💳 Loaded ${accounts.length} accounts: ${accounts.map((a) => "${a.bankId}(${a.accountName}, ID:${a.id})").toList()}',
+      );
       emit(state.copyWith(
         accounts: accounts,
         isEyeViewHidden: isEyeHidden,
@@ -59,15 +63,26 @@ class AccountCubit extends Cubit<AccountState> {
     String? bankName,
     int? brandColor,
   }) async {
+    // 1. Check in state
     final existing = state.accounts.where((a) => a.bankId == bankId).toList();
     if (existing.isNotEmpty) {
-      // If we have an existing account and accountMask matches or is empty, return it
-      if (accountMask == null) return existing.first;
-      final matched = existing.firstWhere(
-        (a) => a.accountMask == accountMask,
-        orElse: () => existing.first,
-      );
-      return matched;
+      if (accountMask != null) {
+        final match = existing.where((a) => a.accountMask == accountMask).firstOrNull;
+        if (match != null) return match;
+      }
+      return existing.first;
+    }
+
+    // 2. Check in repository to prevent race conditions during rapid notifications
+    final repoAccounts = await repository.getAccounts();
+    final existingInRepo = repoAccounts.where((a) => a.bankId == bankId).toList();
+    if (existingInRepo.isNotEmpty) {
+      emit(state.copyWith(accounts: repoAccounts));
+      if (accountMask != null) {
+        final match = existingInRepo.where((a) => a.accountMask == accountMask).firstOrNull;
+        if (match != null) return match;
+      }
+      return existingInRepo.first;
     }
 
     // Auto-create new account
@@ -81,7 +96,7 @@ class AccountCubit extends Cubit<AccountState> {
       bankId: bankId,
       bankName: finalName,
       accountName: profile?.shortName ?? finalName,
-      accountMask: accountMask,
+      accountMask: null,
       currentBalance: 0.0,
       brandColor: finalColor,
       isAutoSyncActive: true,

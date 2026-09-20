@@ -74,8 +74,8 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
     if (list != null) {
       return list;
     }
-    // Default: all supported banks and their aliases enabled
-    return BankProfile.allSupportedPackages;
+    // Default: empty until user explicitly adds bank account and enables auto-sync
+    return [];
   }
 
   @override

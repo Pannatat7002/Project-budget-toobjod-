@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -206,7 +207,7 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                                 color: textColor,
                               ),
                               maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              overflow: TextOverflow.clip,
                             ),
                           ),
                           if (count > 0) ...[
@@ -232,42 +233,32 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                           ],
                           const Spacer(),
                           // ปุ่มดึงแจ้งเตือนที่ตกหล่น (Manual Refresh)
-                          IconButton(
-                            onPressed: _isRefreshing ? null : _handleRefresh,
-                            tooltip: 'ดึงแจ้งเตือนที่ตกหล่น',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                              minWidth: 32,
-                              minHeight: 32,
-                            ),
-                            icon: RotationTransition(
-                              turns: _refreshAnimController,
-                              child: Icon(
-                                Icons.refresh_rounded,
-                                size: 21,
-                                color: _isRefreshing
-                                    ? AppColors.primary
-                                    : AppColors.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          // ปุ่มไปที่หน้าประวัติการตรวจจับ (คู่กับปุ่มปิด)
-                          TextButton.icon(
+                          // IconButton(
+                          //   onPressed: _isRefreshing ? null : _handleRefresh,
+                          //   tooltip: 'ดึงแจ้งเตือนที่ตกหล่น',
+                          //   padding: EdgeInsets.zero,
+                          //   constraints: const BoxConstraints(
+                          //     minWidth: 32,
+                          //     minHeight: 32,
+                          //   ),
+                          //   icon: RotationTransition(
+                          //     turns: _refreshAnimController,
+                          //     child: Icon(
+                          //       Icons.refresh_rounded,
+                          //       size: 21,
+                          //       color: _isRefreshing
+                          //           ? AppColors.primary
+                          //           : AppColors.primary,
+                          //     ),
+                          //   ),
+                          // ),
+                          // const SizedBox(width: 2),
+                          // ปุ่มไปที่หน้าประวัติการตรวจจับ
+                          TextButton(
                             onPressed: () {
-                              Navigator.pop(context);
-                              SwipeHistoryView.show(context);
+                              Navigator.of(context).pop();
+                              context.push('/swipe-history');
                             },
-                            icon: const Icon(Icons.history_rounded, size: 15),
-                            label: Text(
-                              state.swipeHistory.isEmpty
-                                  ? 'ประวัติ'
-                                  : 'ประวัติ (${state.swipeHistory.length})',
-                              style: GoogleFonts.prompt(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
                             style: TextButton.styleFrom(
                               foregroundColor: AppColors.primary,
                               padding: const EdgeInsets.symmetric(
@@ -275,6 +266,15 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                                 vertical: 4,
                               ),
                               visualDensity: VisualDensity.compact,
+                            ),
+                            child: Text(
+                              state.swipeHistory.isEmpty
+                                  ? 'ประวัติ'
+                                  : 'ประวัติ (${state.swipeHistory.length})',
+                              style: GoogleFonts.prompt(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                           IconButton(
@@ -311,64 +311,44 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                           border: Border.all(color: borderColor),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Left Action Guide
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.expense.withAlpha(25),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_back_rounded,
-                                    size: 12,
-                                    color: AppColors.expense,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'ปัดซ้าย: ลบออก',
-                                  style: GoogleFonts.prompt(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.expense,
-                                  ),
-                                ),
-                              ],
+                            // const Icon(
+                            //   Icons.check_circle_rounded,
+                            //   size: 13,
+                            //   color: AppColors.income,
+                            // ),
+                            // const SizedBox(width: 5),
+                            // Text(
+                            //   'บันทึกลงระบบแล้วอัตโนมัติ',
+                            //   style: GoogleFonts.prompt(
+                            //     fontSize: 11.5,
+                            //     fontWeight: FontWeight.w600,
+                            //     color: AppColors.income,
+                            //   ),
+                            // ),
+                            // const SizedBox(width: 8),
+                            Text(
+                              '•',
+                              style: TextStyle(
+                                color: subtextColor.withAlpha(120),
+                                fontSize: 10,
+                              ),
                             ),
-                            Container(
-                              width: 1,
-                              height: 14,
-                              color: subtextColor.withAlpha(60),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.arrow_back_rounded,
+                              size: 13,
+                              color: AppColors.expense,
                             ),
-                            // Right Action Guide
-                            Row(
-                              children: [
-                                Text(
-                                  'ปัดขวา: บันทึก',
-                                  style: GoogleFonts.prompt(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.income,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.income.withAlpha(25),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 12,
-                                    color: AppColors.income,
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(width: 4),
+                            Text(
+                              'ปัดซ้ายเพื่อลบออกหากไม่ถูกต้อง',
+                              style: GoogleFonts.prompt(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.expense,
+                              ),
                             ),
                           ],
                         ),
@@ -412,7 +392,7 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                                   ),
                                   const SizedBox(height: 14),
                                   Text(
-                                    'ไม่มีรายการตรวจพบค้างอยู่ 🐾',
+                                    'ยังไม่มีรายการตรวจพบ',
                                     style: GoogleFonts.prompt(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
@@ -450,7 +430,7 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                                     label: Text(
                                       _isRefreshing
                                           ? 'กำลังดึงข้อมูล...'
-                                          : 'กดดึงแจ้งเตือนที่ตกหล่น',
+                                          : 'ดึงข้อมูลใหม่',
                                       style: GoogleFonts.prompt(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -541,17 +521,17 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                                     .discardAllPending();
                                 TopToast.show(
                                   context,
-                                  message: '🗑️ ลบรายการค้างตรวจทานทั้งหมดแล้ว',
+                                  message: '🗑️ ลบรายการทั้งหมดออกจากระบบแล้ว',
                                   isSuccess: false,
                                 );
                               },
                               icon: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 15,
+                                Icons.delete_sweep_rounded,
+                                size: 16,
                                 color: AppColors.expense,
                               ),
                               label: Text(
-                                'ลบทั้งหมด',
+                                'ลบทั้งหมดออกจากระบบ',
                                 style: GoogleFonts.prompt(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w600,
@@ -568,26 +548,25 @@ class _NotificationDrawerSheetState extends State<NotificationDrawerSheet>
                             ),
                             TextButton.icon(
                               onPressed: () {
-                                context
-                                    .read<AutoSyncCubit>()
-                                    .confirmAllPending();
+                                context.read<AutoSyncCubit>().clearAllPending();
                                 TopToast.show(
                                   context,
-                                  message: '✅ บันทึกรายการทั้งหมดเรียบร้อย',
+                                  message:
+                                      '✨ เคลียร์รายการตรวจพบแล้ว (ข้อมูลบันทึกในระบบแล้ว)',
                                   isSuccess: true,
                                 );
                               },
                               icon: const Icon(
-                                Icons.done_all_rounded,
-                                size: 15,
-                                color: AppColors.income,
+                                Icons.check_circle_outline_rounded,
+                                size: 16,
+                                color: AppColors.primary,
                               ),
                               label: Text(
-                                'บันทึกทั้งหมด',
+                                'รับทราบทั้งหมด',
                                 style: GoogleFonts.prompt(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.income,
+                                  color: AppColors.primary,
                                 ),
                               ),
                               style: TextButton.styleFrom(
@@ -694,6 +673,7 @@ class _DismissibleNotificationCardState
                           _categoryIconCode = cat.iconCode;
                           _categoryColorValue = cat.colorValue;
                         });
+                        _triggerConfirm();
                         Navigator.pop(ctx);
                       },
                       borderRadius: BorderRadius.circular(10),
@@ -790,40 +770,10 @@ class _DismissibleNotificationCardState
 
     return Dismissible(
       key: Key('notif_card_${tx.id}'),
-      direction: DismissDirection.horizontal,
-      dismissThresholds: const {
-        DismissDirection.startToEnd: 0.25,
-        DismissDirection.endToStart: 0.25,
-      },
-      // Swipe Right -> Confirm / Save (Green)
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: AppColors.income,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: const Row(
-          children: [
-            Icon(
-              Icons.check_circle_outline_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
-            SizedBox(width: 8),
-            Text(
-              'ยืนยันบันทึก',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
+      direction: DismissDirection.endToStart,
+      dismissThresholds: const {DismissDirection.endToStart: 0.25},
       // Swipe Left -> Discard / Delete (Red)
-      secondaryBackground: Container(
+      background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
@@ -834,7 +784,7 @@ class _DismissibleNotificationCardState
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              'ไม่ถูกต้อง (ลบ)',
+              'ลบออกจากระบบ',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -846,24 +796,13 @@ class _DismissibleNotificationCardState
           ],
         ),
       ),
-      onDismissed: (direction) {
-        if (direction == DismissDirection.startToEnd) {
-          // Swiped Right -> Confirm
-          _triggerConfirm();
-          TopToast.show(
-            context,
-            message: '✅ บันทึก "${tx.title}" เรียบร้อย',
-            isSuccess: true,
-          );
-        } else {
-          // Swiped Left -> Discard
-          widget.onDiscard();
-          TopToast.show(
-            context,
-            message: '🗑️ ลบ "${tx.title}" แล้ว',
-            isSuccess: false,
-          );
-        }
+      onDismissed: (_) {
+        widget.onDiscard();
+        TopToast.show(
+          context,
+          message: '🗑️ ลบ "${tx.title}" ออกจากระบบแล้ว',
+          isSuccess: false,
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),

@@ -12,8 +12,14 @@ class TopToast {
   }) {
     if (!context.mounted) return;
 
-    _currentEntry?.remove();
-    _currentEntry = null;
+    if (_currentEntry != null) {
+      try {
+        if (_currentEntry!.mounted) {
+          _currentEntry!.remove();
+        }
+      } catch (_) {}
+      _currentEntry = null;
+    }
 
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
@@ -26,7 +32,11 @@ class TopToast {
         duration: duration,
         onDismissed: () {
           if (_currentEntry == entry) {
-            entry.remove();
+            try {
+              if (entry.mounted) {
+                entry.remove();
+              }
+            } catch (_) {}
             _currentEntry = null;
           }
         },

@@ -192,10 +192,11 @@ abstract class BankParserStrategy {
       final minute = int.tryParse(kMatch.group(5) ?? '');
 
       if (day != null && month != null && year != null && hour != null && minute != null) {
-        if (year < 100) {
-          year += 2500; // e.g. 69 -> 2569
-        }
-        if (year >= 2400) {
+        if (year < 50) {
+          year += 2000; // e.g. 26 -> 2026 CE
+        } else if (year < 100) {
+          year = (year + 2500) - 543; // e.g. 69 -> 2569 BE -> 2026 CE
+        } else if (year >= 2400) {
           year -= 543; // Convert Buddhist Year (BE) to Common Era (CE)
         }
         return DateTime(year, month, day, hour, minute);

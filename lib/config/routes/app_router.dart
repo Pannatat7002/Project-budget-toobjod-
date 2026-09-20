@@ -8,6 +8,7 @@ import '../../features/analytics/presentation/views/analytics_view.dart';
 import '../../features/auto_sync/presentation/views/auto_sync_settings_view.dart';
 import '../../features/auto_sync/presentation/views/bank_selection_view.dart';
 import '../../features/auto_sync/presentation/views/notification_permission_view.dart';
+import '../../features/auto_sync/presentation/views/swipe_history_view.dart';
 import '../../features/budget/presentation/views/budget_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
@@ -99,6 +100,12 @@ class AppRouter {
         path: '/bank-selection',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const BankSelectionView(),
+      ),
+      // Standalone Route for Detection / Swipe History
+      GoRoute(
+        path: '/swipe-history',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SwipeHistoryView(),
       ),
     ],
   );

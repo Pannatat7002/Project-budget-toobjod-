@@ -76,19 +76,14 @@ class BankNotificationListenerService : NotificationListenerService() {
          */
         @Synchronized
         fun rebindService(context: Context, forceToggle: Boolean = false): Boolean {
-            if (isServiceConnected && !forceToggle) {
+            if (isServiceConnected && instance != null && !forceToggle) {
                 return true
             }
             return try {
                 val cn = ComponentName(context, BankNotificationListenerService::class.java)
                 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    NotificationListenerService.requestRebind(cn)
-                    Log.i(TAG, "🔄 [BankNotifListener] requestRebind called successfully.")
-                }
-
-                if (forceToggle) {
-                    // Component toggling trick to kickstart NotificationManagerService only if explicitly forced
+                if (forceToggle || instance == null || !isServiceConnected) {
+                    // Component toggling trick to kickstart NotificationManagerService
                     val pm = context.packageManager
                     pm.setComponentEnabledSetting(
                         cn,
@@ -101,6 +96,11 @@ class BankNotificationListenerService : NotificationListenerService() {
                         android.content.pm.PackageManager.DONT_KILL_APP
                     )
                     Log.i(TAG, "⚡ [BankNotifListener] Component toggled to force OS re-binding.")
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    NotificationListenerService.requestRebind(cn)
+                    Log.i(TAG, "🔄 [BankNotifListener] requestRebind called successfully.")
                 }
                 true
             } catch (e: Exception) {

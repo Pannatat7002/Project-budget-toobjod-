@@ -141,13 +141,29 @@ class BankProfile {
     ),
   ];
 
-  /// Get all supported package names including aliases
+  /// SMS messaging app packages that can receive bank notifications
+  static const List<String> smsPackages = [
+    'com.google.android.apps.messaging',
+    'com.samsung.android.messaging',
+    'com.android.mms',
+  ];
+
+  static bool isSmsApp(String packageName) {
+    if (packageName.isEmpty) return false;
+    final lower = packageName.toLowerCase();
+    return lower.contains('messaging') ||
+        lower.contains('.mms') ||
+        lower.contains('sms');
+  }
+
+  /// Get all supported package names including aliases and SMS apps
   static List<String> get allSupportedPackages {
     final list = <String>[];
     for (final b in supportedBanks) {
       list.add(b.packageName);
       list.addAll(b.packageAliases);
     }
+    list.addAll(smsPackages);
     return list;
   }
 

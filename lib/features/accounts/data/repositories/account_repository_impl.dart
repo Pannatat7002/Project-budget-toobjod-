@@ -10,7 +10,23 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<List<BankAccountEntity>> getAccounts() async {
-    return await localDataSource.getAccounts();
+    final models = await localDataSource.getAccounts();
+    return models
+        .map(
+          (m) => BankAccountEntity(
+            id: m.id,
+            bankId: m.bankId,
+            bankName: m.bankName,
+            accountName: m.accountName,
+            accountMask: m.accountMask,
+            currentBalance: m.currentBalance,
+            brandColor: m.brandColor,
+            isAutoSyncActive: m.isAutoSyncActive,
+            createdAt: m.createdAt,
+            isDefault: m.isDefault,
+          ),
+        )
+        .toList();
   }
 
   @override

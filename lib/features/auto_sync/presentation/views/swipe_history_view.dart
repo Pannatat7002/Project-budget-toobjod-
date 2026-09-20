@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -15,15 +16,7 @@ class SwipeHistoryView extends StatefulWidget {
   const SwipeHistoryView({super.key});
 
   static Future<void> show(BuildContext context) {
-    final autoSyncCubit = context.read<AutoSyncCubit>();
-    return Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: autoSyncCubit,
-          child: const SwipeHistoryView(),
-        ),
-      ),
-    );
+    return context.push('/swipe-history');
   }
 
   @override
@@ -166,6 +159,16 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
     );
   }
 
+  void _handleBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -179,35 +182,54 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
         final discardedCount = allHistory.where((r) => r.swipeResult == SwipeResult.discarded).length;
         final changedCatCount = allHistory.where((r) => r.categoryChanged && r.swipeResult == SwipeResult.confirmed).length;
 
-        return Scaffold(
-          backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          appBar: AppBar(
-            backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-            elevation: 0,
-            title: Text(
-              'ประวัติการตรวจสอบ',
-              style: GoogleFonts.prompt(fontWeight: FontWeight.w800, fontSize: 17),
-            ),
-            actions: [
-              if (allHistory.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.delete_sweep_rounded, size: 22),
-                  tooltip: 'ล้างประวัติทั้งหมด',
-                  onPressed: () => _confirmClear(context, isDark),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _handleBack(context);
+          },
+          child: Scaffold(
+            backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+            appBar: AppBar(
+              backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 19,
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                 ),
-              if (filtered.isNotEmpty)
-                _isExporting
-                    ? const Padding(
-                        padding: EdgeInsets.all(14),
-                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.download_rounded, size: 22),
-                        tooltip: 'Export CSV',
-                        onPressed: () => _exportCsv(context, filtered),
-                      ),
-            ],
-          ),
+                tooltip: 'ย้อนกลับ',
+                onPressed: () => _handleBack(context),
+              ),
+              title: Text(
+                'ประวัติการตรวจสอบ',
+                style: GoogleFonts.prompt(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                ),
+              ),
+              actions: [
+                if (allHistory.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.delete_sweep_rounded, size: 22),
+                    tooltip: 'ล้างประวัติทั้งหมด',
+                    onPressed: () => _confirmClear(context, isDark),
+                  ),
+                if (filtered.isNotEmpty)
+                  _isExporting
+                      ? const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.download_rounded, size: 22),
+                          tooltip: 'Export CSV',
+                          onPressed: () => _exportCsv(context, filtered),
+                        ),
+              ],
+            ),
           body: Column(
             children: [
               // ── Summary Chips Bar ──
@@ -228,6 +250,7 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
           bottomNavigationBar: filtered.isNotEmpty
               ? _buildExportFooter(context, filtered, isDark)
               : null,
+          ),
         );
       },
     );
@@ -382,8 +405,8 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
         color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorder,
       ),
       itemBuilder: (context, index) {
-        // Most recent first
-        final r = records[records.length - 1 - index];
+        // Most recent first (records is already ordered newest to oldest)
+        final r = records[index];
         return _buildHistoryItem(r, isDark);
       },
     );
@@ -767,9 +790,9 @@ class _SwipeHistoryViewState extends State<SwipeHistoryView> {
             child: Text('ยกเลิก', style: GoogleFonts.prompt(color: AppColors.primary, fontWeight: FontWeight.w700)),
           ),
           TextButton(
-            onPressed: () {
-              context.read<AutoSyncCubit>().clearSwipeHistory();
-              Navigator.pop(ctx);
+            onPressed: () async {
+              await context.read<AutoSyncCubit>().clearSwipeHistory();
+              if (ctx.mounted) Navigator.pop(ctx);
             },
             child: Text('ล้างประวัติ', style: GoogleFonts.prompt(color: AppColors.error, fontWeight: FontWeight.w800)),
           ),

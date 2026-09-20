@@ -16,9 +16,10 @@ class AutoSyncBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AutoSyncCubit, AutoSyncState>(
-      // Rebuild only when pending transactions change or permission state changes
+      // Rebuild when pending transactions, banner dismissed state, or permission state changes
       buildWhen: (prev, curr) =>
           prev.pendingTransactions.length != curr.pendingTransactions.length ||
+          prev.isDashboardBannerDismissed != curr.isDashboardBannerDismissed ||
           prev.isPermissionGranted != curr.isPermissionGranted ||
           prev.isAutoSyncEnabled != curr.isAutoSyncEnabled,
       builder: (context, state) {
@@ -26,8 +27,8 @@ class AutoSyncBanner extends StatelessWidget {
         final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
         final subtextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
-        // Case 1: Has pending detected transactions waiting for user review
-        if (state.pendingTransactions.isNotEmpty) {
+        // Case 1: Has pending detected transactions waiting for user review (and banner is not dismissed on dashboard)
+        if (state.pendingTransactions.isNotEmpty && !state.isDashboardBannerDismissed) {
           final firstTx = state.pendingTransactions.first;
           final count = state.pendingTransactions.length;
 
@@ -49,79 +50,104 @@ class AutoSyncBanner extends StatelessWidget {
                 width: 1.2,
               ),
             ),
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                NotificationDrawerSheet.show(context);
-              },
-              child: Row(
-                children: [
-                  BankLogoBadge(
-                    packageName: firstTx.packageName,
-                    fallbackShortName: firstTx.bankShortName,
-                    fallbackColorValue: firstTx.bankColorValue,
-                    size: 38,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      NotificationDrawerSheet.show(context);
+                    },
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                'ตรวจพบรายการจาก ${firstTx.bankShortName}',
+                        BankLogoBadge(
+                          packageName: firstTx.packageName,
+                          fallbackShortName: firstTx.bankShortName,
+                          fallbackColorValue: firstTx.bankColorValue,
+                          size: 38,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'ตรวจพบรายการจาก ${firstTx.bankShortName}',
+                                      style: GoogleFonts.prompt(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: textColor,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (count > 1) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '+$count',
+                                        style: GoogleFonts.prompt(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${firstTx.isIncome ? 'รับเงิน' : 'ชำระ'} ${CurrencyFormatter.format(firstTx.amount)} • บันทึกแล้ว (แตะเพื่อดู/จัดการ)',
                                 style: GoogleFonts.prompt(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: textColor,
+                                  fontSize: 12,
+                                  color: subtextColor,
+                                  height: 1.4,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            if (count > 1) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '+$count',
-                                  style: GoogleFonts.prompt(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${firstTx.isIncome ? 'รับเงิน' : 'ชำระ'} ${CurrencyFormatter.format(firstTx.amount)} - แตะเพื่อบันทึก 🐾',
-                          style: GoogleFonts.prompt(
-                            fontSize: 12,
-                            color: subtextColor,
-                            height: 1.4,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Tooltip(
+                  message: 'ปิดการแจ้งเตือนบนแดชบอร์ด',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      context.read<AutoSyncCubit>().dismissDashboardBanner();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: (isDark ? Colors.white : Colors.black).withAlpha(isDark ? 30 : 15),
+                      ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 17,
+                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary,
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }

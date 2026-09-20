@@ -14,6 +14,7 @@ class AutoSyncState extends Equatable {
   final DetectedTransaction? latestDetected;
   final bool isLoading;
   final String? errorMessage;
+  final bool isDashboardBannerDismissed;
   final List<SwipeHistoryRecord> swipeHistory;
 
   /// Check whether auto-sync is enabled for a specific bank
@@ -34,6 +35,7 @@ class AutoSyncState extends Equatable {
     this.latestDetected,
     this.isLoading = false,
     this.errorMessage,
+    this.isDashboardBannerDismissed = false,
     this.swipeHistory = const [],
   });
 
@@ -49,6 +51,7 @@ class AutoSyncState extends Equatable {
     bool clearLatestDetected = false,
     bool? isLoading,
     String? errorMessage,
+    bool? isDashboardBannerDismissed,
     List<SwipeHistoryRecord>? swipeHistory,
   }) {
     return AutoSyncState(
@@ -64,6 +67,8 @@ class AutoSyncState extends Equatable {
           clearLatestDetected ? null : (latestDetected ?? this.latestDetected),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
+      isDashboardBannerDismissed:
+          isDashboardBannerDismissed ?? this.isDashboardBannerDismissed,
       swipeHistory: swipeHistory ?? this.swipeHistory,
     );
   }
@@ -80,6 +85,7 @@ class AutoSyncState extends Equatable {
         latestDetected,
         isLoading,
         errorMessage,
+        isDashboardBannerDismissed,
         swipeHistory,
       ];
 }
