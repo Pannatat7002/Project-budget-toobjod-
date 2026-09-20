@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../injection_container.dart' as di;
+import '../../../security/data/datasources/security_local_data_source.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -57,6 +58,13 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
 
   void _goToDashboard() {
     if (mounted) {
+      try {
+        final isPinEnabled = di.sl<SecurityLocalDataSource>().isPinEnabled();
+        if (isPinEnabled) {
+          context.go('/pin');
+          return;
+        }
+      } catch (_) {}
       context.go('/');
     }
   }

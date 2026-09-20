@@ -11,6 +11,8 @@ import '../../features/auto_sync/presentation/views/notification_permission_view
 import '../../features/auto_sync/presentation/views/swipe_history_view.dart';
 import '../../features/budget/presentation/views/budget_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
+import '../../features/security/domain/models/pin_mode.dart';
+import '../../features/security/presentation/views/pin_screen.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
 import '../../features/transactions/presentation/views/transactions_view.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -22,8 +24,12 @@ String _determineInitialLocation() {
   try {
     final prefs = di.sl<SharedPreferences>();
     final lastSplashDate = prefs.getString(AppConstants.lastSplashDateKey);
+    final isPinEnabled = prefs.getBool('security_pin_enabled') ?? false;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     if (lastSplashDate == today) {
+      if (isPinEnabled) {
+        return '/pin';
+      }
       return '/';
     }
   } catch (_) {}
@@ -106,6 +112,15 @@ class AppRouter {
         path: '/swipe-history',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SwipeHistoryView(),
+      ),
+      // Standalone Route for Security PIN Screen
+      GoRoute(
+        path: '/pin',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final mode = state.extra is PinMode ? state.extra as PinMode : PinMode.verify;
+          return PinScreen(initialMode: mode);
+        },
       ),
     ],
   );

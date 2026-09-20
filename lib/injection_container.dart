@@ -32,6 +32,10 @@ import 'features/auto_sync/data/repositories/auto_sync_repository_impl.dart';
 import 'features/auto_sync/domain/repositories/auto_sync_repository.dart';
 import 'features/auto_sync/presentation/state/auto_sync_cubit.dart';
 
+// Features - Security (PIN & Biometrics)
+import 'features/security/data/datasources/security_local_data_source.dart';
+import 'features/security/presentation/state/security_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -116,6 +120,12 @@ Future<void> init() async {
   // DataSource
   sl.registerLazySingleton<AutoSyncLocalDataSource>(
     () => AutoSyncLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  //! Features - Security (PIN Code & Biometrics)
+  sl.registerFactory(() => SecurityCubit(localDataSource: sl()));
+  sl.registerLazySingleton<SecurityLocalDataSource>(
+    () => SecurityLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
   //! External
