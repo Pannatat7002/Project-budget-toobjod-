@@ -13,6 +13,7 @@ import '../../features/budget/presentation/views/budget_view.dart';
 import '../../features/dashboard/presentation/views/dashboard_view.dart';
 import '../../features/security/domain/models/pin_mode.dart';
 import '../../features/security/presentation/views/pin_screen.dart';
+import '../../features/security/presentation/views/security_settings_view.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
 import '../../features/transactions/presentation/views/transactions_view.dart';
 import '../../shared/widgets/app_bottom_nav_bar.dart';
@@ -112,6 +113,12 @@ class AppRouter {
         path: '/swipe-history',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SwipeHistoryView(),
+      ),
+      // Standalone Route for Security Settings (PIN & Biometrics)
+      GoRoute(
+        path: '/security-settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SecuritySettingsView(),
       ),
       // Standalone Route for Security PIN Screen
       GoRoute(

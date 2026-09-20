@@ -18,6 +18,9 @@ class DateFormatter {
     }
   }
 
+  /// Alias for formatFull ('25 ส.ค. 2026')
+  static String formatDate(DateTime date) => formatFull(date);
+
   /// Formats date to '25/08/2026'
   static String formatShort(DateTime date) {
     return _shortDate.format(date);

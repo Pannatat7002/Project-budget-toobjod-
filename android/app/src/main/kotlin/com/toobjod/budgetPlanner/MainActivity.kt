@@ -11,12 +11,12 @@ import android.service.notification.NotificationListenerService
 import android.util.Log
 import androidx.annotation.NonNull
 import com.toobjod.budgetPlanner.notification.BankNotificationListenerService
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val METHOD_CHANNEL = "com.toobjod.budgetPlanner/notification_channel"
     private val EVENT_CHANNEL = "com.toobjod.budgetPlanner/notification_stream"
 

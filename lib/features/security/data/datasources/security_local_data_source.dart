@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class SecurityLocalDataSource {
@@ -17,10 +19,16 @@ abstract class SecurityLocalDataSource {
   int? getLockoutTimestamp();
   Future<void> setLockoutTimestamp(int timestampMillis);
   Future<void> clearLockout();
+
+  // OS Device Credentials & Biometrics Authentication
+  Future<bool> isDeviceAuthSupported();
+  Future<bool> authenticateWithDeviceCredentials({required String localizedReason});
+  Future<bool> authenticateWithBiometrics({required String localizedReason});
 }
 
 class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   final SharedPreferences sharedPreferences;
+  final LocalAuthentication localAuth;
 
   static const String _keyPinHash = 'security_pin_hash';
   static const String _keyPinSalt = 'security_pin_salt';
@@ -29,7 +37,10 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   static const String _keyFailedAttempts = 'security_failed_attempts';
   static const String _keyLockoutTimestamp = 'security_lockout_timestamp';
 
-  SecurityLocalDataSourceImpl({required this.sharedPreferences});
+  SecurityLocalDataSourceImpl({
+    required this.sharedPreferences,
+    LocalAuthentication? localAuth,
+  }) : localAuth = localAuth ?? LocalAuthentication();
 
   @override
   bool isPinEnabled() {
@@ -112,6 +123,53 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   @override
   Future<void> clearLockout() async {
     await sharedPreferences.remove(_keyLockoutTimestamp);
+  }
+
+  @override
+  Future<bool> isDeviceAuthSupported() async {
+    try {
+      final canCheck = await localAuth.canCheckBiometrics;
+      final isSupported = await localAuth.isDeviceSupported();
+      return canCheck || isSupported;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> authenticateWithDeviceCredentials({required String localizedReason}) async {
+    try {
+      return await localAuth.authenticate(
+        localizedReason: localizedReason,
+        options: const AuthenticationOptions(
+          biometricOnly: false, // Allows device lock screen PIN / Pattern / Password
+          stickyAuth: true,
+          useErrorDialogs: true,
+        ),
+      );
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> authenticateWithBiometrics({required String localizedReason}) async {
+    try {
+      return await localAuth.authenticate(
+        localizedReason: localizedReason,
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+          useErrorDialogs: true,
+        ),
+      );
+    } on PlatformException catch (_) {
+      return false;
+    } catch (_) {
+      return false;
+    }
   }
 
   String _hashPin(String pin, String salt) {

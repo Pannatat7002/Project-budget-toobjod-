@@ -20,6 +20,7 @@ import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../../transactions/presentation/state/transaction_cubit.dart';
 import '../../../transactions/presentation/state/transaction_state.dart';
 import '../../../transactions/presentation/views/add_transaction_sheet.dart';
+import '../../../transactions/presentation/widgets/delete_transaction_dialog.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
 import '../widgets/dashboard_actions_grid.dart';
 
@@ -179,6 +180,8 @@ class _DashboardViewState extends State<DashboardView> {
             onSelected: (val) {
               if (val == 'rename_dog') {
                 _showRenameDogDialog(context);
+              } else if (val == 'security_settings') {
+                context.push('/security-settings');
               } else if (val == 'auto_sync') {
                 context.push('/auto-sync-settings');
               } else if (val == 'reset') {
@@ -194,6 +197,19 @@ class _DashboardViewState extends State<DashboardView> {
             itemBuilder: (ctx) {
               final currentMode = ctx.read<ThemeCubit>().state;
               return [
+                const PopupMenuItem(
+                  value: 'security_settings',
+                  child: Row(
+                    children: [
+                      Icon(Icons.shield_rounded, color: AppColors.primaryOrange, size: 18),
+                      SizedBox(width: 10),
+                      Text(
+                        'ความปลอดภัย & รหัส PIN',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'auto_sync',
                   child: Row(
@@ -569,6 +585,11 @@ class _DashboardViewState extends State<DashboardView> {
                                                     context,
                                                     existingTransaction:
                                                         recentTransactions[i],
+                                                  ),
+                                              confirmDelete: () =>
+                                                  DeleteTransactionDialog.show(
+                                                    context,
+                                                    recentTransactions[i],
                                                   ),
                                               onDelete: () {
                                                 final item =

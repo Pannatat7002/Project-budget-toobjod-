@@ -169,7 +169,7 @@ class _PinScreenContent extends StatelessWidget {
                 if (state.mode == PinMode.verify)
                   TextButton(
                     onPressed: () {
-                      _showForgotPinDialog(context);
+                      _showForgotPinDialog(context, cubit);
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: textSecondaryColor,
@@ -251,27 +251,113 @@ class _PinScreenContent extends StatelessWidget {
     }
   }
 
-  void _showForgotPinDialog(BuildContext context) {
-    showDialog(
+  void _showForgotPinDialog(BuildContext context, SecurityCubit cubit) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? AppColors.darkSurface : Colors.white;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.lock_reset_rounded, color: AppColors.primaryOrange),
-            SizedBox(width: 8),
-            Text('ลืมรหัส PIN?'),
-          ],
-        ),
-        content: const Text(
-          'คุณสามารถใช้การสแกนลายนิ้วมือเพื่อเข้าสู่ระบบ หรือหากจำรหัสไม่ได้ ระบบจะให้รีเซ็ตข้อมูลความปลอดภัยใหม่',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('ตกลง'),
+      backgroundColor: backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (bottomSheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Icon & Title
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryOrange.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_reset_rounded,
+                  color: AppColors.primaryOrange,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              Text(
+                'ลืมรหัส PIN?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              Text(
+                'คุณสามารถยืนยันตัวตนด้วยรหัสล็อกหน้าจอเครื่อง (PIN/Pattern/Password) หรือสแกนลายนิ้วมือ/ใบหน้า เพื่อตั้งรหัส PIN ใหม่ได้ทันที',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Primary Action: Authenticate with Device Credentials
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.of(bottomSheetContext).pop();
+                    await cubit.authenticateWithDeviceLock(resetPinAfterAuth: true);
+                  },
+                  icon: const Icon(Icons.fingerprint_rounded, size: 22),
+                  label: const Text(
+                    'ยืนยันด้วยรหัสเครื่อง / สแกนนิ้ว',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Cancel Button
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(bottomSheetContext).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: textSecondary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 14)),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

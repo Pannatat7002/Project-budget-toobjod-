@@ -13,10 +13,11 @@ class SecurityCubit extends Cubit<SecurityState> {
     init();
   }
 
-  void init({PinMode defaultMode = PinMode.verify}) {
+  Future<void> init({PinMode defaultMode = PinMode.verify}) async {
     final isPinSet = localDataSource.isPinSet();
     final isPinEnabled = localDataSource.isPinEnabled();
     final isBiometricEnabled = localDataSource.isBiometricEnabled();
+    final isDeviceAuthSupported = await localDataSource.isDeviceAuthSupported();
 
     // Check existing lockout
     final lockoutTimestamp = localDataSource.getLockoutTimestamp();
@@ -40,6 +41,7 @@ class SecurityCubit extends Cubit<SecurityState> {
       mode: isPinSet ? defaultMode : PinMode.create,
       isPinSet: isPinSet && isPinEnabled,
       isBiometricEnabled: isBiometricEnabled,
+      isBiometricAvailable: isDeviceAuthSupported,
       isLocked: isLocked,
       lockoutRemainingSeconds: remainingSeconds,
       enteredPin: '',
@@ -48,6 +50,15 @@ class SecurityCubit extends Cubit<SecurityState> {
       isAuthenticated: false,
       isSuccess: false,
     ));
+
+    // Auto trigger biometric if enabled in verify mode
+    if (isPinSet && isPinEnabled && isBiometricEnabled && defaultMode == PinMode.verify && !isLocked) {
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (!isClosed && state.mode == PinMode.verify && !state.isLocked && !state.isSuccess) {
+          triggerBiometric();
+        }
+      });
+    }
   }
 
   void setMode(PinMode mode, {String? tempPin}) {
@@ -237,16 +248,60 @@ class SecurityCubit extends Cubit<SecurityState> {
   Future<void> triggerBiometric() async {
     if (state.isLocked || state.isSuccess) return;
 
-    // Simulate / execute biometric verification
-    // On success:
-    await localDataSource.resetFailedAttempts();
-    await localDataSource.clearLockout();
-    emit(state.copyWith(
-      isSuccess: true,
-      isAuthenticated: true,
-      isError: false,
-      clearErrorMessage: true,
-    ));
+    final success = await localDataSource.authenticateWithBiometrics(
+      localizedReason: 'สแกนลายนิ้วมือหรือใบหน้าเพื่อเข้าสู่ระบบ เจ้าตูบจด',
+    );
+
+    if (success) {
+      await localDataSource.resetFailedAttempts();
+      await localDataSource.clearLockout();
+      emit(state.copyWith(
+        isSuccess: true,
+        isAuthenticated: true,
+        isError: false,
+        clearErrorMessage: true,
+      ));
+    }
+  }
+
+  /// Authenticate using OS Lock Screen (Device PIN, Pattern, Password, or Biometrics)
+  /// Used when user forgets their in-app PIN to verify device ownership and reset PIN
+  Future<bool> authenticateWithDeviceLock({bool resetPinAfterAuth = true}) async {
+    final success = await localDataSource.authenticateWithDeviceCredentials(
+      localizedReason: 'ยืนยันตัวตนด้วยรหัสล็อกหน้าจอเครื่องเพื่อยืนยันความเป็นเจ้าของและตั้งรหัส PIN ใหม่',
+    );
+
+    if (success) {
+      await localDataSource.resetFailedAttempts();
+      await localDataSource.clearLockout();
+      _lockoutTimer?.cancel();
+
+      if (resetPinAfterAuth) {
+        emit(state.copyWith(
+          mode: PinMode.create,
+          isLocked: false,
+          lockoutRemainingSeconds: 0,
+          enteredPin: '',
+          tempOriginalPin: '',
+          isError: false,
+          clearErrorMessage: true,
+          isSuccess: false,
+        ));
+      } else {
+        emit(state.copyWith(
+          isSuccess: true,
+          isAuthenticated: true,
+          isLocked: false,
+          lockoutRemainingSeconds: 0,
+          isError: false,
+          clearErrorMessage: true,
+        ));
+      }
+      return true;
+    } else {
+      _triggerError('การยืนยันตัวตนไม่สำเร็จ กรุณาลองใหม่');
+      return false;
+    }
   }
 
   Future<void> toggleBiometric(bool enabled) async {

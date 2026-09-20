@@ -17,6 +17,7 @@ import '../../../auto_sync/presentation/widgets/bank_logo_badge.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
 import '../state/transaction_state.dart';
+import '../widgets/delete_transaction_dialog.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction_sheet.dart';
 
@@ -517,7 +518,7 @@ class _TransactionsViewState extends State<TransactionsView> {
                                             existingTransaction: group.items[i],
                                           ),
                                           confirmDelete: () =>
-                                              _confirmDelete(
+                                              DeleteTransactionDialog.show(
                                                 context,
                                                 group.items[i],
                                               ),
@@ -550,111 +551,6 @@ class _TransactionsViewState extends State<TransactionsView> {
     setState(() {
       _selectedMonth = targetMonth;
     });
-  }
-
-  /// Confirmation dialog before deleting a transaction
-  Future<bool> _confirmDelete(
-    BuildContext context,
-    TransactionEntity item,
-  ) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        icon: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.delete_outline_rounded,
-            color: Color(0xFFEF4444),
-            size: 28,
-          ),
-        ),
-        title: Text(
-          'ลบรายการ?',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.prompt(
-            fontWeight: FontWeight.w800,
-            fontSize: 17,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
-          ),
-        ),
-        content: Text(
-          '"${item.title}"\nรายการนี้จะถูกลบออกถาวร ไม่สามารถกู้คืนได้',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.prompt(
-            fontSize: 13.5,
-            color: isDark
-                ? const Color(0xFF94A3B8)
-                : const Color(0xFF64748B),
-            height: 1.5,
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actionsPadding:
-            const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          // Cancel
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                side: BorderSide(
-                  color: isDark
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFE2E8F0),
-                ),
-              ),
-              child: Text(
-                'ยกเลิก',
-                style: GoogleFonts.prompt(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: isDark
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF64748B),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // Confirm delete
-          Expanded(
-            child: FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'ลบเลย',
-                style: GoogleFonts.prompt(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    return confirmed == true;
   }
 
   /// Compact Monthly Financial Overview Card — includes month stepper + type filter

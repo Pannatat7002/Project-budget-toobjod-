@@ -8,6 +8,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
+import '../widgets/delete_transaction_dialog.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../../accounts/presentation/state/account_state.dart';
 
@@ -286,17 +287,44 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Flexible(
-                  child: Text(
-                    widget.existingTransaction != null
-                        ? 'แก้ไขรายการ'
-                        : (_selectedType == TransactionType.income ? 'รับเงินเข้า (+)' : 'จ่ายเงินออก (-)'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                          letterSpacing: -0.3,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.existingTransaction != null
+                              ? 'แก้ไขรายการ'
+                              : (_selectedType == TransactionType.income ? 'รับเงินเข้า (+)' : 'จ่ายเงินออก (-)'),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                                letterSpacing: -0.3,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                      ),
+                      if (widget.existingTransaction != null) ...[
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.expense, size: 20),
+                          tooltip: 'ลบรายการ',
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () async {
+                            final confirmed = await DeleteTransactionDialog.show(
+                              context,
+                              widget.existingTransaction!,
+                            );
+                            if (confirmed && mounted) {
+                              context.read<TransactionCubit>().deleteTransaction(widget.existingTransaction!.id);
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
