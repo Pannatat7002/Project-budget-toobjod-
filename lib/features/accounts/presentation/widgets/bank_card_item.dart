@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import '../../../../core/utils/dog_sound_helper.dart';
 import '../../domain/entities/bank_account_entity.dart';
 
 class BankCardItem extends StatelessWidget {
@@ -352,15 +351,11 @@ class BankCardItem extends StatelessWidget {
         ),
       ),
 
-        // 2. Mascot Dog (ลงมาอยู่ฝั่งขวาของการ์ด แตะเพื่อเห่าโฮ่งๆ)
+        // 2. Mascot Dog (ลงมาอยู่ฝั่งขวาของการ์ด)
         Positioned(
           right: -2,
           bottom: 2,
-          child: GestureDetector(
-            onTap: () {
-              DogSoundHelper.playBark();
-            },
-            behavior: HitTestBehavior.opaque,
+          child: IgnorePointer(
             child: SizedBox(
               width: 125,
               height: 125,

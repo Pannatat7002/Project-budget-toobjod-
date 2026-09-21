@@ -279,6 +279,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           : AppConstants.defaultIncomeCategories;
       final found = categories.where((c) => c.id == matchedCatId).firstOrNull;
       if (found != null && found.id != _selectedCategory.id) {
+        DogSoundHelper.playBark();
         setState(() {
           _selectedCategory = found;
           _dogAutoSuggestedCategoryName = found.name;

@@ -16,7 +16,6 @@ class AutoSyncBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AutoSyncCubit, AutoSyncState>(
-      // Rebuild when pending transactions, dismissed IDs, or permission state changes
       buildWhen: (prev, curr) =>
           prev.pendingTransactions != curr.pendingTransactions ||
           prev.dismissedBannerTransactionIds != curr.dismissedBannerTransactionIds ||
@@ -30,28 +29,37 @@ class AutoSyncBanner extends StatelessWidget {
 
         final unDismissedPending = state.unDismissedPendingTransactions;
 
-        // Case 1: Has pending detected transactions that have NOT been dismissed on the dashboard
+        // ════════════════════════════════════════════════════════════════════════════
+        // Case 1: Dog Sniffed Transaction(s) - เจ้าตูบดมกลิ่นพบรายการใหม่!
+        // ════════════════════════════════════════════════════════════════════════════
         if (unDismissedPending.isNotEmpty) {
           final firstTx = unDismissedPending.first;
           final count = unDismissedPending.length;
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(firstTx.bankColorValue).withAlpha(isDark ? 35 : 20),
-                  AppColors.primary.withAlpha(isDark ? 25 : 15),
+                  Color(firstTx.bankColorValue).withAlpha(isDark ? 45 : 28),
+                  const Color(0xFF10B981).withAlpha(isDark ? 30 : 18),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Color(firstTx.bankColorValue).withAlpha(isDark ? 100 : 120),
+                color: Color(firstTx.bankColorValue).withAlpha(isDark ? 110 : 140),
                 width: 1.2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(firstTx.bankColorValue).withValues(alpha: isDark ? 0.2 : 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -64,11 +72,28 @@ class AutoSyncBanner extends StatelessWidget {
                     },
                     child: Row(
                       children: [
-                        BankLogoBadge(
-                          packageName: firstTx.packageName,
-                          fallbackShortName: firstTx.bankShortName,
-                          fallbackColorValue: firstTx.bankColorValue,
-                          size: 38,
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            BankLogoBadge(
+                              packageName: firstTx.packageName,
+                              fallbackShortName: firstTx.bankShortName,
+                              fallbackColorValue: firstTx.bankColorValue,
+                              size: 38,
+                            ),
+                            Positioned(
+                              right: -4,
+                              bottom: -2,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0F172A),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Text('🐾', style: TextStyle(fontSize: 10)),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -79,10 +104,10 @@ class AutoSyncBanner extends StatelessWidget {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      'ตรวจพบรายการจาก ${firstTx.bankShortName}',
+                                      '🐾 ตูบดมกลิ่นพบรายการจาก ${firstTx.bankShortName}',
                                       style: GoogleFonts.prompt(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
                                         color: textColor,
                                       ),
                                       maxLines: 1,
@@ -94,14 +119,14 @@ class AutoSyncBanner extends StatelessWidget {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary,
+                                        color: const Color(0xFF10B981),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         '+$count',
                                         style: GoogleFonts.prompt(
                                           fontSize: 10,
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight: FontWeight.w800,
                                           color: Colors.white,
                                         ),
                                       ),
@@ -111,11 +136,11 @@ class AutoSyncBanner extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${firstTx.isIncome ? 'รับเงิน' : 'ชำระ'} ${CurrencyFormatter.format(firstTx.amount)} • บันทึกแล้ว (แตะเพื่อดู/จัดการ)',
+                                '${firstTx.isIncome ? '🦴 ได้เงินเข้า' : '💸 จ่ายออก'} ${CurrencyFormatter.format(firstTx.amount)} • ตูบจดแล้ว (แตะดู)',
                                 style: GoogleFonts.prompt(
-                                  fontSize: 12,
+                                  fontSize: 11.5,
                                   color: subtextColor,
-                                  height: 1.4,
+                                  height: 1.35,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -144,7 +169,7 @@ class AutoSyncBanner extends StatelessWidget {
                       ),
                       child: Icon(
                         Icons.close_rounded,
-                        size: 17,
+                        size: 16,
                         color: isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary,
                       ),
                     ),
@@ -155,75 +180,78 @@ class AutoSyncBanner extends StatelessWidget {
           );
         }
 
-        // Case 2: Permission not granted and Auto-sync is enabled -> Offer setup banner
-        if (state.isAutoSyncEnabled && !state.isPermissionGranted) {
+        // ════════════════════════════════════════════════════════════════════════════
+        // Case 2: Permission not granted -> Sleeping Puppy Status (เจ้าตูบแอบงีบอยู่)
+        // ════════════════════════════════════════════════════════════════════════════
+        if (!state.isPermissionGranted) {
           return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(isDark ? 25 : 15),
+              color: const Color(0xFFF59E0B).withAlpha(isDark ? 28 : 16),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.primary.withAlpha(isDark ? 70 : 80),
+                color: const Color(0xFFF59E0B).withAlpha(isDark ? 70 : 90),
                 width: 1,
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(isDark ? 45 : 35),
+                    color: const Color(0xFFF59E0B).withAlpha(isDark ? 45 : 30),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.bolt,
-                    color: AppColors.primary,
-                    size: 20,
+                  child: const Text(
+                    '💤',
+                    style: TextStyle(fontSize: 18),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ระบบจดบันทึกอัตโนมัติ 🐾',
+                        'เจ้าตูบยังแอบงีบอยู่โฮ่ง 🐾',
                         style: GoogleFonts.prompt(
-                          fontSize: 13.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: textColor,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
-                        'ตรวจจับเงินเข้า-ออกจากแอปธนาคารอัตโนมัติ',
+                        'เปิดหูให้เจ้าตูบช่วยอ่านแจ้งเตือนเงินเข้าออกอัตโนมัติ',
                         style: GoogleFonts.prompt(
-                          fontSize: 11.5,
+                          fontSize: 11,
                           color: subtextColor,
-                          height: 1.35,
+                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 TextButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
                     context.push('/notification-permission');
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                    backgroundColor: const Color(0xFFF59E0B),
                     foregroundColor: Colors.white,
+                    visualDensity: VisualDensity.compact,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   child: Text(
-                    'เปิดสิทธิ์',
+                    'เปิดหูให้ตูบ',
                     style: GoogleFonts.prompt(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -238,3 +266,4 @@ class AutoSyncBanner extends StatelessWidget {
     );
   }
 }
+
