@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/dog_sound_helper.dart';
 import '../../domain/entities/bank_account_entity.dart';
 
 class BankCardItem extends StatelessWidget {
@@ -61,18 +62,24 @@ class BankCardItem extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // 1. Bank Card Container
-        Container(
-          margin: const EdgeInsets.fromLTRB(1, 14, 1, 2),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: isSelected
-                  ? Colors.white.withValues(alpha: 0.45)
-                  : Colors.white.withValues(alpha: 0.15),
-              width: isSelected ? 1.8 : 1.0,
-            ),
+        // 1. Bank Card Container (Tappable to toggle privacy eye view)
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onToggleEyeView();
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(1, 14, 1, 2),
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.45)
+                    : Colors.white.withValues(alpha: 0.15),
+                width: isSelected ? 1.8 : 1.0,
+              ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isSelected ? 0.12 : 0.05),
@@ -99,14 +106,14 @@ class BankCardItem extends StatelessWidget {
 
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: 13,
                   vertical: 8,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Header: Brand Badge (Big Logo + Title inside) + Account Mask
+                    // 1. Header: Brand Badge + Actions (Mask, Reconcile, Add Bank, Eye View Toggle)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -118,7 +125,6 @@ class BankCardItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        // Right Side Actions: Account Mask Pill & Reconcile Action Button
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -189,85 +195,147 @@ class BankCardItem extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 5),
                             ],
+                            // Eye View Toggle Button
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                onToggleEyeView();
+                              },
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.20),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.30),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Icon(
+                                  isEyeViewHidden
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                  color: Colors.white,
+                                  size: 13,
+                                ),
+                              ),
+                            ),
                           ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // 2. Middle: Balance Typography
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'ยอดเงินคงเหลือ',
+                          style: GoogleFonts.prompt(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            isEyeViewHidden
+                                ? '฿ ••••••'
+                                : CurrencyFormatter.format(balance),
+                            style: GoogleFonts.prompt(
+                              color: Colors.white,
+                              fontSize: 25,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
 
-                    // Center: Balance Typography + Eye View Button (Privacy Mode on ยอดเงินคงเหลือ)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          onToggleEyeView();
-                        },
-                        behavior: HitTestBehavior.opaque,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    // 3. Bottom Row: Monthly Income & Expense Strip (Left Half Only)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.24),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.16),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            // Income
                             Row(
                               mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  'ยอดเงินคงเหลือ',
+                                  'รับ: ',
                                   style: GoogleFonts.prompt(
                                     color: Colors.white.withValues(alpha: 0.85),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.1,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  isEyeViewHidden
+                                      ? '•••'
+                                      : '+${CurrencyFormatter.format(monthlyIncome)}',
+                                  style: GoogleFonts.prompt(
+                                    color: const Color(0xFF6EE7B7),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 1,
+                              height: 12,
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                            const SizedBox(width: 6),
+                            // Expense
                             Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Flexible(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      isEyeViewHidden
-                                          ? '******'
-                                          : CurrencyFormatter.format(balance),
-                                      style: GoogleFonts.prompt(
-                                        color: Colors.white,
-                                        fontSize: 26,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.5,
-                                      ),
-                                    ),
+                                Text(
+                                  'จ่าย: ',
+                                  style: GoogleFonts.prompt(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                // Eye View Button (Privacy Mode)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 2.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.18),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.28,
-                                      ),
-                                      width: 0.8,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    isEyeViewHidden
-                                        ? Icons.visibility_off_rounded
-                                        : Icons.visibility_rounded,
-                                    color: Colors.white,
-                                    size: 13,
+                                Text(
+                                  isEyeViewHidden
+                                      ? '•••'
+                                      : '-${CurrencyFormatter.format(monthlyExpense)}',
+                                  style: GoogleFonts.prompt(
+                                    color: const Color(0xFFFCA5A5),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
@@ -276,122 +344,35 @@ class BankCardItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-
-                    // Bottom Financial Flow Strip (Income & Expense of this month)
-                    // Row(
-                    //   children: [
-                    //     Flexible(
-                    //       child: Container(
-                    //         padding: const EdgeInsets.symmetric(
-                    //           horizontal: 8,
-                    //           vertical: 3,
-                    //         ),
-                    //         decoration: BoxDecoration(
-                    //           color: Colors.black.withValues(alpha: 0.22),
-                    //           borderRadius: BorderRadius.circular(8),
-                    //           border: Border.all(
-                    //             color: Colors.white.withValues(alpha: 0.18),
-                    //             width: 0.8,
-                    //           ),
-                    //         ),
-                    //         child: Row(
-                    //           mainAxisSize: MainAxisSize.min,
-                    //           children: [
-                    //             const Icon(
-                    //               Icons.arrow_downward_rounded,
-                    //               size: 11,
-                    //               color: Color(0xFF6EE7B7),
-                    //             ),
-                    //             const SizedBox(width: 3),
-                    //             Flexible(
-                    //               child: FittedBox(
-                    //                 fit: BoxFit.scaleDown,
-                    //                 child: Text(
-                    //                   isEyeViewHidden
-                    //                       ? '***'
-                    //                       : '+${CurrencyFormatter.format(monthlyIncome)}',
-                    //                   style: GoogleFonts.prompt(
-                    //                     color: Colors.white,
-                    //                     fontSize: 10.5,
-                    //                     fontWeight: FontWeight.w700,
-                    //                   ),
-                    //                 ),
-                    //               ),
-                    //             ),
-                    //           ],
-                    //         ),
-                    //       ),
-                    //     ),
-                    //     const SizedBox(width: 8),
-                    //     Flexible(
-                    //       child: Container(
-                    //         padding: const EdgeInsets.symmetric(
-                    //           horizontal: 8,
-                    //           vertical: 3,
-                    //         ),
-                    //         decoration: BoxDecoration(
-                    //           color: Colors.black.withValues(alpha: 0.22),
-                    //           borderRadius: BorderRadius.circular(8),
-                    //           border: Border.all(
-                    //             color: Colors.white.withValues(alpha: 0.18),
-                    //             width: 0.8,
-                    //           ),
-                    //         ),
-                    //         child: Row(
-                    //           mainAxisSize: MainAxisSize.min,
-                    //           children: [
-                    //             const Icon(
-                    //               Icons.arrow_upward_rounded,
-                    //               size: 11,
-                    //               color: Color(0xFFFCA5A5),
-                    //             ),
-                    //             const SizedBox(width: 3),
-                    //             Flexible(
-                    //               child: FittedBox(
-                    //                 fit: BoxFit.scaleDown,
-                    //                 child: Text(
-                    //                   isEyeViewHidden
-                    //                       ? '***'
-                    //                       : '-${CurrencyFormatter.format(monthlyExpense)}',
-                    //                   style: GoogleFonts.prompt(
-                    //                     color: Colors.white,
-                    //                     fontSize: 10.5,
-                    //                     fontWeight: FontWeight.w700,
-                    //                   ),
-                    //                 ),
-                    //               ),
-                    //             ),
-                    //           ],
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
                   ],
                 ),
               ),
             ],
           ),
         ),
+      ),
 
-        // 2. Overhanging Mascot Dog (โผล่เกาะขอบบนขวาของการ์ด)
+        // 2. Mascot Dog (ลงมาอยู่ฝั่งขวาของการ์ด แตะเพื่อเห่าโฮ่งๆ)
         Positioned(
-          right: 0,
-          top: 50,
-          child: IgnorePointer(
+          right: -2,
+          bottom: 2,
+          child: GestureDetector(
+            onTap: () {
+              DogSoundHelper.playBark();
+            },
+            behavior: HitTestBehavior.opaque,
             child: SizedBox(
-              width: 120,
-              height: 120,
+              width: 125,
+              height: 125,
               child: Image.asset(
                 'assets/images/mascot_dog_peek.png',
-                cacheWidth: 240,
-                cacheHeight: 240,
+                cacheWidth: 250,
+                cacheHeight: 250,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Image.asset(
                   'assets/images/mascot_avatar.jpg',
-                  cacheWidth: 240,
-                  cacheHeight: 240,
+                  cacheWidth: 250,
+                  cacheHeight: 250,
                   fit: BoxFit.contain,
                 ),
               ),

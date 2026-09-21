@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/dog_sound_helper.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
@@ -75,6 +76,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   String? _matchedTargetTransactionId;
   bool _autoCreateTargetIncome = true;
   bool _hasUserManuallyUnlinked = false;
+  String? _dogAutoSuggestedCategoryName;
+  bool _hasUserManuallySelectedCategory = false;
 
   @override
   void initState() {
@@ -85,6 +88,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     _selectedDate = existing?.date ?? DateTime.now();
 
     _titleController = TextEditingController(text: existing?.title ?? '');
+    _titleController.addListener(_onTitleChanged);
     _amountController = TextEditingController(
       text: existing != null ? existing.amount.toStringAsFixed(0) : '',
     );
@@ -167,6 +171,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   @override
   void dispose() {
+    _titleController.removeListener(_onTitleChanged);
     _amountController.removeListener(_onAmountChanged);
     _amountFocusNode.dispose();
     _titleController.dispose();
@@ -183,9 +188,110 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
   }
 
+  void _onTitleChanged() {
+    if (_hasUserManuallySelectedCategory) return;
+    if (_selectedType == TransactionType.transfer) return;
+
+    final text = _titleController.text.trim().toLowerCase();
+    if (text.isEmpty) {
+      if (_dogAutoSuggestedCategoryName != null && mounted) {
+        setState(() {
+          _dogAutoSuggestedCategoryName = null;
+        });
+      }
+      return;
+    }
+
+    String? matchedCatId;
+
+    if (_selectedType == TransactionType.expense) {
+      if (text.contains('7-11') || text.contains('711') || text.contains('เซเว่น') ||
+          text.contains('grab') || text.contains('lineman') || text.contains('foodpanda') ||
+          text.contains('shopeefood') || text.contains('cafe') || text.contains('คาเฟ่') ||
+          text.contains('กาแฟ') || text.contains('ชาตรามือ') || text.contains('starbucks') ||
+          text.contains('amazon') || text.contains('ข้าว') || text.contains('ก๋วยเตี๋ยว') ||
+          text.contains('อาหาร') || text.contains('หมูกระทะ') || text.contains('kfc') ||
+          text.contains('mcdonald') || text.contains('พิซซ่า') || text.contains('sushi') ||
+          text.contains('mk') || text.contains('ชาบู') || text.contains('ชานม') ||
+          text.contains('ขนม') || text.contains('ส้มตำ') || text.contains('บุฟเฟต์') ||
+          text.contains('น้ำดื่ม') || text.contains('เครื่องดื่ม')) {
+        matchedCatId = 'food';
+      } else if (text.contains('bts') || text.contains('mrt') || text.contains('taxi') ||
+          text.contains('แท็กซี่') || text.contains('bolt') || text.contains('ทางด่วน') ||
+          text.contains('easy pass') || text.contains('น้ำมัน') || text.contains('ptt') ||
+          text.contains('บางจาก') || text.contains('shell') || text.contains('caltex') ||
+          text.contains('esso') || text.contains('วิน') || text.contains('รถเมล์') ||
+          text.contains('เครื่องบิน') || text.contains('airasia') || text.contains('vietjet') ||
+          text.contains('nokair') || text.contains('ที่จอดรถ') || text.contains('ค่าจอด') ||
+          text.contains('ล้างรถ') || text.contains('ตั๋วรถ')) {
+        matchedCatId = 'transport';
+      } else if (text.contains('ค่าน้ำ') || text.contains('ค่าไฟ') || text.contains('ais') ||
+          text.contains('true') || text.contains('dtac') || text.contains('เน็ตบ้าน') ||
+          text.contains('ค่าเน็ต') || text.contains('netflix') || text.contains('spotify') ||
+          text.contains('youtube') || text.contains('ค่าห้อง') || text.contains('ค่าคอนโด') ||
+          text.contains('ค่าเช่า') || text.contains('ค่าส่วนกลาง')) {
+        matchedCatId = 'bills';
+      } else if (text.contains('บัตรเครดิต') || text.contains('งวดรถ') || text.contains('ผ่อนบ้าน') ||
+          text.contains('หนี้') || text.contains('กู้') || text.contains('ดอกเบี้ย') ||
+          text.contains('ผ่อน')) {
+        matchedCatId = 'debts';
+      } else if (text.contains('shopee') || text.contains('lazada') || text.contains('tiktok') ||
+          text.contains('uniqlo') || text.contains('zara') || text.contains('h&m') ||
+          text.contains('muji') || text.contains('ikea') || text.contains('eveandboy') ||
+          text.contains('watsons') || text.contains('boots') || text.contains('เสื้อผ้า') ||
+          text.contains('รองเท้า') || text.contains('ของเล่น') || text.contains('ช้อป') ||
+          text.contains('กระเป๋า') || text.contains('เครื่องสำอาง')) {
+        matchedCatId = 'shopping';
+      } else if (text.contains('หนัง') || text.contains('major') || text.contains('sf cinema') ||
+          text.contains('เกม') || text.contains('steam') || text.contains('playstation') ||
+          text.contains('nintendo') || text.contains('เที่ยว') || text.contains('คอนเสิร์ต') ||
+          text.contains('โรงแรม') || text.contains('รีสอร์ท')) {
+        matchedCatId = 'entertainment';
+      } else if (text.contains('ยา') || text.contains('หมอ') || text.contains('คลินิก') ||
+          text.contains('โรงพยาบาล') || text.contains('ฟัน') || text.contains('ทำฟัน') ||
+          text.contains('วิตามิน') || text.contains('ฟิตเนส') || text.contains('ตรวจสุขภาพ')) {
+        matchedCatId = 'health';
+      } else if (text.contains('ออม') || text.contains('กองทุน') || text.contains('หุ้น') ||
+          text.contains('crypto') || text.contains('บิตคอยน์') || text.contains('สลาก') ||
+          text.contains('ทอง')) {
+        matchedCatId = 'savings';
+      }
+    } else if (_selectedType == TransactionType.income) {
+      if (text.contains('เงินเดือน') || text.contains('salary') || text.contains('ค่าจ้าง') ||
+          text.contains('เบี้ยเลี้ยง') || text.contains('โอที') || text.contains('ot')) {
+        matchedCatId = 'salary';
+      } else if (text.contains('โบนัส') || text.contains('bonus') || text.contains('คอมมิชชัน') ||
+          text.contains('รางวัล') || text.contains('ถูกหวย') || text.contains('แต๊ะเอีย') ||
+          text.contains('อั่งเปา')) {
+        matchedCatId = 'bonus';
+      } else if (text.contains('ปันผล') || text.contains('ดอกเบี้ย') || text.contains('กำไร') ||
+          text.contains('ขายหุ้น') || text.contains('dividend')) {
+        matchedCatId = 'investment';
+      } else if (text.contains('ขายของ') || text.contains('ยอดขาย') || text.contains('ฟรีแลนซ์') ||
+          text.contains('freelance') || text.contains('รับจ้าง') || text.contains('ลูกค้า')) {
+        matchedCatId = 'business';
+      }
+    }
+
+    if (matchedCatId != null) {
+      final categories = _selectedType == TransactionType.expense
+          ? AppConstants.defaultExpenseCategories
+          : AppConstants.defaultIncomeCategories;
+      final found = categories.where((c) => c.id == matchedCatId).firstOrNull;
+      if (found != null && found.id != _selectedCategory.id) {
+        setState(() {
+          _selectedCategory = found;
+          _dogAutoSuggestedCategoryName = found.name;
+        });
+      }
+    }
+  }
+
   void _onTypeChanged(TransactionType type) {
     setState(() {
       _selectedType = type;
+      _hasUserManuallySelectedCategory = false;
+      _dogAutoSuggestedCategoryName = null;
       if (type == TransactionType.transfer) {
         _selectedCategory = const CategoryItem(
           id: 'transfer',
@@ -309,6 +415,31 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       await accountCubit.refreshBalancesFromTransactions(cubit.state.transactions);
 
       if (mounted) {
+        DogSoundHelper.playHappyBark();
+        HapticFeedback.mediumImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Text('🐾 ', style: TextStyle(fontSize: 15)),
+                Expanded(
+                  child: Text(
+                    widget.existingTransaction != null
+                        ? 'แก้ไขเรียบร้อย! เจ้าตูบอัปเดตข้อมูลให้แล้วนะโฮ่ง'
+                        : (isTransferMode
+                            ? 'ย้ายเงินเรียบร้อย! เจ้าตูบปรับยอดให้ทั้งสองบัญชีแล้วนะโฮ่ง'
+                            : 'บันทึกเรียบร้อย! เจ้าตูบจดลงสมุดให้แล้วนะโฮ่ง 🦴'),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1800),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: const Color(0xFF0F172A),
+          ),
+        );
         Navigator.pop(context);
       }
     }
@@ -395,6 +526,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         final isTransfer = cat.id == 'transfer';
                         setState(() {
                           _selectedCategory = cat;
+                          _hasUserManuallySelectedCategory = true;
+                          _dogAutoSuggestedCategoryName = null;
                           if (isTransfer) {
                             _selectedType = TransactionType.transfer;
                             final accState = context.read<AccountCubit>().state;
@@ -1966,6 +2099,39 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               focusedBorder: InputBorder.none,
                             ),
                           ),
+                          if (_dogAutoSuggestedCategoryName != null) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2, bottom: 4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.2 : 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text('🐾', style: TextStyle(fontSize: 11)),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        'เจ้าตูบช่วยเลือกหมวด "$_dogAutoSuggestedCategoryName" ให้แล้วนะโฮ่ง!',
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF10B981),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                           if (!_showMoreOptions)
                             GestureDetector(
                               onTap: () => setState(() => _showMoreOptions = true),

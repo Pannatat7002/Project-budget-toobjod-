@@ -95,7 +95,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     debugPrint(
-      '[BankCardsCarousel] 💳 Rendering $totalCount cards (selectedBankId: ${widget.selectedBankId}):\n'
+      '[- รวมสรุปรายรับ-รายจ่ายเดือนนี้ไว้ในการ์ดโดยตรง] 💳 Rendering $totalCount cards (selectedBankId: ${widget.selectedBankId}):\n'
       '  - [Card 0] 🌐 บัตรภาพรวมทุกบัญชี (Net Worth)\n'
       '${widget.accounts.asMap().entries.map((e) => '  - [Card ${e.key + 1}] ID: ${e.value.id} | bankId: ${e.value.bankId} | name: ${e.value.accountName} | mask: ${e.value.accountMask ?? "-"} | autoSync: ${e.value.isAutoSyncActive}').join('\n')}',
     );
@@ -104,7 +104,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 175,
+          height: 180,
           child: PageView.builder(
             controller: _pageController,
             clipBehavior: Clip.none,
@@ -137,6 +137,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                   isEyeViewHidden: widget.isEyeViewHidden,
                   onToggleEyeView: widget.onToggleEyeView,
                   isSelected: widget.selectedBankId == null,
+                  onAddAccountTap: widget.onAddBankTap,
                 );
               }
 
@@ -154,6 +155,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
                 isEyeViewHidden: widget.isEyeViewHidden,
                 onToggleEyeView: widget.onToggleEyeView,
                 isSelected: widget.selectedBankId == acc.bankId,
+                onAddAccountTap: widget.onAddBankTap,
                 onReconcileTap: () {
                   if (widget.onReconcileAccount != null) {
                     widget.onReconcileAccount!(acc);
@@ -166,7 +168,7 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
           ),
         ),
         if (totalCount > 1) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(totalCount, (idx) {
@@ -220,172 +222,6 @@ class _BankCardsCarouselState extends State<BankCardsCarousel> {
             }),
           ),
         ],
-        const SizedBox(height: 10),
-
-        // Inflow / Outflow Section (below carousel)
-        Builder(
-          builder: (context) {
-            final isDarkSection =
-                Theme.of(context).brightness == Brightness.dark;
-            final income = _currentPage == 0
-                ? widget.totalMonthlyIncome
-                : (_currentPage <= widget.accounts.length
-                      ? widget.getBankIncome(
-                          widget.accounts[_currentPage - 1].bankId,
-                        )
-                      : 0.0);
-            final expense = _currentPage == 0
-                ? widget.totalMonthlyExpense
-                : (_currentPage <= widget.accounts.length
-                      ? widget.getBankExpense(
-                          widget.accounts[_currentPage - 1].bankId,
-                        )
-                      : 0.0);
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isDarkSection
-                    ? AppColors.darkSurface
-                    : AppColors.lightSurface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isDarkSection
-                      ? AppColors.darkBorderSubtle
-                      : AppColors.lightBorder,
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  // เข้า (Inflow) — Royal Blue
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withValues(
-                              alpha: isDarkSection ? 0.15 : 0.1,
-                            ),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.success.withValues(alpha: 0.35),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_downward_rounded,
-                            color: AppColors.success,
-                            size: 17,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'เข้า',
-                              style: GoogleFonts.prompt(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: isDarkSection
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextSecondary,
-                              ),
-                            ),
-                            Text(
-                              widget.isEyeViewHidden
-                                  ? '••••'
-                                  : CurrencyFormatter.format(income),
-                              style: GoogleFonts.prompt(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
-                                color: isDarkSection
-                                    ? AppColors.successLight
-                                    : AppColors.success,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Divider
-                  Container(
-                    width: 1,
-                    height: 28,
-                    color: isDarkSection
-                        ? AppColors.darkBorderSubtle
-                        : AppColors.lightBorder,
-                  ),
-
-                  // ออก (Outflow) — Shiba Orange
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'ออก',
-                              style: GoogleFonts.prompt(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: isDarkSection
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextSecondary,
-                              ),
-                            ),
-                            Text(
-                              widget.isEyeViewHidden
-                                  ? '••••'
-                                  : CurrencyFormatter.format(expense),
-                              style: GoogleFonts.prompt(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
-                                color: isDarkSection
-                                    ? AppColors.primaryLight
-                                    : AppColors.primaryDark,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(
-                              alpha: isDarkSection ? 0.15 : 0.1,
-                            ),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.35),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_upward_rounded,
-                            color: AppColors.primary,
-                            size: 17,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
       ],
     );
   }

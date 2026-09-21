@@ -6,10 +6,11 @@ import '../../../../config/theme/app_colors.dart';
 /// Unified Action Panel with Image-Centric Tactile Cards
 /// Layout:
 /// - Left Column: วิเคราะห์ (ขยายเต็มความสูง)
-/// - Right Column: รับเงิน, จ่ายเงิน (2 items)
+/// - Right Column: รับเงิน, จ่ายเงิน, โอนย้าย (3 items)
 class DashboardActionsGrid extends StatelessWidget {
   final VoidCallback onAddIncome;
   final VoidCallback onAddExpense;
+  final VoidCallback onTransfer;
   final VoidCallback? onSetBudget;
   final VoidCallback onAnalytics;
 
@@ -17,6 +18,7 @@ class DashboardActionsGrid extends StatelessWidget {
     super.key,
     required this.onAddIncome,
     required this.onAddExpense,
+    required this.onTransfer,
     this.onSetBudget,
     required this.onAnalytics,
   });
@@ -29,7 +31,7 @@ class DashboardActionsGrid extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Left Column (วิเคราะห์): ขยายเต็มความสูงเทียบเท่า 2 การ์ดฝั่งขวา
+          // Left Column (วิเคราะห์): ขยายเต็มความสูงเทียบเท่า 3 การ์ดฝั่งขวา
           Expanded(
             child: _TactileActionCard(
               isDark: isDark,
@@ -39,7 +41,7 @@ class DashboardActionsGrid extends StatelessWidget {
               imageAsset: 'assets/images/action_analytics.png',
               fallbackIcon: Icons.insights_rounded,
               accentColor: const Color.fromARGB(255, 110, 110, 110),
-              imageSize: 52,
+              imageSize: 56,
               titleFontSize: 15,
               subtitleFontSize: 11.5,
               onTap: onAnalytics,
@@ -47,7 +49,7 @@ class DashboardActionsGrid extends StatelessWidget {
           ),
           const SizedBox(width: 10),
 
-          // Right Column (บันทึกรายการประจำวัน): 2 items
+          // Right Column (บันทึกรายการประจำวัน): 3 items (รับเงิน, จ่ายเงิน, โอนย้าย)
           Expanded(
             child: Column(
               children: [
@@ -58,14 +60,14 @@ class DashboardActionsGrid extends StatelessWidget {
                     subtitle: 'บันทึกรายรับ 🐾',
                     imageAsset: 'assets/images/action_income.png',
                     fallbackIcon: Icons.arrow_downward_rounded,
-                    accentColor: const Color.fromARGB(255, 110, 110, 110),
-                    imageSize: 48,
-                    titleFontSize: 14,
-                    subtitleFontSize: 11,
+                    accentColor: const Color(0xFF10B981),
+                    imageSize: 34,
+                    titleFontSize: 13,
+                    subtitleFontSize: 10,
                     onTap: onAddIncome,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Expanded(
                   child: _TactileActionCard(
                     isDark: isDark,
@@ -73,11 +75,26 @@ class DashboardActionsGrid extends StatelessWidget {
                     subtitle: 'บันทึกรายจ่าย 🐾',
                     imageAsset: 'assets/images/action_expense.png',
                     fallbackIcon: Icons.arrow_upward_rounded,
-                    accentColor: const Color.fromARGB(255, 110, 110, 110),
-                    imageSize: 48,
-                    titleFontSize: 14,
-                    subtitleFontSize: 11,
+                    accentColor: const Color(0xFFEF4444),
+                    imageSize: 34,
+                    titleFontSize: 13,
+                    subtitleFontSize: 10,
                     onTap: onAddExpense,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: _TactileActionCard(
+                    isDark: isDark,
+                    title: 'โอนย้าย',
+                    subtitle: 'โอนระหว่างบัญชี 🐾',
+                    imageAsset: 'assets/images/action_transfer.png',
+                    fallbackIcon: Icons.swap_horiz_rounded,
+                    accentColor: const Color(0xFF6366F1),
+                    imageSize: 34,
+                    titleFontSize: 13,
+                    subtitleFontSize: 10,
+                    onTap: onTransfer,
                   ),
                 ),
               ],
@@ -275,8 +292,8 @@ class _TactileActionCardState extends State<_TactileActionCard> {
                   )
                 : Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
+                      horizontal: 9,
+                      vertical: 6,
                     ),
                     child: Row(
                       children: [

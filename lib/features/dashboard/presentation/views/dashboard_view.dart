@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/dog_sound_helper.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../../features/settings/presentation/state/theme_cubit.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
@@ -61,6 +62,19 @@ class _DashboardViewState extends State<DashboardView> {
     }
   }
 
+  String _getDynamicDogGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return 'อรุณสวัสดิ์โฮ่ง! เช้าแล้ววางแผนเงินกัน 🐾';
+    } else if (hour >= 12 && hour < 17) {
+      return 'มื้อเที่ยงกินอะไรดี อย่าลืมให้ตูบจดนะ 🍖';
+    } else if (hour >= 17 && hour < 21) {
+      return 'ตกเย็นแล้ว วันนี้ใช้เงินไปกี่บาทโฮ่ง? 🐾';
+    } else {
+      return 'ดึกแล้ว ตูบช่วยเฝ้ากระเป๋าเงินให้นะ ฝันดีโฮ่ง 🌙';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -79,27 +93,32 @@ class _DashboardViewState extends State<DashboardView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Mascot Avatar Logo (Spacious & Clean)
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFFDB813),
-                      width: 2.2,
+                // Mascot Avatar Logo (Spacious & Clean - แตะเพื่อส่งเสียงเห่า)
+                GestureDetector(
+                  onTap: () {
+                    DogSoundHelper.playBark();
+                  },
+                  child: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFDB813),
+                        width: 2.2,
+                      ),
                     ),
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/mascot_dog_peek.png',
-                      cacheWidth: 126,
-                      cacheHeight: 126,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.pets,
-                        color: Color(0xFFFDB813),
-                        size: 20,
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/mascot_dog_peek.png',
+                        cacheWidth: 126,
+                        cacheHeight: 126,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.pets,
+                          color: Color(0xFFFDB813),
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -147,7 +166,7 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'วางแผนคุมงบการเงิน 🐾',
+                        _getDynamicDogGreeting(),
                         style: GoogleFonts.prompt(
                           fontSize: 11.5,
                           color: isDark
@@ -347,7 +366,7 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                       const SizedBox(height: 10),
 
-                      // 2. Unified Dashboard Actions Grid (ซ้าย: วิเคราะห์ขยายเต็ม / ขวา: รับเงินเข้า, จ่ายเงินออก)
+                      // 2. Unified Dashboard Actions Grid (ซ้าย: วิเคราะห์ขยายเต็ม / ขวา: รับเงิน, จ่ายเงิน, โอนย้าย)
                       DashboardActionsGrid(
                         onAddIncome: () => _handleTransactionAction(
                           context,
@@ -358,6 +377,11 @@ class _DashboardViewState extends State<DashboardView> {
                           context,
                           accountState,
                           TransactionType.expense,
+                        ),
+                        onTransfer: () => _handleTransactionAction(
+                          context,
+                          accountState,
+                          TransactionType.transfer,
                         ),
                         onAnalytics: () => context.push('/analytics'),
                       ),
@@ -843,6 +867,50 @@ class _DashboardViewState extends State<DashboardView> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 7),
+                  GestureDetector(
+                    onTap: () {
+                      if (progress >= 0.8) {
+                        DogSoundHelper.playAlertBark();
+                      } else {
+                        DogSoundHelper.playBark();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.25),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              progress > 1.0
+                                  ? '🛑 หงิง... เดือนนี้ใช้เกินงบแล้ว พักก่อนนะเจ้านาย'
+                                  : (progress >= 0.8
+                                      ? '⚠️ โฮ่ง! งบใกล้หมดแล้วนะ ตูบเริ่มเฝ้าระวัง'
+                                      : '🐾 เงินเหลือสบายใจ ตูบยกสองเท้าหน้าให้เลยโฮ่ง! ✨'),
+                              style: GoogleFonts.prompt(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: statusColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
