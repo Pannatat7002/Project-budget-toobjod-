@@ -227,114 +227,17 @@ class _DashboardViewState extends State<DashboardView> {
                     ],
                   ),
                 ),
-                // ─── Theme divider ────────────────────────────────
+                // ─── Theme 3-Way Toggle ───────────────────────────
                 const PopupMenuDivider(),
-                // Light
                 PopupMenuItem(
-                  value: 'theme_light',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.light_mode_rounded,
-                        color: currentMode == ThemeMode.light
-                            ? AppColors.primary
-                            : Colors.grey,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'โหมดสว่าง',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: currentMode == ThemeMode.light
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                          color: currentMode == ThemeMode.light
-                              ? AppColors.primary
-                              : null,
-                        ),
-                      ),
-                      if (currentMode == ThemeMode.light) ...[
-                        const Spacer(),
-                        const Icon(
-                          Icons.check_rounded,
-                          color: AppColors.primary,
-                          size: 16,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                // Dark
-                PopupMenuItem(
-                  value: 'theme_dark',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.dark_mode_rounded,
-                        color: currentMode == ThemeMode.dark
-                            ? AppColors.primary
-                            : Colors.grey,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'โหมดมืด',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: currentMode == ThemeMode.dark
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                          color: currentMode == ThemeMode.dark
-                              ? AppColors.primary
-                              : null,
-                        ),
-                      ),
-                      if (currentMode == ThemeMode.dark) ...[
-                        const Spacer(),
-                        const Icon(
-                          Icons.check_rounded,
-                          color: AppColors.primary,
-                          size: 16,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                // System
-                PopupMenuItem(
-                  value: 'theme_system',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.brightness_auto_rounded,
-                        color: currentMode == ThemeMode.system
-                            ? AppColors.primary
-                            : Colors.grey,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'ตามระบบ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: currentMode == ThemeMode.system
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                          color: currentMode == ThemeMode.system
-                              ? AppColors.primary
-                              : null,
-                        ),
-                      ),
-                      if (currentMode == ThemeMode.system) ...[
-                        const Spacer(),
-                        const Icon(
-                          Icons.check_rounded,
-                          color: AppColors.primary,
-                          size: 16,
-                        ),
-                      ],
-                    ],
+                  enabled: false,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: _ThemeModeSegmentedToggle(
+                    currentMode: currentMode,
+                    onThemeChanged: (mode) {
+                      ctx.read<ThemeCubit>().setTheme(mode);
+                      Navigator.pop(ctx);
+                    },
                   ),
                 ),
                 // ─── Danger zone ──────────────────────────────────
@@ -1091,13 +994,9 @@ class _DashboardViewState extends State<DashboardView> {
                     Container(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? const Color(0xFF0F172A)
+                            ? const Color(0xFF334155).withValues(alpha: 0.45)
                             : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: const Color(0xFFFDB813).withValues(alpha: 0.6),
-                          width: 1.4,
-                        ),
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -1464,3 +1363,101 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 }
+
+class _ThemeModeSegmentedToggle extends StatelessWidget {
+  final ThemeMode currentMode;
+  final ValueChanged<ThemeMode> onThemeChanged;
+
+  const _ThemeModeSegmentedToggle({
+    required this.currentMode,
+    required this.onThemeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final containerBg =
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+
+    final items = [
+      (ThemeMode.light, Icons.light_mode_rounded, 'สว่าง'),
+      (ThemeMode.dark, Icons.dark_mode_rounded, 'มืด'),
+      (ThemeMode.system, Icons.brightness_auto_rounded, 'ระบบ'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: containerBg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: items.map((item) {
+          final mode = item.$1;
+          final icon = item.$2;
+          final label = item.$3;
+          final isSelected = currentMode == mode;
+
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onThemeChanged(mode),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark ? const Color(0xFF334155) : Colors.white)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(9),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.25 : 0.08,
+                            ),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      icon,
+                      size: 14,
+                      color: isSelected
+                          ? AppColors.primaryOrange
+                          : (isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B)),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      label,
+                      style: GoogleFonts.prompt(
+                        fontSize: 12,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                            : (isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+

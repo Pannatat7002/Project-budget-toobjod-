@@ -237,38 +237,25 @@ class _TransactionsViewState extends State<TransactionsView> {
                           child: Container(
                             margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
+                              horizontal: 14,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: isDark
                                   ? const Color(0xFF1E293B)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.5,
-                                ),
-                                width: 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: isDark ? 0.15 : 0.08,
-                                  ),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.search_rounded,
-                                  size: 18,
-                                  color: AppColors.primary,
+                                  size: 20,
+                                  color: isDark
+                                      ? AppColors.darkTextMuted
+                                      : const Color(0xFF94A3B8),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: TextField(
                                     controller: _searchController,
@@ -277,16 +264,16 @@ class _TransactionsViewState extends State<TransactionsView> {
                                     decoration: InputDecoration(
                                       hintText: 'ค้นหาชื่อรายการ, ร้านค้า...',
                                       hintStyle: GoogleFonts.prompt(
-                                        fontSize: 13,
+                                        fontSize: 13.5,
                                         color: isDark
-                                            ? Colors.white38
-                                            : Colors.black38,
+                                            ? AppColors.darkTextMuted
+                                            : const Color(0xFF94A3B8),
                                       ),
                                       border: InputBorder.none,
                                       isDense: true,
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                        vertical: 7,
+                                        vertical: 10,
                                       ),
                                     ),
                                     style: GoogleFonts.prompt(
@@ -322,7 +309,7 @@ class _TransactionsViewState extends State<TransactionsView> {
                                   onPressed: _toggleSearch,
                                   style: TextButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
+                                      horizontal: 8,
                                       vertical: 4,
                                     ),
                                     minimumSize: Size.zero,
@@ -330,11 +317,11 @@ class _TransactionsViewState extends State<TransactionsView> {
                                         MaterialTapTargetSize.shrinkWrap,
                                   ),
                                   child: Text(
-                                    'ปิด',
+                                    'ยกเลิก',
                                     style: GoogleFonts.prompt(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.primary,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaryOrange,
                                     ),
                                   ),
                                 ),

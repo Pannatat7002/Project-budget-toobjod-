@@ -65,6 +65,12 @@ class AppConstants {
       colorValue: 0xFF14B8A6, // Teal
     ),
     CategoryItem(
+      id: 'transfer',
+      name: 'โอนย้ายเงิน',
+      iconCode: 0xe8d4, // swap_horiz
+      colorValue: 0xFF6366F1, // Indigo
+    ),
+    CategoryItem(
       id: 'other',
       name: 'อื่นๆ',
       iconCode: 0xe41d, // more_horiz
@@ -103,6 +109,12 @@ class AppConstants {
       name: 'งานเสริม & ฟรีแลนซ์',
       iconCode: 0xe3e3, // laptop_mac
       colorValue: 0xFF8B5CF6, // Purple
+    ),
+    CategoryItem(
+      id: 'transfer',
+      name: 'โอนย้ายเงิน',
+      iconCode: 0xe8d4, // swap_horiz
+      colorValue: 0xFF6366F1, // Indigo
     ),
     CategoryItem(
       id: 'other_income',

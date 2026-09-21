@@ -1,9 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../../domain/entities/bank_account_entity.dart';
 import '../../domain/repositories/account_repository.dart';
-import '../../../auto_sync/domain/entities/bank_profile.dart';
-import '../../../transactions/domain/entities/transaction_entity.dart';
 import 'account_state.dart';
 
 class AccountCubit extends Cubit<AccountState> {
@@ -16,9 +14,6 @@ class AccountCubit extends Cubit<AccountState> {
     try {
       final accounts = await repository.getAccounts();
       final isEyeHidden = await repository.getEyeViewPrivacy();
-      debugPrint(
-        '[AccountCubit] 💳 Loaded ${accounts.length} accounts: ${accounts.map((a) => "${a.bankId}(${a.accountName}, ID:${a.id})").toList()}',
-      );
       emit(state.copyWith(
         accounts: accounts,
         isEyeViewHidden: isEyeHidden,
@@ -27,123 +22,94 @@ class AccountCubit extends Cubit<AccountState> {
     } catch (e) {
       emit(state.copyWith(
         isLoading: false,
-        errorMessage: 'ไม่สามารถโหลดบัญชี: $e',
+        errorMessage: 'ไม่สามารถโหลดบัญชีได้: $e',
       ));
     }
   }
 
-  void selectBank(String? bankId) {
-    if (bankId == null) {
-      emit(state.copyWith(clearSelectedBank: true));
-    } else {
-      emit(state.copyWith(selectedBankId: bankId));
+  Future<void> addAccount(BankAccountEntity account) async {
+    try {
+      await repository.addOrUpdateAccount(account);
+      await loadAccounts();
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'ไม่สามารถเพิ่มบัญชีได้: $e'));
     }
   }
 
-  Future<void> toggleEyeView() async {
-    final nextVal = !state.isEyeViewHidden;
-    await repository.setEyeViewPrivacy(nextVal);
-    emit(state.copyWith(isEyeViewHidden: nextVal));
+  Future<void> updateAccount(BankAccountEntity account) async {
+    try {
+      await repository.addOrUpdateAccount(account);
+      await loadAccounts();
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'ไม่สามารถแก้ไขบัญชีได้: $e'));
+    }
   }
 
   Future<void> addOrUpdateAccount(BankAccountEntity account) async {
-    await repository.addOrUpdateAccount(account);
-    await loadAccounts();
+    try {
+      await repository.addOrUpdateAccount(account);
+      await loadAccounts();
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'ไม่สามารถบันทึกบัญชีได้: $e'));
+    }
   }
 
   Future<void> deleteAccount(String id) async {
-    await repository.deleteAccount(id);
-    await loadAccounts();
+    try {
+      await repository.deleteAccount(id);
+      await loadAccounts();
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'ไม่สามารถลบบัญชีได้: $e'));
+    }
   }
 
-  /// Auto-Discovery: Ensure an account exists for this bankId
-  Future<BankAccountEntity> ensureAccountForBank(
-    String bankId, {
-    String? accountMask,
-    String? bankName,
-    int? brandColor,
-  }) async {
-    // 1. Check in state
-    final existing = state.accounts.where((a) => a.bankId == bankId).toList();
-    if (existing.isNotEmpty) {
-      if (accountMask != null) {
-        final match = existing.where((a) => a.accountMask == accountMask).firstOrNull;
-        if (match != null) return match;
-      }
-      return existing.first;
-    }
-
-    // 2. Check in repository to prevent race conditions during rapid notifications
-    final repoAccounts = await repository.getAccounts();
-    final existingInRepo = repoAccounts.where((a) => a.bankId == bankId).toList();
-    if (existingInRepo.isNotEmpty) {
-      emit(state.copyWith(accounts: repoAccounts));
-      if (accountMask != null) {
-        final match = existingInRepo.where((a) => a.accountMask == accountMask).firstOrNull;
-        if (match != null) return match;
-      }
-      return existingInRepo.first;
-    }
-
-    // Auto-create new account
-    final profile = BankProfile.findById(bankId);
-    final finalName = bankName ?? profile?.name ?? bankId.toUpperCase();
-    final finalColor = brandColor ?? profile?.brandColor ?? 0xFF2563EB;
-    final newId = 'acc_${bankId}_${DateTime.now().millisecondsSinceEpoch % 10000}';
-
-    final newAccount = BankAccountEntity(
-      id: newId,
-      bankId: bankId,
-      bankName: finalName,
-      accountName: profile?.shortName ?? finalName,
-      accountMask: null,
-      currentBalance: 0.0,
-      brandColor: finalColor,
-      isAutoSyncActive: true,
-      createdAt: DateTime.now(),
-    );
-
-    await repository.addOrUpdateAccount(newAccount);
-    final updatedList = List<BankAccountEntity>.from(state.accounts)..add(newAccount);
-    emit(state.copyWith(accounts: updatedList));
-    return newAccount;
+  void selectBank(String? bankId) {
+    emit(state.copyWith(
+      selectedBankId: bankId,
+      clearSelectedBank: bankId == null,
+    ));
   }
 
-  /// Calculate balances for each account from transaction list
-  void refreshBalancesFromTransactions(List<TransactionEntity> transactions) {
+  Future<void> toggleEyeView() async {
+    final nextState = !state.isEyeViewHidden;
+    emit(state.copyWith(isEyeViewHidden: nextState));
+    await repository.setEyeViewPrivacy(nextState);
+  }
+
+  /// Recalculates balance of each account from transactions
+  /// including normal income, expense, and transfer (between source & target accounts)
+  Future<void> refreshBalancesFromTransactions(
+    List<TransactionEntity> transactions,
+  ) async {
     if (state.accounts.isEmpty) return;
 
-    final updated = state.accounts.map((acc) {
-      double incomeSum = 0.0;
-      double expenseSum = 0.0;
+    final updatedAccounts = state.accounts.map((acc) {
+      double current = 0.0;
 
-      for (final tx in transactions) {
-        final bool isMatch = (tx.bankAccountId != null && tx.bankAccountId!.isNotEmpty)
-            ? tx.bankAccountId == acc.id
-            : tx.bankId == acc.bankId;
-        if (isMatch) {
-          if (tx.type == TransactionType.income) {
-            incomeSum += tx.amount;
-          } else if (tx.type == TransactionType.expense) {
-            expenseSum += tx.amount;
+      for (final t in transactions) {
+        final isSourceMatch =
+            t.bankAccountId == acc.id || t.bankId == acc.bankId;
+        final isTargetMatch =
+            t.targetAccountId == acc.id || t.targetAccountId == acc.bankId;
+
+        if (t.isIncome && isSourceMatch) {
+          current += t.amount;
+        } else if (t.isExpense && isSourceMatch) {
+          current -= t.amount;
+        } else if (t.isTransfer) {
+          if (isSourceMatch) {
+            current -= t.amount;
+          }
+          if (isTargetMatch) {
+            current += t.amount;
           }
         }
       }
 
-      final balance = incomeSum - expenseSum;
-      return acc.copyWith(currentBalance: balance);
+      return acc.copyWith(currentBalance: current);
     }).toList();
 
-    // Guard: only emit if any balance actually changed
-    bool changed = false;
-    for (int i = 0; i < updated.length; i++) {
-      if (updated[i].currentBalance != state.accounts[i].currentBalance) {
-        changed = true;
-        break;
-      }
-    }
-    if (!changed) return;
-
-    emit(state.copyWith(accounts: updated));
+    emit(state.copyWith(accounts: updatedAccounts));
+    await repository.saveAccounts(updatedAccounts);
   }
 }

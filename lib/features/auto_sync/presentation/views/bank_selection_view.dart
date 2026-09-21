@@ -83,9 +83,8 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                         // Search Bar
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkCard : AppColors.lightBackground,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: borderColor),
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: TextField(
                             controller: _searchController,
@@ -98,10 +97,10 @@ class _BankSelectionViewState extends State<BankSelectionView> {
                             decoration: InputDecoration(
                               hintText: 'ค้นหาธนาคาร (เช่น กสิกร, SCB, TrueMoney)...',
                               hintStyle: TextStyle(fontSize: 13, color: subtextColor),
-                              prefixIcon: Icon(Icons.search, size: 20, color: subtextColor),
+                              prefixIcon: Icon(Icons.search_rounded, size: 20, color: subtextColor),
                               suffixIcon: _searchQuery.isNotEmpty
                                   ? IconButton(
-                                      icon: Icon(Icons.clear, size: 18, color: subtextColor),
+                                      icon: Icon(Icons.cancel_rounded, size: 18, color: subtextColor),
                                       onPressed: () {
                                         _searchController.clear();
                                         setState(() {
