@@ -168,17 +168,31 @@ class _TransactionsViewState extends State<TransactionsView> {
             }).toList();
             final groupedTransactions = _groupTransactionsByDate(transactions);
 
-            // Calculate monthly summary for the selected active month
-            final monthAllTxs = state.transactions.where((item) {
-              return item.date.year == activeMonth.year &&
-                  item.date.month == activeMonth.month;
+            // All transactions for the active month (used for monthly summary and export)
+            final monthAllTxs = state.transactions.where((t) {
+              return t.date.year == activeMonth.year &&
+                  t.date.month == activeMonth.month;
             }).toList();
-            final monthIncome = monthAllTxs
-                .where((t) => t.isIncome)
-                .fold(0.0, (sum, t) => sum + t.amount);
-            final monthExpense = monthAllTxs
-                .where((t) => !t.isIncome)
-                .fold(0.0, (sum, t) => sum + t.amount);
+
+            // Calculate monthly summary for the selected active month
+            final monthIncome = monthAllTxs.where((t) {
+              if (t.isIncome) return true;
+              if (t.isTransfer && state.selectedBankId != null) {
+                return (t.targetAccountId == state.selectedBankId ||
+                    (t.targetAccountId != null && t.targetAccountId!.toLowerCase().contains(state.selectedBankId!.toLowerCase())));
+              }
+              return false;
+            }).fold(0.0, (sum, t) => sum + t.amount);
+
+            final monthExpense = monthAllTxs.where((t) {
+              if (t.isExpense) return true;
+              if (t.isTransfer && state.selectedBankId != null) {
+                return (t.bankAccountId == state.selectedBankId ||
+                    t.bankId == state.selectedBankId ||
+                    (t.bankAccountId != null && t.bankAccountId!.toLowerCase().contains(state.selectedBankId!.toLowerCase())));
+              }
+              return false;
+            }).fold(0.0, (sum, t) => sum + t.amount);
             final monthNet = monthIncome - monthExpense;
 
             return Scaffold(
@@ -2210,7 +2224,11 @@ class _TransactionsViewState extends State<TransactionsView> {
       final date = items.first.date;
       final dailyNet = items.fold(
         0.0,
-        (sum, t) => sum + (t.isIncome ? t.amount : -t.amount),
+        (sum, t) {
+          if (t.isIncome) return sum + t.amount;
+          if (t.isExpense) return sum - t.amount;
+          return sum;
+        },
       );
 
       return _TransactionGroup(

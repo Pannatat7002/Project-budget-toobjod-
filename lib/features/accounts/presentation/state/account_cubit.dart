@@ -87,10 +87,12 @@ class AccountCubit extends Cubit<AccountState> {
       double current = 0.0;
 
       for (final t in transactions) {
-        final isSourceMatch =
-            t.bankAccountId == acc.id || t.bankId == acc.bankId;
-        final isTargetMatch =
-            t.targetAccountId == acc.id || t.targetAccountId == acc.bankId;
+        final isSourceMatch = t.bankAccountId == acc.id ||
+            t.bankId == acc.bankId ||
+            (t.bankAccountId != null && t.bankAccountId!.toLowerCase().contains(acc.bankId.toLowerCase()));
+        final isTargetMatch = t.targetAccountId == acc.id ||
+            t.targetAccountId == acc.bankId ||
+            (t.targetAccountId != null && (t.targetAccountId!.toLowerCase().contains(acc.bankId.toLowerCase()) || acc.bankId.toLowerCase().contains(t.targetAccountId!.toLowerCase())));
 
         if (t.isIncome && isSourceMatch) {
           current += t.amount;

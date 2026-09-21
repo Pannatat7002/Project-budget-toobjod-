@@ -211,7 +211,7 @@ class CashFlowBarChart extends StatelessWidget {
 
         if (tx.isIncome) {
           segments[idx].income += tx.amount;
-        } else {
+        } else if (tx.isExpense) {
           segments[idx].expense += tx.amount;
         }
       }
@@ -236,7 +236,7 @@ class CashFlowBarChart extends StatelessWidget {
         }
         if (tx.isIncome) {
           monthMap[key]!.income += tx.amount;
-        } else {
+        } else if (tx.isExpense) {
           monthMap[key]!.expense += tx.amount;
         }
       }

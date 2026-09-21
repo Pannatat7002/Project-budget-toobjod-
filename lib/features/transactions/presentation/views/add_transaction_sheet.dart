@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -12,6 +13,7 @@ import '../widgets/delete_transaction_dialog.dart';
 import '../../../accounts/domain/entities/bank_account_entity.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../../accounts/presentation/state/account_state.dart';
+import '../../../auto_sync/presentation/widgets/bank_logo_badge.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final TransactionEntity? existingTransaction;
@@ -70,6 +72,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   bool _showMoreOptions = false;
   String? _selectedAccountId;
   String? _selectedTargetAccountId;
+  String? _matchedTargetTransactionId;
+  bool _autoCreateTargetIncome = true;
+  bool _hasUserManuallyUnlinked = false;
 
   @override
   void initState() {
@@ -83,6 +88,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     _amountController = TextEditingController(
       text: existing != null ? existing.amount.toStringAsFixed(0) : '',
     );
+    _amountController.addListener(_onAmountChanged);
     _noteController = TextEditingController(text: existing?.note ?? '');
     _showMoreOptions = existing != null && (existing.note != null && existing.note!.isNotEmpty);
     _selectedTargetAccountId = existing?.targetAccountId;
@@ -101,10 +107,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             : AppConstants.defaultIncomeCategories);
 
     if (existing != null) {
-      _selectedCategory = initialList.firstWhere(
-        (c) => c.id == existing.categoryId,
-        orElse: () => initialList.first,
-      );
+      _selectedCategory = initialList.where((c) => c.id == existing.categoryId).firstOrNull ?? initialList.first;
     } else {
       _selectedCategory = initialList.first;
     }
@@ -132,7 +135,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         if (existing.bankAccountId != null && accState.accounts.any((a) => a.id == existing.bankAccountId)) {
           _selectedAccountId = existing.bankAccountId;
         } else if (existing.bankId != null && accState.accounts.any((a) => a.bankId == existing.bankId)) {
-          _selectedAccountId = accState.accounts.firstWhere((a) => a.bankId == existing.bankId).id;
+          _selectedAccountId = accState.accounts.where((a) => a.bankId == existing.bankId).firstOrNull?.id;
         }
       }
 
@@ -140,7 +143,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         if (widget.initialBankAccountId != null && accState.accounts.any((a) => a.id == widget.initialBankAccountId)) {
           _selectedAccountId = widget.initialBankAccountId;
         } else if (widget.initialBankId != null && accState.accounts.any((a) => a.bankId == widget.initialBankId)) {
-          _selectedAccountId = accState.accounts.firstWhere((a) => a.bankId == widget.initialBankId).id;
+          _selectedAccountId = accState.accounts.where((a) => a.bankId == widget.initialBankId).firstOrNull?.id;
         } else if (accState.selectedBankId != null) {
           final matched = accState.accounts.where((a) => a.bankId == accState.selectedBankId).toList();
           if (matched.isNotEmpty) {
@@ -164,11 +167,20 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountFocusNode.dispose();
     _titleController.dispose();
     _amountController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  void _onAmountChanged() {
+    if (mounted) {
+      setState(() {
+        _hasUserManuallyUnlinked = false;
+      });
+    }
   }
 
   void _onTypeChanged(TransactionType type) {
@@ -220,7 +232,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       final amount = double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0.0;
       final id = widget.existingTransaction?.id ?? const Uuid().v4();
@@ -254,6 +266,12 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         finalTitle = 'โอนย้าย: ${selectedAcc.shortName} ➜ ${selectedTargetAcc.shortName}';
       }
 
+      final targetAccId = isTransferMode
+          ? (_autoCreateTargetIncome || _matchedTargetTransactionId != null
+              ? (selectedTargetAcc?.id ?? _selectedTargetAccountId)
+              : null)
+          : null;
+
       final transaction = TransactionEntity(
         id: id,
         title: finalTitle,
@@ -269,17 +287,26 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         bankAccountId: selectedAcc?.id ?? widget.existingTransaction?.bankAccountId,
         bankShortName: selectedAcc?.shortName ?? widget.existingTransaction?.bankShortName,
         accountMask: selectedAcc?.accountMask ?? widget.existingTransaction?.accountMask,
-        targetAccountId: isTransferMode ? (selectedTargetAcc?.id ?? _selectedTargetAccountId) : null,
+        targetAccountId: targetAccId,
       );
 
       final cubit = context.read<TransactionCubit>();
-      if (widget.existingTransaction != null) {
-        cubit.updateTransaction(transaction);
-      } else {
-        cubit.addTransaction(transaction);
+      final accountCubit = context.read<AccountCubit>();
+
+      // 1. If matched with an existing incoming transaction on the target bank, remove duplicate
+      if (isTransferMode && _matchedTargetTransactionId != null) {
+        await cubit.deleteTransaction(_matchedTargetTransactionId!);
       }
 
-      context.read<AccountCubit>().refreshBalancesFromTransactions(cubit.state.transactions);
+      // 2. Save current transaction
+      if (widget.existingTransaction != null) {
+        await cubit.updateTransaction(transaction);
+      } else {
+        await cubit.addTransaction(transaction);
+      }
+
+      // 3. Recalculate balances with the updated transactions list
+      await accountCubit.refreshBalancesFromTransactions(cubit.state.transactions);
 
       if (mounted) {
         Navigator.pop(context);
@@ -798,6 +825,534 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     );
   }
 
+  List<TransactionEntity> _getMatchingTargetTransactions(
+    List<TransactionEntity> allTransactions,
+    BankAccountEntity? targetAccount,
+  ) {
+    if (targetAccount == null) return [];
+    final rawAmount = _amountController.text.replaceAll(',', '').trim();
+    final amount = double.tryParse(rawAmount) ?? 0.0;
+    if (amount <= 0) return [];
+
+    final existingId = widget.existingTransaction?.id;
+    final List<TransactionEntity> result = [];
+    for (final t in allTransactions) {
+      if (t.id == existingId) continue;
+      final tBankId = (t.bankAccountId ?? t.bankId ?? '').toLowerCase();
+      final targetAccId = targetAccount.id.toLowerCase();
+      final targetBankId = targetAccount.bankId.toLowerCase();
+
+      final isTargetMatch = t.bankAccountId == targetAccount.id ||
+          t.bankId == targetAccount.bankId ||
+          (tBankId.isNotEmpty &&
+              (tBankId.contains(targetAccId) ||
+                  tBankId.contains(targetBankId) ||
+                  targetAccId.contains(tBankId)));
+      if (!isTargetMatch) continue;
+
+      final isAmountMatch = (t.amount - amount).abs() < 0.01;
+      if (!isAmountMatch) continue;
+
+      final isIncomeCandidate = t.isIncome || (!t.isTransfer && t.isUnknownCategory);
+      if (!isIncomeCandidate) continue;
+
+      final dayDiff = t.date.difference(_selectedDate).inDays.abs();
+      if (dayDiff <= 5) {
+        result.add(t);
+      }
+    }
+    return result;
+  }
+
+  void _showMatchCandidatePickerSheet(
+    BuildContext context,
+    bool isDark,
+    List<TransactionEntity> candidates,
+    BankAccountEntity targetAcc,
+  ) {
+    final fmt = NumberFormat('#,##0.00');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.65,
+          ),
+          padding: EdgeInsets.only(
+            top: 14,
+            left: 16,
+            right: 16,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkBorder : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'เลือกรายการเงินเข้าใน ${targetAcc.shortName}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: candidates.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, idx) {
+                    if (idx == candidates.length) {
+                      final isSelected = _matchedTargetTransactionId == null;
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _matchedTargetTransactionId = null;
+                            _hasUserManuallyUnlinked = true;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF6366F1).withValues(alpha: isDark ? 0.22 : 0.12)
+                                : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                            borderRadius: BorderRadius.circular(14),
+                            border: isSelected
+                                ? Border.all(color: const Color(0xFF6366F1), width: 1.5)
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF6366F1)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'ไม่จับคู่ (สร้างรายการใหม่ไปยังปลายทาง)',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                size: 18,
+                                color: isSelected
+                                    ? const Color(0xFF6366F1)
+                                    : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    final candidate = candidates[idx];
+                    final isSelected = _matchedTargetTransactionId == candidate.id;
+
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _matchedTargetTransactionId = candidate.id;
+                          _hasUserManuallyUnlinked = false;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF6366F1).withValues(alpha: isDark ? 0.22 : 0.12)
+                              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                          borderRadius: BorderRadius.circular(14),
+                          border: isSelected
+                              ? Border.all(color: const Color(0xFF6366F1), width: 1.5)
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.arrow_downward_rounded, size: 16, color: Color(0xFF10B981)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    candidate.title.isNotEmpty ? candidate.title : 'เงินเข้า',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    DateFormatter.formatDateTime(candidate.date),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '+฿${fmt.format(candidate.amount)}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF10B981),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                              size: 18,
+                              color: isSelected
+                                  ? const Color(0xFF6366F1)
+                                  : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTransferMatchingWidget(
+    BuildContext context,
+    bool isDark,
+    BankAccountEntity? targetAcc,
+  ) {
+    if (targetAcc == null) return const SizedBox.shrink();
+
+    final txState = context.watch<TransactionCubit>().state;
+    final candidates = _getMatchingTargetTransactions(txState.transactions, targetAcc);
+
+    if (candidates.isNotEmpty && !_hasUserManuallyUnlinked) {
+      if (_matchedTargetTransactionId == null ||
+          !candidates.any((c) => c.id == _matchedTargetTransactionId)) {
+        _matchedTargetTransactionId = candidates.first.id;
+      }
+    }
+
+    final isAnyMatched = _matchedTargetTransactionId != null &&
+        candidates.any((c) => c.id == _matchedTargetTransactionId);
+
+    final fmt = NumberFormat('#,##0.00');
+
+    // Case 1: Matching candidates found in target account!
+    if (candidates.isNotEmpty) {
+      return Container(
+        margin: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1B4B).withValues(alpha: 0.5) : const Color(0xFFEEF2FF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.40 : 0.25),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Title with Badge
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.35 : 0.20),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded, size: 13, color: Color(0xFF6366F1)),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    candidates.length == 1
+                        ? 'ตรวจพบยอดเงินเข้าใน ${targetAcc.shortName}!'
+                        : 'ตรวจพบยอดเงินเข้าใน ${targetAcc.shortName} (${candidates.length} รายการ):',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? const Color(0xFFC7D2FE) : const Color(0xFF4338CA),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Render ALL candidate options directly on screen
+            for (int i = 0; i < candidates.length; i++) ...[
+              () {
+                final candidate = candidates[i];
+                final isSelected = _matchedTargetTransactionId == candidate.id;
+
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _matchedTargetTransactionId = candidate.id;
+                      _hasUserManuallyUnlinked = false;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 140),
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? (isDark ? const Color(0xFF312E81).withValues(alpha: 0.6) : Colors.white)
+                          : (isDark ? const Color(0xFF1E293B).withValues(alpha: 0.4) : const Color(0xFFF8FAFC)),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF6366F1)
+                            : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                              size: 16,
+                              color: isSelected
+                                  ? const Color(0xFF6366F1)
+                                  : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                            ),
+                            const SizedBox(width: 8),
+                            BankLogoBadge(
+                              bankId: targetAcc.bankId,
+                              fallbackShortName: targetAcc.shortName,
+                              size: 20,
+                              borderRadius: 6,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    candidate.title.isNotEmpty
+                                        ? candidate.title
+                                        : 'เงินเข้า ${targetAcc.shortName}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    DateFormatter.formatDateTime(candidate.date),
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '+฿${fmt.format(candidate.amount)}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.income,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isSelected) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '• จับคู่และรวมยอด (ลบรายการเงินเข้าเดิมออกเพื่อป้องกันยอดใน ${targetAcc.shortName} ซ้ำ)',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF6366F1),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }(),
+            ],
+
+            // Option: Do not combine (Create new)
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _matchedTargetTransactionId = null;
+                  _hasUserManuallyUnlinked = true;
+                });
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: !isAnyMatched
+                      ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+                      : (isDark ? const Color(0xFF1E293B).withValues(alpha: 0.3) : const Color(0xFFF8FAFC)),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: !isAnyMatched
+                        ? const Color(0xFF6366F1)
+                        : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                    width: !isAnyMatched ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      !isAnyMatched ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      size: 16,
+                      color: !isAnyMatched
+                          ? const Color(0xFF6366F1)
+                          : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'ไม่รวมรายการ (สร้างรายการใหม่ไปยัง ${targetAcc.shortName})',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Case 2: No match candidate found -> Show clean auto-create option
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.add_circle_outline_rounded,
+            size: 16,
+            color: _autoCreateTargetIncome
+                ? const Color(0xFF10B981)
+                : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ปรับยอดเงินเข้า ${targetAcc.shortName} อัตโนมัติ',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  _autoCreateTargetIncome
+                      ? 'คำนวณยอดคงเหลือของทั้งสองบัญชีให้ตรงกัน'
+                      : 'บันทึกเฉพาะยอดโอนออกจากต้นทาง',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Transform.scale(
+            scale: 0.75,
+            child: Switch.adaptive(
+              value: _autoCreateTargetIncome,
+              activeColor: const Color(0xFF10B981),
+              onChanged: (val) => setState(() => _autoCreateTargetIncome = val),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1005,7 +1560,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               focusNode: _amountFocusNode,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                              autofocus: true,
+                              autofocus: widget.existingTransaction == null,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                               style: TextStyle(
@@ -1035,66 +1590,68 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Card 2: Category Selector Row (Compact & Tap to pick)
-                    InkWell(
-                      onTap: () => _showCategoryPickerSheet(context, isDark),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: Image.asset(
-                                _selectedCategory.imageAsset,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => CategoryIconBadge(
-                                  icon: _selectedCategory.icon,
-                                  color: _selectedCategory.color,
-                                  size: 28,
-                                  iconSize: 14,
+                    // Card 2: Category Selector Row (Hidden in Transfer mode)
+                    if (_selectedType != TransactionType.transfer) ...[
+                      InkWell(
+                        onTap: () => _showCategoryPickerSheet(context, isDark),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 28,
+                                height: 28,
+                                child: Image.asset(
+                                  _selectedCategory.imageAsset,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => CategoryIconBadge(
+                                    icon: _selectedCategory.icon,
+                                    color: _selectedCategory.color,
+                                    size: 28,
+                                    iconSize: 14,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'หมวดหมู่',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'หมวดหมู่',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    _selectedCategory.name,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    Text(
+                                      _selectedCategory.name,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18,
-                              color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
-                            ),
-                          ],
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 18,
+                                color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
+                      const SizedBox(height: 8),
+                    ],
 
                     // Card 3: Account Selector Row (บัญชีต้นทาง & บัญชีปลายทาง)
                     BlocBuilder<AccountCubit, AccountState>(
@@ -1115,178 +1672,185 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                 : null);
 
                         if (isTransferMode) {
-                          return Row(
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Source Account (Left)
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () => _showAccountPickerSheet(context, isDark),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                              Row(
+                                children: [
+                                  // Source Account (Left)
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => _showAccountPickerSheet(context, isDark),
                                       borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        if (selectedAcc != null) ...[
-                                          Container(
-                                            width: 26,
-                                            height: 26,
-                                            decoration: BoxDecoration(
-                                              color: Color(selectedAcc.brandColor),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: ClipOval(
-                                              child: Image.asset(
-                                                selectedAcc.logoAsset,
-                                                cacheWidth: 78,
-                                                cacheHeight: 78,
-                                                fit: BoxFit.contain,
-                                                errorBuilder: (_, __, ___) => const Icon(
-                                                  Icons.account_balance,
-                                                  color: Colors.white,
-                                                  size: 13,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            if (selectedAcc != null) ...[
+                                              Container(
+                                                width: 26,
+                                                height: 26,
+                                                decoration: BoxDecoration(
+                                                  color: Color(selectedAcc.brandColor),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: ClipOval(
+                                                  child: Image.asset(
+                                                    selectedAcc.logoAsset,
+                                                    cacheWidth: 78,
+                                                    cacheHeight: 78,
+                                                    fit: BoxFit.contain,
+                                                    errorBuilder: (_, __, ___) => const Icon(
+                                                      Icons.account_balance,
+                                                      color: Colors.white,
+                                                      size: 13,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'ต้นทาง (ออก)',
-                                                  style: TextStyle(
-                                                    fontSize: 9.5,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  selectedAcc.shortName,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ] else ...[
-                                          const Icon(Icons.account_balance_wallet_outlined, size: 18),
-                                          const SizedBox(width: 6),
-                                          const Expanded(
-                                            child: Text(
-                                              'เลือกต้นทาง',
-                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                              maxLines: 1,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Arrow Middle Indicator
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
-                                child: Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.25 : 0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 14,
-                                    color: Color(0xFF6366F1),
-                                  ),
-                                ),
-                              ),
-                              // Target Account (Right)
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () => _showTargetAccountPickerSheet(context, isDark),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        if (selectedTargetAcc != null) ...[
-                                          Container(
-                                            width: 26,
-                                            height: 26,
-                                            decoration: BoxDecoration(
-                                              color: Color(selectedTargetAcc.brandColor),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: ClipOval(
-                                              child: Image.asset(
-                                                selectedTargetAcc.logoAsset,
-                                                cacheWidth: 78,
-                                                cacheHeight: 78,
-                                                fit: BoxFit.contain,
-                                                errorBuilder: (_, __, ___) => const Icon(
-                                                  Icons.account_balance,
-                                                  color: Colors.white,
-                                                  size: 13,
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'ต้นทาง (ออก)',
+                                                      style: TextStyle(
+                                                        fontSize: 9.5,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      selectedAcc.shortName,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'ปลายทาง (เข้า)',
-                                                  style: TextStyle(
-                                                    fontSize: 9.5,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  selectedTargetAcc.shortName,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                                  ),
+                                            ] else ...[
+                                              const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                                              const SizedBox(width: 6),
+                                              const Expanded(
+                                                child: Text(
+                                                  'เลือกต้นทาง',
+                                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
                                                 ),
-                                              ],
-                                            ),
-                                          ),
-                                        ] else ...[
-                                          const Icon(Icons.account_balance_wallet_outlined, size: 18),
-                                          const SizedBox(width: 6),
-                                          const Expanded(
-                                            child: Text(
-                                              'เลือกปลายทาง',
-                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                              maxLines: 1,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
+                                  // Arrow Middle Indicator
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.25 : 0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 14,
+                                        color: Color(0xFF6366F1),
+                                      ),
+                                    ),
+                                  ),
+                                  // Target Account (Right)
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => _showTargetAccountPickerSheet(context, isDark),
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            if (selectedTargetAcc != null) ...[
+                                              Container(
+                                                width: 26,
+                                                height: 26,
+                                                decoration: BoxDecoration(
+                                                  color: Color(selectedTargetAcc.brandColor),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: ClipOval(
+                                                  child: Image.asset(
+                                                    selectedTargetAcc.logoAsset,
+                                                    cacheWidth: 78,
+                                                    cacheHeight: 78,
+                                                    fit: BoxFit.contain,
+                                                    errorBuilder: (_, __, ___) => const Icon(
+                                                      Icons.account_balance,
+                                                      color: Colors.white,
+                                                      size: 13,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'ปลายทาง (เข้า)',
+                                                      style: TextStyle(
+                                                        fontSize: 9.5,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      selectedTargetAcc.shortName,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ] else ...[
+                                              const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                                              const SizedBox(width: 6),
+                                              const Expanded(
+                                                child: Text(
+                                                  'เลือกปลายทาง',
+                                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                                  maxLines: 1,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              _buildTransferMatchingWidget(context, isDark, selectedTargetAcc),
                             ],
                           );
                         }

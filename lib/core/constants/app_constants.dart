@@ -65,24 +65,19 @@ class AppConstants {
       colorValue: 0xFF14B8A6, // Teal
     ),
     CategoryItem(
-      id: 'transfer',
-      name: 'โอนย้ายเงิน',
-      iconCode: 0xe8d4, // swap_horiz
-      colorValue: 0xFF6366F1, // Indigo
-    ),
-    CategoryItem(
       id: 'other',
       name: 'อื่นๆ',
       iconCode: 0xe41d, // more_horiz
       colorValue: 0xFF64748B, // Slate
     ),
-    CategoryItem(
-      id: 'reconciliation_expense',
-      name: 'ปรับปรุงยอดเงินลด',
-      iconCode: 0xe8af, // tune
-      colorValue: 0xFF64748B, // Slate
-    ),
   ];
+
+  static const CategoryItem transferCategory = CategoryItem(
+    id: 'transfer',
+    name: 'โอนย้ายเงิน',
+    iconCode: 0xe8d4, // swap_horiz
+    colorValue: 0xFF6366F1, // Indigo
+  );
 
   // Default Categories for Income
   static const List<CategoryItem> defaultIncomeCategories = [

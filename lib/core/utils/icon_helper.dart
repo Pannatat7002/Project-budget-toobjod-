@@ -95,8 +95,57 @@ class IconHelper {
   }
 
   /// Get 3D asset image path for category if available
-  static String? getCategoryAsset(String? categoryId) {
-    if (categoryId == null || categoryId.isEmpty) return null;
-    return 'assets/images/categories/cat_$categoryId.png';
+  static String? getCategoryAsset(String? categoryId, {String? categoryName, String? title}) {
+    if (categoryId != null &&
+        categoryId.isNotEmpty &&
+        categoryId != 'other' &&
+        categoryId != 'other_income' &&
+        categoryId != 'uncategorized' &&
+        categoryId != 'unknown') {
+      return 'assets/images/categories/cat_$categoryId.png';
+    }
+
+    final query = '${categoryName ?? ''} ${title ?? ''}'.toLowerCase();
+    if (query.contains('อาหาร') || query.contains('กิน') || query.contains('ข้าว') || query.contains('food') || query.contains('cafe') || query.contains('กาแฟ') || query.contains('ขนม') || query.contains('ชาบู') || query.contains('kfc') || query.contains('grab food')) {
+      return 'assets/images/categories/cat_food.png';
+    }
+    if (query.contains('เดินทาง') || query.contains('รถ') || query.contains('น้ำมัน') || query.contains('bts') || query.contains('mrt') || query.contains('grab') || query.contains('taxi') || query.contains('transport')) {
+      return 'assets/images/categories/cat_transport.png';
+    }
+    if (query.contains('บ้าน') || query.contains('ห้อง') || query.contains('ไฟ') || query.contains('น้ำ') || query.contains('เน็ต') || query.contains('บิล') || query.contains('bills') || query.contains('ที่พัก')) {
+      return 'assets/images/categories/cat_bills.png';
+    }
+    if (query.contains('บัตร') || query.contains('หนี้') || query.contains('งวด') || query.contains('card') || query.contains('loan') || query.contains('ผ่อน')) {
+      return 'assets/images/categories/cat_debts.png';
+    }
+    if (query.contains('ช้อป') || query.contains('ซื้อ') || query.contains('shop') || query.contains('เซเว่น') || query.contains('7-eleven') || query.contains('ตลาด') || query.contains('ของใช้') || query.contains('shopee') || query.contains('lazada')) {
+      return 'assets/images/categories/cat_shopping.png';
+    }
+    if (query.contains('เที่ยว') || query.contains('หนัง') || query.contains('เกม') || query.contains('บันเทิง') || query.contains('netflix') || query.contains('entertainment')) {
+      return 'assets/images/categories/cat_entertainment.png';
+    }
+    if (query.contains('ยา') || query.contains('แพทย์') || query.contains('หมอ') || query.contains('สุขภาพ') || query.contains('health') || query.contains('clinic') || query.contains('โรงพยาบาล')) {
+      return 'assets/images/categories/cat_health.png';
+    }
+    if (query.contains('ออม') || query.contains('ฝาก') || query.contains('savings')) {
+      return 'assets/images/categories/cat_savings.png';
+    }
+    if (query.contains('เดือน') || query.contains('เงินเดือน') || query.contains('salary') || query.contains('ค่าจ้าง')) {
+      return 'assets/images/categories/cat_salary.png';
+    }
+    if (query.contains('โบนัส') || query.contains('bonus') || query.contains('ของขวัญ')) {
+      return 'assets/images/categories/cat_bonus.png';
+    }
+    if (query.contains('ลงทุน') || query.contains('หุ้น') || query.contains('ปันผล') || query.contains('invest') || query.contains('ดอกเบี้ย')) {
+      return 'assets/images/categories/cat_investment.png';
+    }
+    if (query.contains('ฟรีแลนซ์') || query.contains('งานเสริม') || query.contains('freelance')) {
+      return 'assets/images/categories/cat_freelance.png';
+    }
+
+    if (categoryId != null && categoryId.isNotEmpty) {
+      return 'assets/images/categories/cat_$categoryId.png';
+    }
+    return null;
   }
 }

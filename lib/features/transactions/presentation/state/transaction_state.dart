@@ -49,13 +49,30 @@ class TransactionState extends Equatable {
     );
   }
 
+  bool _isSourceMatch(TransactionEntity t, String bankId) {
+    if (t.bankAccountId == bankId || t.bankId == bankId) return true;
+    final bId = bankId.toLowerCase();
+    if (t.bankAccountId != null && t.bankAccountId!.toLowerCase().contains(bId)) return true;
+    if (t.bankId != null && t.bankId!.toLowerCase() == bId) return true;
+    return false;
+  }
+
+  bool _isTargetMatch(TransactionEntity t, String bankId) {
+    if (!t.isTransfer || t.targetAccountId == null) return false;
+    if (t.targetAccountId == bankId) return true;
+    final bId = bankId.toLowerCase();
+    if (t.targetAccountId!.toLowerCase().contains(bId)) return true;
+    if (bId.contains(t.targetAccountId!.toLowerCase())) return true;
+    return false;
+  }
+
   /// Get transactions for a specific bank account or bank profile ID
   /// (includes incoming and outgoing transfers)
   List<TransactionEntity> getTransactionsForBank(String? bankId) {
     if (bankId == null) return transactions;
     return transactions.where((t) {
-      final isSource = t.bankAccountId == bankId || t.bankId == bankId;
-      final isTarget = t.isTransfer && t.targetAccountId == bankId;
+      final isSource = _isSourceMatch(t, bankId);
+      final isTarget = _isTargetMatch(t, bankId);
       return isSource || isTarget;
     }).toList();
   }
@@ -66,9 +83,9 @@ class TransactionState extends Equatable {
     if (bankId == null) return totalIncome;
     return transactions.where((t) {
       if (t.isIncome) {
-        return t.bankAccountId == bankId || t.bankId == bankId;
+        return _isSourceMatch(t, bankId);
       } else if (t.isTransfer) {
-        return t.targetAccountId == bankId;
+        return _isTargetMatch(t, bankId);
       }
       return false;
     }).fold(0.0, (sum, t) => sum + t.amount);
@@ -80,9 +97,9 @@ class TransactionState extends Equatable {
     if (bankId == null) return totalExpense;
     return transactions.where((t) {
       if (t.isExpense) {
-        return t.bankAccountId == bankId || t.bankId == bankId;
+        return _isSourceMatch(t, bankId);
       } else if (t.isTransfer) {
-        return t.bankAccountId == bankId || t.bankId == bankId;
+        return _isSourceMatch(t, bankId);
       }
       return false;
     }).fold(0.0, (sum, t) => sum + t.amount);
@@ -99,15 +116,15 @@ class TransactionState extends Equatable {
     return transactions.where((t) {
       // 1. Bank Filter (Checks both source and target for transfers)
       if (selectedBankId != null) {
-        final isSource = t.bankAccountId == selectedBankId || t.bankId == selectedBankId;
-        final isTarget = t.isTransfer && t.targetAccountId == selectedBankId;
+        final isSource = _isSourceMatch(t, selectedBankId!);
+        final isTarget = _isTargetMatch(t, selectedBankId!);
         if (!isSource && !isTarget) return false;
       }
 
       // 2. Type Filter
       if (filterType == TransactionFilterType.income) {
         if (t.isTransfer) {
-          if (selectedBankId != null && t.targetAccountId != selectedBankId) {
+          if (selectedBankId != null && !_isTargetMatch(t, selectedBankId!)) {
             return false;
           }
         } else if (!t.isIncome) {
@@ -115,8 +132,7 @@ class TransactionState extends Equatable {
         }
       } else if (filterType == TransactionFilterType.expense) {
         if (t.isTransfer) {
-          if (selectedBankId != null &&
-              (t.bankAccountId != selectedBankId && t.bankId != selectedBankId)) {
+          if (selectedBankId != null && !_isSourceMatch(t, selectedBankId!)) {
             return false;
           }
         } else if (!t.isExpense) {
