@@ -308,4 +308,14 @@ class AutoSyncRepositoryImpl implements AutoSyncRepository {
   Future<void> setEnabledBankPackages(List<String> packages) {
     return localDataSource.setEnabledBankPackages(packages);
   }
+
+  @override
+  Future<List<String>> getDismissedBannerTransactionIds() {
+    return localDataSource.getDismissedBannerTransactionIds();
+  }
+
+  @override
+  Future<void> saveDismissedBannerTransactionIds(List<String> ids) {
+    return localDataSource.saveDismissedBannerTransactionIds(ids);
+  }
 }

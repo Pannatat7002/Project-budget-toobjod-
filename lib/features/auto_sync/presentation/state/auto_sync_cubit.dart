@@ -39,6 +39,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       final packages = await repository.getEnabledBankPackages();
       final pending = await repository.getPendingTransactions();
       final history = await repository.getSwipeHistory();
+      final dismissedBannerIds = await repository.getDismissedBannerTransactionIds();
 
       // Auto-backfill: Ensure all detected/pending items are in swipeHistory immediately
       final historyIds = history.map((h) => h.id).toSet();
@@ -59,7 +60,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
       }
 
       debugPrint(
-        '[AutoSyncCubit] Initialized. isGranted=$isGranted, isConnected=$isConnected, isBatteryIgnored=$isBatteryIgnored, isAutoSync=$isAutoSync, pendingCount=${pending.length}, historyCount=${finalHistory.length}',
+        '[AutoSyncCubit] Initialized. isGranted=$isGranted, isConnected=$isConnected, isBatteryIgnored=$isBatteryIgnored, isAutoSync=$isAutoSync, pendingCount=${pending.length}, historyCount=${finalHistory.length}, dismissedBannerCount=${dismissedBannerIds.length}',
       );
 
       emit(
@@ -72,6 +73,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
           enabledBankPackages: packages,
           pendingTransactions: pending,
           swipeHistory: finalHistory,
+          dismissedBannerTransactionIds: dismissedBannerIds,
           isLoading: false,
         ),
       );
@@ -642,9 +644,19 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
     );
   }
 
-  /// Dismisses only the Dashboard banner card without removing pending transactions from notification bell/drawer
-  void dismissDashboardBanner() {
-    emit(state.copyWith(isDashboardBannerDismissed: true));
+  /// Dismisses only the Dashboard banner card for all current pending transactions
+  /// It persists the dismissed IDs so it will NOT show again on app reopen/refresh,
+  /// UNLESS a new transaction is detected!
+  Future<void> dismissDashboardBanner() async {
+    final currentPendingIds = state.pendingTransactions.map((t) => t.id).toList();
+    final updatedDismissed = {...state.dismissedBannerTransactionIds, ...currentPendingIds}.toList();
+    await repository.saveDismissedBannerTransactionIds(updatedDismissed);
+    emit(
+      state.copyWith(
+        isDashboardBannerDismissed: true,
+        dismissedBannerTransactionIds: updatedDismissed,
+      ),
+    );
   }
 
   /// User dismissed / closed dialog -> Keep auto-saved transaction

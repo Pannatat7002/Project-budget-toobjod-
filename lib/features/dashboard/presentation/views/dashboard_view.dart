@@ -201,7 +201,11 @@ class _DashboardViewState extends State<DashboardView> {
                   value: 'security_settings',
                   child: Row(
                     children: [
-                      Icon(Icons.shield_rounded, color: AppColors.primaryOrange, size: 18),
+                      Icon(
+                        Icons.shield_rounded,
+                        color: AppColors.primaryOrange,
+                        size: 18,
+                      ),
                       SizedBox(width: 10),
                       Text(
                         'ความปลอดภัย & รหัส PIN',
@@ -347,7 +351,10 @@ class _DashboardViewState extends State<DashboardView> {
                       SizedBox(width: 10),
                       Text(
                         'ล้างข้อมูลทั้งหมด',
-                        style: TextStyle(color: AppColors.expense, fontSize: 13),
+                        style: TextStyle(
+                          color: AppColors.expense,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -439,15 +446,15 @@ class _DashboardViewState extends State<DashboardView> {
 
                       // 2. Unified Dashboard Actions Grid (ซ้าย: วิเคราะห์ขยายเต็ม / ขวา: รับเงินเข้า, จ่ายเงินออก)
                       DashboardActionsGrid(
-                        onAddIncome: () => AddTransactionSheet.show(
+                        onAddIncome: () => _handleTransactionAction(
                           context,
-                          initialType: TransactionType.income,
-                          initialBankId: accountState.selectedBankId,
+                          accountState,
+                          TransactionType.income,
                         ),
-                        onAddExpense: () => AddTransactionSheet.show(
+                        onAddExpense: () => _handleTransactionAction(
                           context,
-                          initialType: TransactionType.expense,
-                          initialBankId: accountState.selectedBankId,
+                          accountState,
+                          TransactionType.expense,
                         ),
                         onAnalytics: () => context.push('/analytics'),
                       ),
@@ -537,8 +544,13 @@ class _DashboardViewState extends State<DashboardView> {
                                   title: selectedBankId != null
                                       ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
                                       : 'ยังไม่มีรายการเลยนะโฮ่ง!',
-                                  onAction: () =>
-                                      AddTransactionSheet.show(context),
+                                  onAction: () {
+                                    if (accountState.accounts.isEmpty) {
+                                      _showNoBankWarningDialog(context);
+                                    } else {
+                                      AddTransactionSheet.show(context);
+                                    }
+                                  },
                                 )
                               : Column(
                                   children: [
@@ -1309,6 +1321,143 @@ class _DashboardViewState extends State<DashboardView> {
               foregroundColor: Colors.white,
             ),
             child: const Text('ล้างข้อมูล'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleTransactionAction(
+    BuildContext context,
+    AccountState accountState,
+    TransactionType type,
+  ) {
+    if (accountState.accounts.isEmpty) {
+      _showNoBankWarningDialog(context);
+      return;
+    }
+
+    AddTransactionSheet.show(
+      context,
+      initialType: type,
+      initialBankId: accountState.selectedBankId,
+    );
+  }
+
+  void _showNoBankWarningDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textSecondary =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        icon: Center(
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFFDB813).withValues(alpha: 0.15),
+              border: Border.all(
+                color: const Color(0xFFFDB813),
+                width: 2,
+              ),
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/mascot_dog_peek.png',
+                cacheWidth: 160,
+                cacheHeight: 160,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.pets,
+                  color: Color(0xFFFDB813),
+                  size: 32,
+                ),
+              ),
+            ),
+          ),
+        ),
+        title: Text(
+          'ยังไม่มีบัญชีธนาคาร',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.prompt(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'กรุณาเพิ่มหรือเชื่อมต่อบัญชีธนาคาร\nอย่างน้อย 1 บัญชี เพื่อเริ่มต้นทำรายการ 🐾',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.prompt(
+                fontSize: 13.5,
+                color: textSecondary,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.push('/bank-selection');
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: Text(
+                    'เพิ่มบัญชีธนาคาร & เชื่อมต่อ',
+                    style: GoogleFonts.prompt(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primaryOrange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    'ปิด / ไว้ทีหลัง',
+                    style: GoogleFonts.prompt(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

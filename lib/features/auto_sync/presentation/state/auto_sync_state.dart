@@ -15,7 +15,15 @@ class AutoSyncState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final bool isDashboardBannerDismissed;
+  final List<String> dismissedBannerTransactionIds;
   final List<SwipeHistoryRecord> swipeHistory;
+
+  /// Returns only pending transactions that haven't been dismissed by the user on the dashboard banner
+  List<DetectedTransaction> get unDismissedPendingTransactions {
+    return pendingTransactions
+        .where((t) => !dismissedBannerTransactionIds.contains(t.id))
+        .toList();
+  }
 
   /// Check whether auto-sync is enabled for a specific bank
   bool isBankEnabled(BankProfile bank) {
@@ -36,6 +44,7 @@ class AutoSyncState extends Equatable {
     this.isLoading = false,
     this.errorMessage,
     this.isDashboardBannerDismissed = false,
+    this.dismissedBannerTransactionIds = const [],
     this.swipeHistory = const [],
   });
 
@@ -52,6 +61,7 @@ class AutoSyncState extends Equatable {
     bool? isLoading,
     String? errorMessage,
     bool? isDashboardBannerDismissed,
+    List<String>? dismissedBannerTransactionIds,
     List<SwipeHistoryRecord>? swipeHistory,
   }) {
     return AutoSyncState(
@@ -69,6 +79,8 @@ class AutoSyncState extends Equatable {
       errorMessage: errorMessage,
       isDashboardBannerDismissed:
           isDashboardBannerDismissed ?? this.isDashboardBannerDismissed,
+      dismissedBannerTransactionIds:
+          dismissedBannerTransactionIds ?? this.dismissedBannerTransactionIds,
       swipeHistory: swipeHistory ?? this.swipeHistory,
     );
   }
@@ -86,6 +98,7 @@ class AutoSyncState extends Equatable {
         isLoading,
         errorMessage,
         isDashboardBannerDismissed,
+        dismissedBannerTransactionIds,
         swipeHistory,
       ];
 }

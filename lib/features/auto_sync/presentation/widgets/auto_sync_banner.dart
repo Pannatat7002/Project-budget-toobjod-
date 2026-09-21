@@ -16,9 +16,10 @@ class AutoSyncBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AutoSyncCubit, AutoSyncState>(
-      // Rebuild when pending transactions, banner dismissed state, or permission state changes
+      // Rebuild when pending transactions, dismissed IDs, or permission state changes
       buildWhen: (prev, curr) =>
-          prev.pendingTransactions.length != curr.pendingTransactions.length ||
+          prev.pendingTransactions != curr.pendingTransactions ||
+          prev.dismissedBannerTransactionIds != curr.dismissedBannerTransactionIds ||
           prev.isDashboardBannerDismissed != curr.isDashboardBannerDismissed ||
           prev.isPermissionGranted != curr.isPermissionGranted ||
           prev.isAutoSyncEnabled != curr.isAutoSyncEnabled,
@@ -27,10 +28,12 @@ class AutoSyncBanner extends StatelessWidget {
         final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
         final subtextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
-        // Case 1: Has pending detected transactions waiting for user review (and banner is not dismissed on dashboard)
-        if (state.pendingTransactions.isNotEmpty && !state.isDashboardBannerDismissed) {
-          final firstTx = state.pendingTransactions.first;
-          final count = state.pendingTransactions.length;
+        final unDismissedPending = state.unDismissedPendingTransactions;
+
+        // Case 1: Has pending detected transactions that have NOT been dismissed on the dashboard
+        if (unDismissedPending.isNotEmpty) {
+          final firstTx = unDismissedPending.first;
+          final count = unDismissedPending.length;
 
           return Container(
             margin: const EdgeInsets.only(bottom: 16),

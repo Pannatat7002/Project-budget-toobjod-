@@ -9,6 +9,7 @@ import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
 import '../widgets/delete_transaction_dialog.dart';
+import '../../../accounts/domain/entities/bank_account_entity.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
 import '../../../accounts/presentation/state/account_state.dart';
 
@@ -129,22 +130,16 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       }
 
       if (_selectedAccountId == null && accState.accounts.isNotEmpty) {
-        // Priority 1: explicitly passed initialBankAccountId
         if (widget.initialBankAccountId != null && accState.accounts.any((a) => a.id == widget.initialBankAccountId)) {
           _selectedAccountId = widget.initialBankAccountId;
-        }
-        // Priority 2: explicitly passed initialBankId (e.g. from current bank card on dashboard)
-        else if (widget.initialBankId != null && accState.accounts.any((a) => a.bankId == widget.initialBankId)) {
+        } else if (widget.initialBankId != null && accState.accounts.any((a) => a.bankId == widget.initialBankId)) {
           _selectedAccountId = accState.accounts.firstWhere((a) => a.bankId == widget.initialBankId).id;
-        }
-        // Priority 3: currently selected bank in AccountCubit
-        else if (accState.selectedBankId != null) {
+        } else if (accState.selectedBankId != null) {
           final matched = accState.accounts.where((a) => a.bankId == accState.selectedBankId).toList();
           if (matched.isNotEmpty) {
             _selectedAccountId = matched.first.id;
           }
         }
-        // Priority 4: fallback to first account
         _selectedAccountId ??= accState.accounts.first.id;
       }
     }
@@ -237,26 +232,329 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  // Show Category Picker Bottom Sheet (Compact Grid)
+  void _showCategoryPickerSheet(BuildContext context, bool isDark) {
     final categories = _selectedType == TransactionType.expense
         ? AppConstants.defaultExpenseCategories
         : AppConstants.defaultIncomeCategories;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.70,
+          ),
+          padding: EdgeInsets.only(
+            top: 12,
+            left: 16,
+            right: 16,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: isDark ? Border.all(color: AppColors.darkBorderSubtle, width: 1) : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkBorder : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'เลือกหมวดหมู่ (${_selectedType == TransactionType.income ? "รายรับ" : "รายจ่าย"})',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    mainAxisExtent: 82,
+                  ),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = categories[index];
+                    final isSelected = cat.id == _selectedCategory.id;
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() => _selectedCategory = cat);
+                        Navigator.pop(ctx);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? cat.color.withValues(alpha: isDark ? 0.25 : 0.14)
+                              : (isDark ? const Color(0xFF1E293B).withValues(alpha: 0.6) : const Color(0xFFF8FAFC)),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSelected ? cat.color : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                            width: isSelected ? 2.0 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Center(
+                                child: Image.asset(
+                                  cat.imageAsset,
+                                  cacheWidth: 108,
+                                  cacheHeight: 108,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => CategoryIconBadge(
+                                    icon: cat.icon,
+                                    color: cat.color,
+                                    size: 34,
+                                    iconSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              cat.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected
+                                    ? cat.color
+                                    : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Show Account Picker Bottom Sheet (Compact List)
+  void _showAccountPickerSheet(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return BlocBuilder<AccountCubit, AccountState>(
+          builder: (context, accState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.70,
+              ),
+              padding: EdgeInsets.only(
+                top: 12,
+                left: 16,
+                right: 16,
+                bottom: 16 + MediaQuery.of(context).padding.bottom,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: isDark ? Border.all(color: AppColors.darkBorderSubtle, width: 1) : null,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkBorder : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'เลือกบัญชี / กระเป๋าเงิน',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: accState.accounts.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, idx) {
+                        final acc = accState.accounts[idx];
+                        final isAccSelected = _selectedAccountId == acc.id;
+                        final brandCol = Color(acc.brandColor);
+
+                        return InkWell(
+                          onTap: () {
+                            setState(() => _selectedAccountId = acc.id);
+                            Navigator.pop(ctx);
+                          },
+                          borderRadius: BorderRadius.circular(14),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 140),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isAccSelected
+                                  ? brandCol.withValues(alpha: isDark ? 0.22 : 0.12)
+                                  : (isDark ? const Color(0xFF1E293B).withValues(alpha: 0.6) : const Color(0xFFF8FAFC)),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isAccSelected
+                                    ? brandCol
+                                    : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                                width: isAccSelected ? 1.8 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: brandCol,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: ClipOval(
+                                    child: Image.asset(
+                                      acc.logoAsset,
+                                      cacheWidth: 96,
+                                      cacheHeight: 96,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.account_balance,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        acc.accountName.isNotEmpty ? acc.accountName : acc.bankName,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        acc.accountMask != null
+                                            ? '${acc.shortName} • ${acc.accountMask}'
+                                            : acc.shortName,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  isAccSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                  size: 18,
+                                  color: isAccSelected
+                                      ? brandCol
+                                      : (isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryThemeColor = _selectedType == TransactionType.income ? AppColors.income : AppColors.expense;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
       ),
       padding: EdgeInsets.only(
         bottom: bottomInset > 0
-            ? bottomInset + 8
-            : (18 + MediaQuery.of(context).padding.bottom),
-        left: 16,
-        right: 16,
-        top: 10,
+            ? bottomInset + 6
+            : (14 + MediaQuery.of(context).padding.bottom),
+        left: 14,
+        right: 14,
+        top: 8,
       ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
@@ -269,7 +567,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle Bar & Close
+            // Top Bar: Drag Handle
             Center(
               child: Container(
                 width: 32,
@@ -280,137 +578,155 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
 
-            // Header with Type Switcher Pills
+            // Header Row: Close Button / Title / Delete Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          widget.existingTransaction != null
-                              ? 'แก้ไขรายการ'
-                              : (_selectedType == TransactionType.income ? 'รับเงินเข้า (+)' : 'จ่ายเงินออก (-)'),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                letterSpacing: -0.3,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (widget.existingTransaction != null) ...[
-                        const SizedBox(width: 4),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.expense, size: 20),
-                          tooltip: 'ลบรายการ',
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () async {
-                            final confirmed = await DeleteTransactionDialog.show(
-                              context,
-                              widget.existingTransaction!,
-                            );
-                            if (confirmed && mounted) {
-                              context.read<TransactionCubit>().deleteTransaction(widget.existingTransaction!.id);
-                              Navigator.pop(context);
-                            }
-                          },
-                        ),
-                      ],
-                    ],
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => Navigator.pop(context),
                 ),
-                const SizedBox(width: 8),
-
-                // Compact Type Toggle Pill
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
-                      width: 1,
-                    ),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                  ),
-                  child: Row(
-                    children: [
-                      _buildTypePill(
-                        type: TransactionType.expense,
-                        label: 'จ่ายเงินออก',
-                        imageAsset: 'assets/images/action_expense.png',
-                        icon: Icons.arrow_upward,
-                        color: AppColors.expense,
-                        isDark: isDark,
+                Text(
+                  widget.existingTransaction != null ? 'แก้ไขรายการ' : 'บันทึกรายการ',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        letterSpacing: -0.3,
                       ),
-                      _buildTypePill(
-                        type: TransactionType.income,
-                        label: 'รับเงินเข้า',
-                        imageAsset: 'assets/images/action_income.png',
-                        icon: Icons.arrow_downward,
-                        color: AppColors.income,
-                        isDark: isDark,
-                      ),
-                    ],
-                  ),
                 ),
+                if (widget.existingTransaction != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.expense, size: 20),
+                    tooltip: 'ลบรายการ',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () async {
+                      final confirmed = await DeleteTransactionDialog.show(
+                        context,
+                        widget.existingTransaction!,
+                      );
+                      if (confirmed && mounted) {
+                        context.read<TransactionCubit>().deleteTransaction(widget.existingTransaction!.id);
+                        Navigator.pop(context);
+                      }
+                    },
+                  )
+                else
+                  const SizedBox(width: 24),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-            // Scrollable Content Area (Compact)
+            // Scrollable Content
             Flexible(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Amount Input (Hero Display)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurface : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
-                          width: 1.5,
+                    // Date Strip (Compact)
+                    InkWell(
+                      onTap: _pickDate,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.calendar_today_rounded, size: 13, color: primaryThemeColor),
+                            const SizedBox(width: 6),
+                            Text(
+                              'วันที่: ${DateFormatter.formatRelative(_selectedDate)} (${DateFormatter.formatTimeShort(_selectedDate)} น.)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8)),
+                          ],
                         ),
-                        boxShadow: isDark
-                            ? null
-                            : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Type Switcher Row (Equal Width 50/50 - อยู่บนช่องระบุยอด)
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
+                          Expanded(
+                            child: _buildTypePill(
+                              type: TransactionType.expense,
+                              label: 'รายจ่าย',
+                              icon: Icons.arrow_upward_rounded,
+                              color: AppColors.expense,
+                              isDark: isDark,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: _buildTypePill(
+                              type: TransactionType.income,
+                              label: 'รายรับ',
+                              icon: Icons.arrow_downward_rounded,
+                              color: AppColors.income,
+                              isDark: isDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Card 1: Amount Hero Input (Compact)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: primaryThemeColor.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _selectedType == TransactionType.income
+                                  ? Icons.arrow_downward_rounded
+                                  : Icons.arrow_upward_rounded,
+                              color: primaryThemeColor,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
                           Text(
                             '฿',
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w800,
                               color: primaryThemeColor,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: TextFormField(
                               controller: _amountController,
@@ -445,125 +761,159 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
-                    // Account / Bank Selector (Unified Multi-Bank Architecture)
-                    _buildAccountSelector(isDark),
-                    const SizedBox(height: 12),
-
-                    // Category Grid (Compact 4-columns)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'หมวดหมู่: ${_selectedCategory.name}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _selectedCategory.color,
+                    // Card 2: Category Selector Row (Compact & Tap to pick)
+                    InkWell(
+                      onTap: () => _showCategoryPickerSheet(context, isDark),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+                            width: 1,
                           ),
                         ),
-                        InkWell(
-                          onTap: _pickDate,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today_outlined, size: 12, color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  DateFormatter.formatRelative(_selectedDate),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
-                                  ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: Image.asset(
+                                _selectedCategory.imageAsset,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => CategoryIconBadge(
+                                  icon: _selectedCategory.icon,
+                                  color: _selectedCategory.color,
+                                  size: 28,
+                                  iconSize: 14,
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'หมวดหมู่',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                  Text(
+                                    _selectedCategory.name,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 8),
 
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        mainAxisExtent: 84,
-                      ),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final cat = categories[index];
-                        final isSelected = cat.id == _selectedCategory.id;
+                    // Card 3: Account Selector Row (Compact & ไม่ต้องแสดงยอด)
+                    BlocBuilder<AccountCubit, AccountState>(
+                      builder: (context, accState) {
+                        final matchedAcc = accState.accounts.where((a) => a.id == _selectedAccountId).toList();
+                        final selectedAcc = matchedAcc.isNotEmpty
+                            ? matchedAcc.first
+                            : (accState.accounts.isNotEmpty ? accState.accounts.first : null);
 
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedCategory = cat),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 140),
-                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        return InkWell(
+                          onTap: () => _showAccountPickerSheet(context, isDark),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? cat.color.withValues(alpha: isDark ? 0.25 : 0.14)
-                                  : (isDark ? const Color(0xFF1E293B).withValues(alpha: 0.5) : Colors.white),
+                              color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: isSelected ? cat.color : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
-                                width: isSelected ? 2.0 : 1,
+                                color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+                                width: 1,
                               ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: cat.color.withValues(alpha: isDark ? 0.35 : 0.20),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ]
-                                  : [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: isDark ? 0 : 0.03),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 1),
-                                      ),
-                                    ],
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Row(
                               children: [
-                                Expanded(
-                                  child: Center(
-                                    child: Image.asset(
-                                      cat.imageAsset,
-                                      cacheWidth: 108,
-                                      cacheHeight: 108,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => CategoryIconBadge(
-                                        icon: cat.icon,
-                                        color: cat.color,
-                                        size: 36,
-                                        iconSize: 18,
+                                if (selectedAcc != null) ...[
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: Color(selectedAcc.brandColor),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: ClipOval(
+                                      child: Image.asset(
+                                        selectedAcc.logoAsset,
+                                        cacheWidth: 84,
+                                        cacheHeight: 84,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.account_balance,
+                                          color: Colors.white,
+                                          size: 14,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  cat.name,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected
-                                        ? cat.color
-                                        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'บัญชี / กระเป๋าเงิน',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                          ),
+                                        ),
+                                        Text(
+                                          selectedAcc.accountMask != null
+                                              ? '${selectedAcc.shortName} • ${selectedAcc.accountMask}'
+                                              : selectedAcc.shortName,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                ] else ...[
+                                  const Icon(Icons.account_balance_wallet_outlined, size: 20),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Text(
+                                      'เลือกบัญชี / กระเป๋าเงิน',
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 18,
+                                  color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
                                 ),
                               ],
                             ),
@@ -571,75 +921,101 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         );
                       },
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
-                    // Title Input (Compact Field)
-                    TextFormField(
-                      controller: _titleController,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: 'ชื่อรายการ (เว้นว่างจะใช้: ${_selectedCategory.name})',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                    // Card 4: Title & Notes (Compact)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0),
+                          width: 1,
                         ),
-                        prefixIcon: const Icon(Icons.edit_note_rounded, size: 18),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        isDense: true,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _titleController,
+                            style: const TextStyle(fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'ชื่อรายการ (เว้นว่างจะใช้: ${_selectedCategory.name})',
+                              hintStyle: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                              ),
+                              prefixIcon: const Icon(Icons.edit_note_rounded, size: 18),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+                              isDense: true,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                            ),
+                          ),
+                          if (!_showMoreOptions)
+                            GestureDetector(
+                              onTap: () => setState(() => _showMoreOptions = true),
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 4, bottom: 2),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.add_circle_outline, size: 14, color: primaryThemeColor),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'เพิ่มโน้ตช่วยจำ',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryThemeColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else ...[
+                            const Divider(height: 12, thickness: 0.6),
+                            TextFormField(
+                              controller: _noteController,
+                              maxLines: 2,
+                              style: const TextStyle(fontSize: 12),
+                              decoration: InputDecoration(
+                                hintText: 'บันทึกช่วยจำ (ไม่บังคับ)...',
+                                hintStyle: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                ),
+                                prefixIcon: const Icon(Icons.notes_rounded, size: 16),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                                isDense: true,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-
-                    // Toggle More Options (Note)
-                    if (!_showMoreOptions)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: () => setState(() => _showMoreOptions = true),
-                          icon: const Icon(Icons.add, size: 14),
-                          label: const Text('เพิ่มโน้ตช่วยจำ'),
-                          style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                          ),
-                        ),
-                      )
-                    else ...[
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        controller: _noteController,
-                        maxLines: 2,
-                        style: const TextStyle(fontSize: 12),
-                        decoration: InputDecoration(
-                          hintText: 'บันทึกช่วยจำ (ไม่บังคับ)...',
-                          hintStyle: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
-                          ),
-                          prefixIcon: const Icon(Icons.notes_rounded, size: 16),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          isDense: true,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-            // Sticky Bottom Prominent Save Button (Always in Thumb Reach!)
+            // Sticky Bottom Prominent Save Button
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: 46,
               child: ElevatedButton.icon(
                 onPressed: _onSubmit,
                 icon: const Icon(Icons.check_circle_outline, size: 18),
                 label: Text(
                   widget.existingTransaction != null ? 'บันทึกการแก้ไข' : 'บันทึกรายการ',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.2,
                   ),
@@ -647,9 +1023,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryThemeColor,
                   foregroundColor: Colors.white,
-                  elevation: 2,
+                  elevation: 1,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
@@ -663,7 +1039,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   Widget _buildTypePill({
     required TransactionType type,
     required String label,
-    required String imageAsset,
     required IconData icon,
     required Color color,
     required bool isDark,
@@ -673,151 +1048,32 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     return GestureDetector(
       onTap: () => _onTypeChanged(type),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color
-              : (isDark ? AppColors.darkSurface : Colors.white),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.35),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              imageAsset,
-              width: 22,
-              height: 22,
-              cacheWidth: 66,
-              cacheHeight: 66,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Icon(
-                icon,
-                size: 14,
-                color: isSelected ? Colors.white : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-              ),
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? Colors.white : (isDark ? AppColors.darkTextMuted : const Color(0xFF64748B)),
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 12,
-                color: isSelected ? Colors.white : (isDark ? AppColors.darkTextSecondary : const Color(0xFF334155)),
+                fontSize: 13,
+                color: isSelected ? Colors.white : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475569)),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAccountSelector(bool isDark) {
-    return BlocBuilder<AccountCubit, AccountState>(
-      builder: (context, accState) {
-        if (accState.accounts.isEmpty) return const SizedBox.shrink();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 2, bottom: 6),
-              child: Text(
-                'บัญชี / กระเป๋า:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: accState.accounts.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, idx) {
-                  final acc = accState.accounts[idx];
-                  final isAccSelected = _selectedAccountId == acc.id;
-                  final brandCol = Color(acc.brandColor);
-
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedAccountId = acc.id;
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isAccSelected
-                            ? brandCol.withValues(alpha: 0.18)
-                            : (isDark ? AppColors.darkCard : const Color(0xFFF1F5F9)),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isAccSelected
-                              ? brandCol
-                              : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
-                          width: isAccSelected ? 1.6 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: brandCol,
-                              shape: BoxShape.circle,
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                acc.logoAsset,
-                                cacheWidth: 60,
-                                cacheHeight: 60,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.account_balance,
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            acc.accountMask != null ? '${acc.shortName} • ${acc.accountMask}' : acc.shortName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isAccSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isAccSelected
-                                  ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                                  : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475569)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

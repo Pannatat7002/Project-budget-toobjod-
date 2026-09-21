@@ -29,6 +29,9 @@ abstract class AutoSyncLocalDataSource {
   Future<void> addSwipeHistoryRecord(SwipeHistoryRecord record);
   Future<void> addSwipeHistoryRecords(List<SwipeHistoryRecord> records);
   Future<void> clearSwipeHistory();
+
+  Future<List<String>> getDismissedBannerTransactionIds();
+  Future<void> saveDismissedBannerTransactionIds(List<String> ids);
 }
 
 class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
@@ -40,6 +43,7 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
   static const String _keyPendingTxs = 'bp_pending_detected_txs_v1';
   static const String _keyHistoryTxs = 'bp_history_detected_txs_v1';
   static const String _keySwipeHistory = 'bp_swipe_history_records_v1';
+  static const String _keyDismissedBannerTxIds = 'bp_dismissed_banner_tx_ids_v1';
 
   List<DetectedTransaction>? _cachedPending;
   List<DetectedTransaction>? _cachedHistory;
@@ -230,5 +234,18 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
   Future<void> clearSwipeHistory() async {
     _cachedSwipeHistory = [];
     await sharedPreferences.remove(_keySwipeHistory);
+  }
+
+  @override
+  Future<List<String>> getDismissedBannerTransactionIds() async {
+    final list = sharedPreferences.getStringList(_keyDismissedBannerTxIds);
+    return list != null ? List<String>.from(list) : [];
+  }
+
+  @override
+  Future<void> saveDismissedBannerTransactionIds(List<String> ids) async {
+    // Keep max 200 IDs to avoid unbounded growth
+    final trimmed = ids.length > 200 ? ids.sublist(ids.length - 200) : ids;
+    await sharedPreferences.setStringList(_keyDismissedBannerTxIds, trimmed);
   }
 }

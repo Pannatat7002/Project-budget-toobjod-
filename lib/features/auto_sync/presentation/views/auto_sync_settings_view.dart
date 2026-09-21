@@ -84,7 +84,6 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
           return BlocBuilder<AutoSyncCubit, AutoSyncState>(
             builder: (context, state) {
               final isGranted = state.isPermissionGranted;
-              final isConnected = state.isServiceConnected;
               final isBatteryIgnored = state.isBatteryOptimizationIgnored;
 
               final userAccounts = accState.accounts;
@@ -233,156 +232,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                   ),
                   const SizedBox(height: 12),
 
-                  // 2. เมนู: ซ่อมแซมการเชื่อมต่อ Service
-                  _buildMenuItem(
-                    isDark: isDark,
-                    cardColor: cardColor,
-                    textColor: textColor,
-                    subtextColor: subtextColor,
-                    borderColor: borderColor,
-                    leading: _buildGradientIcon(
-                      gradient: (isGranted && isConnected)
-                          ? const LinearGradient(
-                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : const LinearGradient(
-                              colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                      icon: Icons.sync_rounded,
-                    ),
-                    title: 'ซ่อมแซมการเชื่อมต่อ',
-                    subtitle:
-                        'กดเพื่อบังคับ Rebind Service หากระบบ Android ตัดการทำงาน',
-                    badgeText: (isGranted && isConnected)
-                        ? 'เชื่อมต่อปกติ 🟢'
-                        : 'กดเชื่อมต่อใหม่ 🔄',
-                    badgeColor: (isGranted && isConnected)
-                        ? const Color(0xFF0EA5E9)
-                        : const Color(0xFFF43F5E),
-                    onTap: () async {
-                      final scaffold = ScaffoldMessenger.of(context);
-                      final success = await context
-                          .read<AutoSyncCubit>()
-                          .forceRebindService();
-                      scaffold.showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(
-                                success
-                                    ? Icons.check_circle_rounded
-                                    : Icons.error_outline_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  success
-                                      ? '🔄 สั่ง Rebind Service ดักจับแจ้งเตือนใหม่สำเร็จแล้ว!'
-                                      : '⚠️ ไม่สามารถ Rebind ได้ กรุณาตรวจสอบสิทธิ์',
-                                  style: GoogleFonts.prompt(fontSize: 13.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: success
-                              ? const Color(0xFF059669)
-                              : Colors.red,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // 2.1 เมนู: ดึงแจ้งเตือนที่ตกหล่น (Manual Refresh)
-                  _buildMenuItem(
-                    isDark: isDark,
-                    cardColor: cardColor,
-                    textColor: textColor,
-                    subtextColor: subtextColor,
-                    borderColor: borderColor,
-                    leading: _buildGradientIcon(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      icon: Icons.mark_email_unread_rounded,
-                    ),
-                    title: 'ดึงแจ้งเตือนที่ตกหล่น',
-                    subtitle:
-                        'สแกนแจ้งเตือนจากแถบแจ้งเตือนเครื่องและบัฟเฟอร์ด้วยตนเอง',
-                    badgeText: 'กดดึงข้อมูล ⚡',
-                    badgeColor: const Color(0xFF8B5CF6),
-                    onTap: () async {
-                      final scaffold = ScaffoldMessenger.of(context);
-                      scaffold.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '⏳ กำลังดึงแจ้งเตือนที่ตกหล่น...',
-                            style: GoogleFonts.prompt(fontSize: 13.5),
-                          ),
-                          duration: const Duration(milliseconds: 900),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
-                      final count = await context
-                          .read<AutoSyncCubit>()
-                          .manualSyncMissedNotifications();
-                      if (!context.mounted) return;
-                      scaffold.hideCurrentSnackBar();
-                      scaffold.showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(
-                                count > 0
-                                    ? Icons.check_circle_rounded
-                                    : Icons.info_outline_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  count == -1
-                                      ? '⚠️ กรุณาเปิดสิทธิ์การอ่านการแจ้งเตือนก่อน'
-                                      : (count > 0
-                                          ? '🎉 ตรวจพบรายการตกหล่น $count รายการ!'
-                                          : '🐾 ไม่พบแจ้งเตือนตกหล่นเพิ่มเติม'),
-                                  style: GoogleFonts.prompt(fontSize: 13.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: count > 0
-                              ? const Color(0xFF059669)
-                              : (count == -1
-                                  ? Colors.orange
-                                  : const Color(0xFF3B82F6)),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // 3. เมนู: ปิดการประหยัดแบตเตอรี่ (Battery Optimization)
+                  // 2. เมนู: ปิดการประหยัดแบตเตอรี่ (Battery Optimization)
                   _buildMenuItem(
                     isDark: isDark,
                     cardColor: cardColor,
@@ -421,7 +271,7 @@ class _AutoSyncSettingsViewState extends State<AutoSyncSettingsView>
                   ),
                   const SizedBox(height: 12),
 
-                  // 4. เมนู: เลือกธนาคารตรวจจับ
+                  // 3. เมนู: เลือกธนาคารตรวจจับ
                   _buildMenuItem(
                     isDark: isDark,
                     cardColor: cardColor,
