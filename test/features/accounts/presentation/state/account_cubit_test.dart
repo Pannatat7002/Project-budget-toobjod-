@@ -172,16 +172,22 @@ void main() {
       expect(updatedSavings.currentBalance, 5000.0);
     });
 
-    test('ensureAccountForBank creates new account when not found and reuses existing', () async {
-      final created = await cubit.ensureAccountForBank('ttb', accountMask: '9876');
-      expect(created.bankId, 'ttb');
-      expect(created.accountMask, isNull);
-      expect(cubit.state.accounts.length, 1);
+    test('addAccount and deleteAccount update state and repository', () async {
+      final newAcc = BankAccountEntity(
+        id: 'acc_ttb',
+        bankId: 'ttb',
+        bankName: 'ธนาคารทหารไทยธนชาต',
+        accountName: 'ttb all free',
+        brandColor: 0xFF002D63,
+        createdAt: DateTime.now(),
+      );
 
-      // Call again for same bank
-      final reused = await cubit.ensureAccountForBank('ttb');
-      expect(reused.id, created.id);
+      await cubit.addAccount(newAcc);
       expect(cubit.state.accounts.length, 1);
+      expect(cubit.state.accounts.first.id, 'acc_ttb');
+
+      await cubit.deleteAccount('acc_ttb');
+      expect(cubit.state.accounts, isEmpty);
     });
   });
 }

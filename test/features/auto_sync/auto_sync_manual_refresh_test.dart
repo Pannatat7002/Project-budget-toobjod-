@@ -127,6 +127,19 @@ class FakeAutoSyncRepository implements AutoSyncRepository {
   Future<void> clearSwipeHistory() async {
     _swipeHistory.clear();
   }
+
+  final List<String> _dismissedBannerTransactionIds = [];
+
+  @override
+  Future<List<String>> getDismissedBannerTransactionIds() async =>
+      List.from(_dismissedBannerTransactionIds);
+
+  @override
+  Future<void> saveDismissedBannerTransactionIds(List<String> ids) async {
+    _dismissedBannerTransactionIds
+      ..clear()
+      ..addAll(ids);
+  }
 }
 
 class FakeTransactionRepository implements TransactionRepository {
