@@ -8,6 +8,8 @@ class CategoryIconBadge extends StatelessWidget {
   final double size;
   final double iconSize;
   final String? categoryId;
+  final String? categoryName;
+  final String? title;
   final String? assetPath;
   final bool isBankLogo;
 
@@ -18,6 +20,8 @@ class CategoryIconBadge extends StatelessWidget {
     this.size = 48,
     this.iconSize = 22,
     this.categoryId,
+    this.categoryName,
+    this.title,
     this.assetPath,
     this.isBankLogo = false,
   });
@@ -25,7 +29,12 @@ class CategoryIconBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final resolvedAsset = assetPath ?? IconHelper.getCategoryAsset(categoryId);
+    final resolvedAsset = assetPath ??
+        IconHelper.getCategoryAsset(
+          categoryId,
+          categoryName: categoryName,
+          title: title,
+        );
     final isBank = isBankLogo || (resolvedAsset != null && resolvedAsset.contains('/banks/'));
 
     return Container(

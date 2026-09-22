@@ -224,14 +224,21 @@ class _ReconciliationBottomSheetState extends State<ReconciliationBottomSheet> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: brandColor.withValues(alpha: 0.12),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: brandColor.withValues(alpha: 0.35),
                         width: 1.2,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
-                    padding: const EdgeInsets.all(7),
+                    padding: const EdgeInsets.all(5),
                     child: Image.asset(
                       widget.account.logoAsset,
                       cacheWidth: 90,

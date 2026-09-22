@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="th" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>เจ้าตูบจด (ToobJod) | แอปบันทึกรายรับรายจ่ายอัตโนมัติ ตัวช่วยวางแผนการเงิน</title>
-  <meta name="description" content="เจ้าตูบจด (ToobJod) แอปช่วยบันทึกรายรับรายจ่ายอัตโนมัติจากแจ้งเตือนธนาคาร (Auto-Sync 13 ธนาคารไทย) กระทบยอดเงินจริง คุมงบประมาณรายหมวด และโหมดตาปิด Privacy Mask ใช้ฟรี วางแผนการเงินง่าย โอนปุ๊บ จดปั๊บ" />
-  
+  <meta name="description"
+    content="เจ้าตูบจด (ToobJod) แอปช่วยบันทึกรายรับรายจ่ายอัตโนมัติจากแจ้งเตือนธนาคาร (Auto-Sync 13 ธนาคารไทย) กระทบยอดเงินจริง คุมงบประมาณรายหมวด และโหมดตาปิด Privacy Mask ใช้ฟรี วางแผนการเงินง่าย โอนปุ๊บ จดปั๊บ" />
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Google Fonts: Kanit & Prompt -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -76,18 +80,33 @@
       --brand-primary: #FF7A00;
       --brand-blue: #2563EB;
     }
-    
-    html, body {
+
+    html,
+    body {
       background-color: #0B132B !important;
       color: #F8FAFC;
       font-family: 'Prompt', 'Kanit', sans-serif;
     }
-    
-    .bg-navy-low { background-color: #0B132B !important; }
-    .bg-navy-mid { background-color: #131E3A !important; }
-    .bg-navy-card { background-color: #18264A !important; }
-    .border-navy { border-color: #22355E !important; }
-    .text-subtle { color: #94A3B8 !important; }
+
+    .bg-navy-low {
+      background-color: #0B132B !important;
+    }
+
+    .bg-navy-mid {
+      background-color: #131E3A !important;
+    }
+
+    .bg-navy-card {
+      background-color: #18264A !important;
+    }
+
+    .border-navy {
+      border-color: #22355E !important;
+    }
+
+    .text-subtle {
+      color: #94A3B8 !important;
+    }
 
     /* Mascot Speech Bubble Triangle */
     .speech-bubble-tail {
@@ -103,52 +122,73 @@
 
     /* Infinite Marquee Animation for Bank Logos */
     @keyframes marqueeLeft {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
     }
+
     @keyframes marqueeRight {
-      0% { transform: translateX(-50%); }
-      100% { transform: translateX(0); }
+      0% {
+        transform: translateX(-50%);
+      }
+
+      100% {
+        transform: translateX(0);
+      }
     }
+
     .marquee-track-left {
       display: flex;
       gap: 16px;
       width: max-content;
       animation: marqueeLeft 30s linear infinite;
     }
+
     .marquee-track-right {
       display: flex;
       gap: 16px;
       width: max-content;
       animation: marqueeRight 34s linear infinite;
     }
-    .marquee-track-left:hover, .marquee-track-right:hover {
+
+    .marquee-track-left:hover,
+    .marquee-track-right:hover {
       animation-play-state: paused;
     }
   </style>
 </head>
-<body class="bg-navy-low text-white font-sans antialiased overflow-x-hidden selection:bg-mjbrand-primary selection:text-white">
+
+<body
+  class="bg-navy-low text-white font-sans antialiased overflow-x-hidden selection:bg-mjbrand-primary selection:text-white">
 
   <!-- 1. TOP NAVBAR (TOOBJOD APP MIDNIGHT NAVY THEME) -->
   <header class="relative z-50">
     <!-- Navbar Spacer for Fixed Nav -->
     <div class="h-[72px] bg-[#0B132B]"></div>
 
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0B132B]/95 backdrop-blur-md border-b border-[#22355E] transition-all duration-300 shadow-md">
+    <nav
+      class="fixed top-0 left-0 right-0 z-50 bg-[#0B132B]/95 backdrop-blur-md border-b border-[#22355E] transition-all duration-300 shadow-md">
       <div class="w-full px-4 sm:px-8 lg:px-12 h-[72px] flex items-center justify-between">
-        
+
         <!-- Brand Logo -->
         <div class="flex items-center">
-          <button id="mobileBurgerBtn" aria-label="burger menu" class="transition-transform duration-300 lg:hidden mr-3 text-white text-2xl font-bold p-1 rounded-lg hover:bg-white/10">
+          <button id="mobileBurgerBtn" aria-label="burger menu"
+            class="transition-transform duration-300 lg:hidden mr-3 text-white text-2xl font-bold p-1 rounded-lg hover:bg-white/10">
             ☰
           </button>
-          
+
           <a href="#" class="flex items-center gap-2.5 sm:gap-3 group">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition transform border border-white/10 shrink-0 bg-[#18264A]">
+            <div
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition transform border border-white/10 shrink-0 bg-[#18264A]">
               <img src="assets/images/app_icon_512.png" alt="ToobJod Logo" class="w-full h-full object-cover" />
             </div>
             <div>
-              <span class="text-xl sm:text-2xl font-black tracking-tight text-white">Toob<span class="text-[#FF7A00]">Jod</span></span>
+              <span class="text-xl sm:text-2xl font-black tracking-tight text-white">Toob<span
+                  class="text-[#FF7A00]">Jod</span></span>
               <span class="text-xs font-semibold text-[#94A3B8] ml-1.5 hidden md:inline">เจ้าตูบจด</span>
             </div>
           </a>
@@ -167,7 +207,8 @@
 
         <!-- Download Action Button (Responsive sizing) -->
         <div class="flex items-center gap-3">
-          <a href="#download" class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF7A00] to-[#EA580C] hover:from-[#FB923C] hover:to-[#FF7A00] text-white px-3.5 sm:px-5 py-2 font-bold text-xs sm:text-sm shadow-md shadow-orange-500/25 transition transform hover:-translate-y-0.5 whitespace-nowrap">
+          <a href="#download"
+            class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF7A00] to-[#EA580C] hover:from-[#FB923C] hover:to-[#FF7A00] text-white px-3.5 sm:px-5 py-2 font-bold text-xs sm:text-sm shadow-md shadow-orange-500/25 transition transform hover:-translate-y-0.5 whitespace-nowrap">
             ดาวน์โหลดฟรี
           </a>
         </div>
@@ -175,17 +216,26 @@
       </div>
 
       <!-- Mobile Drawer Menu -->
-      <div id="mobileMenu" class="hidden lg:hidden bg-[#0B132B]/98 backdrop-blur-xl border-t border-[#22355E] px-6 py-5 space-y-3 font-semibold text-white text-sm shadow-2xl transition-all duration-300">
-        <a href="#get-start" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5" onclick="toggleMobileMenu()">🐾 เริ่มต้นใช้งาน</a>
-        <a href="#features-core" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5" onclick="toggleMobileMenu()">✨ ฟีเจอร์เด่น</a>
-        <a href="#categories-showcase" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5" onclick="toggleMobileMenu()">🏷️ หมวดหมู่ 3D</a>
-        <a href="#autosync" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5" onclick="toggleMobileMenu()">⚡ Auto-Sync 13 ธนาคาร</a>
-        <a href="#reconcile" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5" onclick="toggleMobileMenu()">⚖️ กระทบยอดเงินจริง</a>
-        <a href="#audience" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5" onclick="toggleMobileMenu()">👥 เหมาะกับใคร</a>
+      <div id="mobileMenu"
+        class="hidden lg:hidden bg-[#0B132B]/98 backdrop-blur-xl border-t border-[#22355E] px-6 py-5 space-y-3 font-semibold text-white text-sm shadow-2xl transition-all duration-300">
+        <a href="#get-start" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5"
+          onclick="toggleMobileMenu()">🐾 เริ่มต้นใช้งาน</a>
+        <a href="#features-core" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5"
+          onclick="toggleMobileMenu()">✨ ฟีเจอร์เด่น</a>
+        <a href="#categories-showcase" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5"
+          onclick="toggleMobileMenu()">🏷️ หมวดหมู่ 3D</a>
+        <a href="#autosync" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5"
+          onclick="toggleMobileMenu()">⚡ Auto-Sync 13 ธนาคาร</a>
+        <a href="#reconcile" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5"
+          onclick="toggleMobileMenu()">⚖️ กระทบยอดเงินจริง</a>
+        <a href="#audience" class="block py-1.5 hover:text-[#FF7A00] border-b border-white/5"
+          onclick="toggleMobileMenu()">👥 เหมาะกับใคร</a>
         <a href="#faq" class="block py-1.5 hover:text-[#FF7A00]" onclick="toggleMobileMenu()">❓ คำถามที่พบบ่อย</a>
-        
+
         <div class="pt-3 border-t border-white/10">
-          <a href="#download" class="w-full inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF7A00] to-[#EA580C] text-white px-5 py-2.5 font-bold text-sm shadow-md shadow-orange-500/25" onclick="toggleMobileMenu()">
+          <a href="#download"
+            class="w-full inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF7A00] to-[#EA580C] text-white px-5 py-2.5 font-bold text-sm shadow-md shadow-orange-500/25"
+            onclick="toggleMobileMenu()">
             ดาวน์โหลดฟรี (iOS & Android)
           </a>
         </div>
@@ -196,20 +246,26 @@
   <!-- 2. HERO SECTION (OFFICIAL APP THEME MIDNIGHT NAVY & SHIBA GLOW) -->
   <section class="relative bg-[#0B132B] pt-8 lg:pt-14 pb-28 lg:pb-36 overflow-hidden border-b border-[#22355E]/40">
     <!-- Ambient Radial Glows -->
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[450px] bg-gradient-to-b from-[#FF7A00]/15 via-[#2563EB]/10 to-transparent blur-3xl pointer-events-none"></div>
+    <div
+      class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[450px] bg-gradient-to-b from-[#FF7A00]/15 via-[#2563EB]/10 to-transparent blur-3xl pointer-events-none">
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
-      
+
       <!-- Top Text Box & Mascot Speech Banner -->
       <div class="text-center max-w-4xl mx-auto mb-8">
         <h1 class="text-2xl sm:text-4xl lg:text-[48px] font-black text-white leading-[1.25] mb-4">
-          แอปอ่านแจ้งเตือนธนาคารอัตโนมัติ<br/>
-          <span class="bg-gradient-to-r from-[#FFA726] via-[#FF7A00] to-[#EA580C] text-transparent bg-clip-text">จดค่าใช้จ่ายทันที</span> วางแผนการเงินง่ายที่สุด
+          แอปอ่านแจ้งเตือนธนาคารอัตโนมัติ<br />
+          <span
+            class="bg-gradient-to-r from-[#FFA726] via-[#FF7A00] to-[#EA580C] text-transparent bg-clip-text">จดค่าใช้จ่ายทันที</span>
+          วางแผนการเงินง่ายที่สุด
         </h1>
 
         <!-- Mascot Speech Banner with Real Mascot Image -->
-        <div class="inline-flex items-center gap-3 sm:gap-3.5 bg-[#18264A] text-slate-100 border border-[#22355E] px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl shadow-xl max-w-xl mx-auto mb-2 text-left">
-          <img src="assets/images/mascot_dog_writing.png" alt="เจ้าตูบจด" class="w-11 h-11 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md" />
+        <div
+          class="inline-flex items-center gap-3 sm:gap-3.5 bg-[#18264A] text-slate-100 border border-[#22355E] px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl shadow-xl max-w-xl mx-auto mb-2 text-left">
+          <img src="assets/images/mascot_dog_writing.png" alt="เจ้าตูบจด"
+            class="w-11 h-11 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md" />
           <div>
             <div class="font-bold text-[#FF7A00] text-xs sm:text-base flex items-center gap-1.5">
               <span>🐾 อยากรู้ไหม ใช้เจ้าตูบจดแล้วดียังไง?</span>
@@ -223,27 +279,26 @@
 
       <!-- Hero Visuals & Phone Showcase -->
       <div class="grid lg:grid-cols-12 gap-8 items-center max-w-5xl mx-auto">
-        
+
         <!-- Left: Slips & Notifications Floating Mockup -->
         <div class="lg:col-span-6 flex flex-col items-center lg:items-end">
           <div class="relative w-full max-w-xs sm:max-w-md">
-            
+
             <!-- Real App Screenshot Frame -->
-            <div class="w-[260px] sm:w-[310px] mx-auto bg-slate-900 rounded-[44px] p-2.5 sm:p-3 shadow-2xl border-4 border-[#22355E] relative z-10 overflow-hidden">
+            <div
+              class="w-[260px] sm:w-[310px] mx-auto bg-slate-900 rounded-[44px] p-2.5 sm:p-3 shadow-2xl border-4 border-[#22355E] relative z-10 overflow-hidden">
               <div class="w-full rounded-[34px] overflow-hidden bg-[#07101E] relative">
                 <!-- Dynamic Notch -->
                 <div class="absolute top-1.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-black rounded-full z-20"></div>
-                <img 
-                  src="showcase_assets/v2_dashboard.png" 
-                  alt="เจ้าตูบจด Dashboard" 
+                <img src="showcase_assets/v2_dashboard.png" alt="เจ้าตูบจด Dashboard"
                   class="w-full h-auto object-cover object-top"
-                  onerror="this.src='showcase_assets/current_phone_final.png'"
-                />
+                  onerror="this.src='showcase_assets/current_phone_final.png'" />
               </div>
             </div>
 
             <!-- Floating Notification Badge 1 (K PLUS Real Bank Logo) -->
-            <div class="absolute -top-2 left-1 sm:-left-6 bg-[#18264A]/95 backdrop-blur-md p-2 sm:p-3 rounded-2xl shadow-xl border border-[#22355E] z-20 flex items-center gap-2 sm:gap-2.5 max-w-[210px] sm:max-w-xs animate-bounce duration-1000">
+            <div
+              class="absolute -top-2 left-1 sm:-left-6 bg-[#18264A]/95 backdrop-blur-md p-2 sm:p-3 rounded-2xl shadow-xl border border-[#22355E] z-20 flex items-center gap-2 sm:gap-2.5 max-w-[210px] sm:max-w-xs animate-bounce duration-1000">
               <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white flex items-center justify-center p-1 shrink-0">
                 <img src="assets/images/banks/kbank.png" alt="K PLUS" class="w-full h-full object-contain" />
               </div>
@@ -254,7 +309,8 @@
             </div>
 
             <!-- Floating Notification Badge 2 (App Icon Reconcile) -->
-            <div class="absolute -bottom-2 right-1 sm:-right-6 bg-[#18264A]/95 backdrop-blur-md p-2 sm:p-3 rounded-2xl shadow-xl border border-[#22355E] z-20 flex items-center gap-2 sm:gap-2.5 max-w-[210px] sm:max-w-xs">
+            <div
+              class="absolute -bottom-2 right-1 sm:-right-6 bg-[#18264A]/95 backdrop-blur-md p-2 sm:p-3 rounded-2xl shadow-xl border border-[#22355E] z-20 flex items-center gap-2 sm:gap-2.5 max-w-[210px] sm:max-w-xs">
               <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden shrink-0">
                 <img src="assets/images/app_icon_512.png" alt="ToobJod" class="w-full h-full object-cover" />
               </div>
@@ -270,30 +326,35 @@
         <!-- Right: App Highlights & Download CTAs -->
         <div class="lg:col-span-6 text-center lg:text-left space-y-5">
           <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2">
-            <div class="inline-flex items-center gap-2 bg-[#18264A] text-white px-3.5 py-1.5 rounded-full text-xs font-bold border border-[#22355E] shadow-xs">
+            <div
+              class="inline-flex items-center gap-2 bg-[#18264A] text-white px-3.5 py-1.5 rounded-full text-xs font-bold border border-[#22355E] shadow-xs">
               <img src="showcase_assets/bank_logos/rating-stars.27lk-x1f63-qs.svg" alt="4.9 Stars" class="h-3 w-auto" />
               <span>4.9 ดาว • รีวิวกว่า 500,000 ผู้ใช้งาน</span>
             </div>
-            <div class="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
+            <div
+              class="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
               <span>🛡️</span> On-Device 100%
             </div>
           </div>
 
           <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.3]">
-            โอนปุ๊บ จดปั๊บ ไม่ต้องพิมพ์เอง <br/>
+            โอนปุ๊บ จดปั๊บ ไม่ต้องพิมพ์เอง <br />
             ตรวจจับแจ้งเตือนอัตโนมัติ <span class="text-[#FF7A00]">13 ธนาคาร & วอลเล็ท</span>
           </h2>
 
           <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-lg">
-            หมดปัญหาขี้เกียจจดเงิน เจ้าตูบจดตรวจจับ Notification ทันที มีถาดพักรายการให้ปัดคอนเฟิร์ม (Swipe to Confirm), แดชบอร์ดสรุปผลกระแสเงินสด, และโหมดตาปิดซ่อนยอดเงินในที่สาธารณะ 🙈
+            หมดปัญหาขี้เกียจจดเงิน เจ้าตูบจดตรวจจับ Notification ทันที มีถาดพักรายการให้ปัดคอนเฟิร์ม (Swipe to Confirm),
+            แดชบอร์ดสรุปผลกระแสเงินสด, และโหมดตาปิดซ่อนยอดเงินในที่สาธารณะ 🙈
           </p>
 
           <!-- Download Action Buttons -->
           <div class="pt-2 flex flex-wrap gap-3 justify-center lg:justify-start">
-            <a href="#download" class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF7A00] to-[#EA580C] hover:from-[#FB923C] hover:to-[#FF7A00] text-white px-7 py-3 font-bold text-base shadow-lg shadow-orange-500/25 transition transform hover:-translate-y-0.5">
+            <a href="#download"
+              class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF7A00] to-[#EA580C] hover:from-[#FB923C] hover:to-[#FF7A00] text-white px-7 py-3 font-bold text-base shadow-lg shadow-orange-500/25 transition transform hover:-translate-y-0.5">
               ดาวน์โหลดฟรี
             </a>
-            <a href="features.html" class="inline-flex items-center justify-center rounded-full bg-[#18264A] hover:bg-[#1F325E] text-white px-6 py-3 font-bold text-base shadow-sm border border-[#22355E] transition">
+            <a href="features.html"
+              class="inline-flex items-center justify-center rounded-full bg-[#18264A] hover:bg-[#1F325E] text-white px-6 py-3 font-bold text-base shadow-sm border border-[#22355E] transition">
               ✨ ดูฟีเจอร์ทั้งหมด
             </a>
           </div>
@@ -309,7 +370,8 @@
 
     <!-- Clean SVG Transition -->
     <div class="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
-      <svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="relative block w-full h-8 sm:h-12 text-[#0B132B] fill-current">
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none"
+        class="relative block w-full h-8 sm:h-12 text-[#0B132B] fill-current">
         <polygon points="0,60 1200,0 1200,60"></polygon>
       </svg>
     </div>
@@ -318,17 +380,20 @@
   <!-- 3. TRUST & REPUTATION BADGE SECTION (MEOWJOT #get-start STYLE) -->
   <section id="get-start" class="bg-navy-low pt-12 pb-16 px-6 lg:px-10 text-white relative">
     <div class="max-w-4xl mx-auto text-center space-y-4">
-      
-      <div class="inline-flex items-center gap-3 bg-navy-card px-6 py-3 rounded-2xl border border-navy shadow-sm mx-auto">
+
+      <div
+        class="inline-flex items-center gap-3 bg-navy-card px-6 py-3 rounded-2xl border border-navy shadow-sm mx-auto">
         <span class="text-3xl">🏆</span>
         <div class="text-left">
-          <div class="text-xs font-extrabold text-mjbrand-light uppercase tracking-wider">THAI FINTECH SOLUTION 2026</div>
+          <div class="text-xs font-extrabold text-mjbrand-light uppercase tracking-wider">THAI FINTECH SOLUTION 2026
+          </div>
           <div class="text-sm font-bold text-white">แอปจดรายรับรายจ่ายที่ออกแบบเพื่อคนไทยโดยเฉพาะ</div>
         </div>
       </div>
 
       <p class="text-subtle text-sm sm:text-base max-w-xl mx-auto leading-relaxed pt-2">
-        จัดการเงินไม่อยู่เพราะไม่รู้เงินหายไปไหน เจ้าตูบจดช่วยจัดระบบและสร้างวินัยทางการเงินที่ดี ด้วยแอปรายรับรายจ่ายอัตโนมัติที่เข้าใจง่ายที่สุด
+        จัดการเงินไม่อยู่เพราะไม่รู้เงินหายไปไหน เจ้าตูบจดช่วยจัดระบบและสร้างวินัยทางการเงินที่ดี
+        ด้วยแอปรายรับรายจ่ายอัตโนมัติที่เข้าใจง่ายที่สุด
       </p>
 
     </div>
@@ -337,10 +402,10 @@
   <!-- 4. CORE 4 PILLARS (MEOWJOT START GRID STYLE) -->
   <section id="features-core" class="bg-navy-low pb-20 px-6 lg:px-10 text-white">
     <div class="max-w-6xl mx-auto">
-      
+
       <div class="text-center mb-14">
         <h2 class="text-3xl sm:text-4xl font-black text-mjbrand-main mb-3 leading-[1.3]">
-          เริ่มต้นวางแผนงบง่ายๆ <br/>ด้วยการจดรายจ่ายสไตล์เจ้าตูบ
+          เริ่มต้นวางแผนงบง่ายๆ <br />ด้วยการจดรายจ่ายสไตล์เจ้าตูบ
         </h2>
         <p class="text-subtle text-sm sm:text-base max-w-2xl mx-auto">
           เปลี่ยนเรื่องเงินให้เป็นเรื่องง่าย ไม่ต้องเสียเวลาเปิดแอปมาพิมพ์ยิบย่อย
@@ -348,29 +413,31 @@
       </div>
 
       <div class="grid md:grid-cols-2 gap-8 lg:gap-10">
-        
+
         <!-- Pillar 1: Auto Sync Notification -->
-        <div class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-[#FF7A00] transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
+        <div
+          class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-[#FF7A00] transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
           <div>
-            <div class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
-              <img 
-                src="showcase_assets/v2_auto_sync_clean.png" 
-                alt="Auto Sync Notifications" 
+            <div
+              class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
+              <img src="showcase_assets/v2_auto_sync_clean.png" alt="Auto Sync Notifications"
                 class="max-h-full w-auto object-contain rounded-xl shadow-md"
-                onerror="this.src='showcase_assets/app_bank_selection_success.png'"
-              />
-              <div class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
-                <img src="assets/images/action_expense.png" alt="Auto-Sync Expense" class="w-full h-full object-contain" />
+                onerror="this.src='showcase_assets/app_bank_selection_success.png'" />
+              <div
+                class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
+                <img src="assets/images/action_expense.png" alt="Auto-Sync Expense"
+                  class="w-full h-full object-contain" />
               </div>
             </div>
             <div class="flex items-center gap-3 mb-2">
               <img src="assets/images/action_expense.png" alt="Icon" class="w-8 h-8 object-contain shrink-0" />
               <h3 class="text-xl sm:text-2xl font-black text-white leading-[1.3]">
-                โอนจ่ายแล้วจดเลย <br/><span class="text-[#FF7A00]">จากแจ้งเตือนธนาคาร (Auto-Sync)</span>
+                โอนจ่ายแล้วจดเลย <br /><span class="text-[#FF7A00]">จากแจ้งเตือนธนาคาร (Auto-Sync)</span>
               </h3>
             </div>
             <p class="text-subtle text-sm leading-relaxed">
-              โดดเด่นในการบันทึกค่าใช้จ่ายอัตโนมัติ ตรวจจับ Notification จาก 13 แอปธนาคารไทย ถอดรหัสยอดเงิน เวลา และผู้รับเข้าถาดพักรายการ ไม่ต้องจดเอง ไม่ตกหล่นทุกยอด
+              โดดเด่นในการบันทึกค่าใช้จ่ายอัตโนมัติ ตรวจจับ Notification จาก 13 แอปธนาคารไทย ถอดรหัสยอดเงิน เวลา
+              และผู้รับเข้าถาดพักรายการ ไม่ต้องจดเอง ไม่ตกหล่นทุกยอด
             </p>
           </div>
           <div class="mt-6 pt-4 border-t border-white/10 text-xs font-bold text-[#FF7A00] flex items-center gap-1.5">
@@ -379,26 +446,28 @@
         </div>
 
         <!-- Pillar 2: Reconciliation & Bank Cards -->
-        <div class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-[#2563EB] transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
+        <div
+          class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-[#2563EB] transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
           <div>
-            <div class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
-              <img 
-                src="showcase_assets/v2_dashboard.png" 
-                alt="Reconciliation and Bank Cards" 
-                class="max-h-full w-auto object-contain rounded-xl shadow-md"
-              />
-              <div class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
-                <img src="assets/images/action_income.png" alt="Reconcile Income" class="w-full h-full object-contain" />
+            <div
+              class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
+              <img src="showcase_assets/v2_dashboard.png" alt="Reconciliation and Bank Cards"
+                class="max-h-full w-auto object-contain rounded-xl shadow-md" />
+              <div
+                class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
+                <img src="assets/images/action_income.png" alt="Reconcile Income"
+                  class="w-full h-full object-contain" />
               </div>
             </div>
             <div class="flex items-center gap-3 mb-2">
               <img src="assets/images/action_income.png" alt="Icon" class="w-8 h-8 object-contain shrink-0" />
               <h3 class="text-xl sm:text-2xl font-black text-white leading-[1.3]">
-                จัดการหลายบัญชี <br/><span class="text-[#2563EB]">พร้อมระบบกระทบยอดเงินจริง (Reconcile)</span>
+                จัดการหลายบัญชี <br /><span class="text-[#2563EB]">พร้อมระบบกระทบยอดเงินจริง (Reconcile)</span>
               </h3>
             </div>
             <p class="text-subtle text-sm leading-relaxed">
-              สไลด์ดูบัตรธนาคารเสมือนจริงแยกตามสีของแต่ละธนาคาร และมี Reconciliation Bottom Sheet พิมพ์ยอดเงินจริงจากแอปธนาคาร ระบบคำนวณผลต่างและปรับยอดให้ตรงเป๊ะ
+              สไลด์ดูบัตรธนาคารเสมือนจริงแยกตามสีของแต่ละธนาคาร และมี Reconciliation Bottom Sheet
+              พิมพ์ยอดเงินจริงจากแอปธนาคาร ระบบคำนวณผลต่างและปรับยอดให้ตรงเป๊ะ
             </p>
           </div>
           <div class="mt-6 pt-4 border-t border-white/10 text-xs font-bold text-[#3B82F6] flex items-center gap-1.5">
@@ -407,26 +476,28 @@
         </div>
 
         <!-- Pillar 3: Donut Analytics & Cash Flow -->
-        <div class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-emerald-400 transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
+        <div
+          class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-emerald-400 transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
           <div>
-            <div class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
-              <img 
-                src="showcase_assets/app_analytics.png" 
-                alt="Donut Breakdown Analytics" 
-                class="max-h-full w-auto object-contain rounded-xl shadow-md"
-              />
-              <div class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
-                <img src="assets/images/action_analytics.png" alt="Analytics Donut" class="w-full h-full object-contain" />
+            <div
+              class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
+              <img src="showcase_assets/app_analytics.png" alt="Donut Breakdown Analytics"
+                class="max-h-full w-auto object-contain rounded-xl shadow-md" />
+              <div
+                class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
+                <img src="assets/images/action_analytics.png" alt="Analytics Donut"
+                  class="w-full h-full object-contain" />
               </div>
             </div>
             <div class="flex items-center gap-3 mb-2">
               <img src="assets/images/action_analytics.png" alt="Icon" class="w-8 h-8 object-contain shrink-0" />
               <h3 class="text-xl sm:text-2xl font-black text-white leading-[1.3]">
-                วิเคราะห์ สรุป <br/><span class="text-emerald-400">และติดตามรายจ่ายด้วย Donut Chart</span>
+                วิเคราะห์ สรุป <br /><span class="text-emerald-400">และติดตามรายจ่ายด้วย Donut Chart</span>
               </h3>
             </div>
             <p class="text-subtle text-sm leading-relaxed">
-              สรุปยอดค่าใช้จ่ายรายเดือนแยกตามหมวดหมู่จริง กราฟวงกลม Donut Chart แสดงสัดส่วนชัดเจน ช่วยให้เห็นว่าเงินรั่วไหลไปกับอะไรมากที่สุดเพื่อตั้งเป้าเก็บเงินได้สำเร็จ
+              สรุปยอดค่าใช้จ่ายรายเดือนแยกตามหมวดหมู่จริง กราฟวงกลม Donut Chart แสดงสัดส่วนชัดเจน
+              ช่วยให้เห็นว่าเงินรั่วไหลไปกับอะไรมากที่สุดเพื่อตั้งเป้าเก็บเงินได้สำเร็จ
             </p>
           </div>
           <div class="mt-6 pt-4 border-t border-white/10 text-xs font-bold text-emerald-400 flex items-center gap-1.5">
@@ -435,27 +506,28 @@
         </div>
 
         <!-- Pillar 4: Budgets & Custom Tags -->
-        <div class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-[#FF7A00] transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
+        <div
+          class="bg-[#18264A] p-7 rounded-3xl border border-[#22355E] hover:border-[#FF7A00] transition duration-300 flex flex-col justify-between shadow-lg relative overflow-hidden group">
           <div>
-            <div class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
-              <img 
-                src="showcase_assets/v2_budgets_opened.png" 
-                alt="Budgets and Tags" 
+            <div
+              class="h-52 rounded-2xl bg-[#131E3A] overflow-hidden mb-6 flex items-center justify-center p-4 border border-white/5 relative">
+              <img src="showcase_assets/v2_budgets_opened.png" alt="Budgets and Tags"
                 class="max-h-full w-auto object-contain rounded-xl shadow-md"
-                onerror="this.src='showcase_assets/app_spending_plan.png'"
-              />
-              <div class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
+                onerror="this.src='showcase_assets/app_spending_plan.png'" />
+              <div
+                class="absolute bottom-3 right-3 w-12 h-12 rounded-xl bg-[#18264A]/90 p-1.5 border border-[#22355E] shadow-md flex items-center justify-center">
                 <img src="assets/images/action_budget.png" alt="Budget Planner" class="w-full h-full object-contain" />
               </div>
             </div>
             <div class="flex items-center gap-3 mb-2">
               <img src="assets/images/action_budget.png" alt="Icon" class="w-8 h-8 object-contain shrink-0" />
               <h3 class="text-xl sm:text-2xl font-black text-white leading-[1.3]">
-                จ่ายเงินสด หรือตั้งงบเฉพาะเรื่อง <br/><span class="text-[#FB923C]">ก็เพิ่มและติดแท็ก (#) เองได้</span>
+                จ่ายเงินสด หรือตั้งงบเฉพาะเรื่อง <br /><span class="text-[#FB923C]">ก็เพิ่มและติดแท็ก (#) เองได้</span>
               </h3>
             </div>
             <p class="text-subtle text-sm leading-relaxed">
-              ตั้งงบประมาณรายหมวดพร้อมแถบ Progress เตือนสีก่อนเงินหมด และสามารถจดรายการเงินสดได้ใน Add Transaction Sheet พร้อมใส่แท็ก เช่น <code>#ทริปเชียงใหม่</code> หรือ <code>#คอนโด</code>
+              ตั้งงบประมาณรายหมวดพร้อมแถบ Progress เตือนสีก่อนเงินหมด และสามารถจดรายการเงินสดได้ใน Add Transaction Sheet
+              พร้อมใส่แท็ก เช่น <code>#ทริปเชียงใหม่</code> หรือ <code>#คอนโด</code>
             </p>
           </div>
           <div class="mt-6 pt-4 border-t border-white/10 text-xs font-bold text-[#FB923C] flex items-center gap-1.5">
@@ -469,99 +541,132 @@
   </section>
 
   <!-- 4.5 CATEGORIES & 3D SHOWCASE -->
-  <section id="categories-showcase" class="bg-[#0B132B] py-20 px-6 lg:px-10 text-white border-t border-[#22355E]/60 relative">
+  <section id="categories-showcase"
+    class="bg-[#0B132B] py-20 px-6 lg:px-10 text-white border-t border-[#22355E]/60 relative">
     <div class="max-w-6xl mx-auto">
-      
+
       <div class="text-center max-w-3xl mx-auto mb-14">
-        <div class="inline-flex items-center gap-2 bg-[#18264A] text-[#FF7A00] border border-[#22355E] px-4 py-1.5 rounded-full text-xs font-bold mb-3 shadow-xs">
+        <div
+          class="inline-flex items-center gap-2 bg-[#18264A] text-[#FF7A00] border border-[#22355E] px-4 py-1.5 rounded-full text-xs font-bold mb-3 shadow-xs">
           <span>🏷️</span> หมวดหมู่รายรับ-รายจ่าย
         </div>
         <h2 class="text-2xl sm:text-4xl font-black text-white leading-[1.3] mb-3">
           จัดหมวดหมู่อัตโนมัติ <span class="text-[#FF7A00]">เข้าใจง่าย สบายตา</span>
         </h2>
         <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-          ตรวจจับแจ้งเตือนแล้วแยกหมวดหมู่อัตโนมัติทันที พร้อมไอคอน 3D ดีไซน์เฉพาะตัว ช่วยให้เห็นภาพรวมค่าใช้จ่ายได้อย่างรวดเร็ว
+          ตรวจจับแจ้งเตือนแล้วแยกหมวดหมู่อัตโนมัติทันที พร้อมไอคอน 3D ดีไซน์เฉพาะตัว
+          ช่วยให้เห็นภาพรวมค่าใช้จ่ายได้อย่างรวดเร็ว
         </p>
       </div>
 
       <!-- Categories Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5">
-        
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_food.png" alt="อาหาร & เครื่องดื่ม" class="max-h-full max-w-full object-contain" />
+
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_food.png" alt="อาหาร & เครื่องดื่ม"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">อาหาร & เครื่องดื่ม</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">ข้าว, กาแฟ, ขนม</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_transport.png" alt="การเดินทาง" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_transport.png" alt="การเดินทาง"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">การเดินทาง & น้ำมัน</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">รถไฟฟ้า, น้ำมัน, แท็กซี่</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_shopping.png" alt="ช้อปปิ้ง" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_shopping.png" alt="ช้อปปิ้ง"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">ช้อปปิ้ง & ของใช้</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">เสื้อผ้า, Shopee, ของใช้</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_bills.png" alt="บิล & สาธารณูปโภค" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_bills.png" alt="บิล & สาธารณูปโภค"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">บิล & ค่าใช้จ่ายประจำ</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">ค่าน้ำ, ค่าไฟ, อินเทอร์เน็ต</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_entertainment.png" alt="ความบันเทิง" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_entertainment.png" alt="ความบันเทิง"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">ความบันเทิง & ท่องเที่ยว</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">ดูหนัง, คอนเสิร์ต, ทริป</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#2563EB] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_salary.png" alt="เงินเดือน" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#2563EB] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_salary.png" alt="เงินเดือน"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">เงินเดือน & ค่าจ้าง</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">รายได้หลักประจำเดือน</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#2563EB] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_savings.png" alt="เงินออม" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#2563EB] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_savings.png" alt="เงินออม"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">เงินออม & ฝากประจำ</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">เก็บเงินเพื่อเป้าหมาย</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#2563EB] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_investment.png" alt="การลงทุน" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#2563EB] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_investment.png" alt="การลงทุน"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">การลงทุน & ปันผล</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">กองทุน, หุ้น, ดอกเบี้ย</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_health.png" alt="สุขภาพ" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_health.png" alt="สุขภาพ"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">สุขภาพ & ยา</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">หาหมอ, วิตามิน, คลินิก</div>
         </div>
 
-        <div class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <img src="assets/images/categories/cat_bonus.png" alt="โบนัส" class="max-h-full max-w-full object-contain" />
+        <div
+          class="bg-[#18264A] p-4 sm:p-5 rounded-2xl border border-[#22355E] hover:border-[#FF7A00] transition-all duration-300 flex flex-col items-center text-center shadow-md group hover:-translate-y-1">
+          <div
+            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-2 shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <img src="assets/images/categories/cat_bonus.png" alt="โบนัส"
+              class="max-h-full max-w-full object-contain" />
           </div>
           <div class="font-bold text-sm text-white">โบนัส & รายได้เสริม</div>
           <div class="text-[11px] text-[#94A3B8] mt-1">ฟรีแลนซ์, เงินพิเศษ</div>
@@ -575,7 +680,7 @@
   <!-- 5. MEOWJOT HABITS SECTION (รู้นิสัยการใช้จ่ายจากการจด - 3 COLUMNS) -->
   <section class="bg-navy-mid py-24 px-6 lg:px-10 text-white border-t border-white/5 relative">
     <div class="max-w-6xl mx-auto">
-      
+
       <div class="text-center mb-16">
         <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-[1.3]">
           รู้นิสัย <span class="text-mjbrand-main">การใช้จ่ายของตัวเอง</span> จากการจด
@@ -586,13 +691,14 @@
       </div>
 
       <div class="grid md:grid-cols-3 gap-8">
-        
+
         <!-- Habit Card 1 -->
         <div class="bg-navy-card p-6 rounded-3xl border border-navy">
           <div class="text-4xl mb-4">⚡</div>
           <h3 class="text-lg font-bold text-white mb-2">รู้ทันทุกการใช้จ่าย</h3>
           <p class="text-subtle text-sm leading-relaxed">
-            เห็นยอดรวมการใช้จ่ายทุกรายการในแต่ละเดือน แค่โอนเงินเสร็จ แจ้งเตือนจะถูกอ่านและจัดหมวดหมู่อัตโนมัติจาก 13 แอปธนาคารไทย ไม่ต้องเปิดแอปมาพิมพ์เอง
+            เห็นยอดรวมการใช้จ่ายทุกรายการในแต่ละเดือน แค่โอนเงินเสร็จ แจ้งเตือนจะถูกอ่านและจัดหมวดหมู่อัตโนมัติจาก 13
+            แอปธนาคารไทย ไม่ต้องเปิดแอปมาพิมพ์เอง
           </p>
         </div>
 
@@ -601,7 +707,8 @@
           <div class="text-4xl mb-4">📈</div>
           <h3 class="text-lg font-bold text-white mb-2">รู้แนวโน้มการใช้เงิน</h3>
           <p class="text-subtle text-sm leading-relaxed">
-            รีวิวสุขภาพการเงินผ่านกราฟสรุป Donut Chart และกระแสเงินสด ช่วยให้เห็นแนวโน้มการใช้จ่าย เปรียบเทียบเดือนต่อเดือนได้ง่ายๆ
+            รีวิวสุขภาพการเงินผ่านกราฟสรุป Donut Chart และกระแสเงินสด ช่วยให้เห็นแนวโน้มการใช้จ่าย
+            เปรียบเทียบเดือนต่อเดือนได้ง่ายๆ
           </p>
         </div>
 
@@ -610,7 +717,8 @@
           <div class="text-4xl mb-4">💡</div>
           <h3 class="text-lg font-bold text-white mb-2">ตอบข้อสงสัย เงินหายไปไหนก็รู้</h3>
           <p class="text-subtle text-sm leading-relaxed">
-            เจ้าตูบช่วยแยกหมวดหมู่อาหาร, ช้อปปิ้ง, ค่าเดินทาง ให้เห็นสัดส่วนชัดเจน พอรู้แล้วว่าเงินหายไปไหน ก็ตัดส่วนที่ไม่จำเป็นออกแล้วเริ่มมีเงินเก็บได้ทันที
+            เจ้าตูบช่วยแยกหมวดหมู่อาหาร, ช้อปปิ้ง, ค่าเดินทาง ให้เห็นสัดส่วนชัดเจน พอรู้แล้วว่าเงินหายไปไหน
+            ก็ตัดส่วนที่ไม่จำเป็นออกแล้วเริ่มมีเงินเก็บได้ทันที
           </p>
         </div>
 
@@ -622,11 +730,12 @@
   <!-- 6. AUTO-SYNC 13 THAI BANKS ANIMATED MARQUEE -->
   <section id="autosync" class="bg-navy-low py-20 text-white border-t border-white/5 overflow-hidden">
     <div class="max-w-6xl mx-auto text-center px-6 lg:px-10 mb-10">
-      
-      <div class="inline-flex items-center gap-2 bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 px-4 py-1.5 rounded-full text-xs font-bold mb-3 shadow-sm">
+
+      <div
+        class="inline-flex items-center gap-2 bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 px-4 py-1.5 rounded-full text-xs font-bold mb-3 shadow-sm">
         ⚡ THAI BANK NOTIFICATION ENGINE
       </div>
-      
+
       <h2 class="text-2xl sm:text-4xl font-black text-white mb-3 leading-[1.3]">
         รองรับการแจ้งเตือนจาก <span class="text-[#FF7A00]">13 ธนาคารและวอลเล็ทชั้นนำของไทย</span>
       </h2>
@@ -639,14 +748,20 @@
     <!-- Infinite Scrolling Marquee (Track 1: Left to Right) -->
     <div class="relative w-full overflow-hidden py-2">
       <!-- Gradient Fade Edges -->
-      <div class="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-navy-low to-transparent z-10 pointer-events-none"></div>
-      <div class="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-navy-low to-transparent z-10 pointer-events-none"></div>
+      <div
+        class="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-navy-low to-transparent z-10 pointer-events-none">
+      </div>
+      <div
+        class="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-navy-low to-transparent z-10 pointer-events-none">
+      </div>
 
       <div class="marquee-track-left">
         <!-- Set 1 -->
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/k.2uromo63alc1_.png" alt="K PLUS" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/k.2uromo63alc1_.png" alt="K PLUS"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">K PLUS</div>
@@ -654,9 +769,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/scb.38e-ikrg1niqv.png" alt="SCB EASY" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/scb.38e-ikrg1niqv.png" alt="SCB EASY"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">SCB EASY</div>
@@ -664,9 +781,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/kt.36fh61q77ozax.png" alt="Krungthai NEXT" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/kt.36fh61q77ozax.png" alt="Krungthai NEXT"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Krungthai NEXT</div>
@@ -674,9 +793,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/bbl.1veqep98cav-i.png" alt="Bualuang" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/bbl.1veqep98cav-i.png" alt="Bualuang"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Bualuang mBanking</div>
@@ -684,9 +805,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/ttb.1nul11dskkxmj.png" alt="ttb touch" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/ttb.1nul11dskkxmj.png" alt="ttb touch"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">ttb touch</div>
@@ -694,9 +817,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/ks.0lqa_man9aj-y.png" alt="KMA Krungsri" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/ks.0lqa_man9aj-y.png" alt="KMA Krungsri"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">KMA Krungsri</div>
@@ -704,9 +829,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/mymo.23_gu3ygrerx4.png" alt="MyMo" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/mymo.23_gu3ygrerx4.png" alt="MyMo"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">MyMo (GSB)</div>
@@ -714,9 +841,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/true.3z5m5jk3juh3o.png" alt="TrueMoney" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/true.3z5m5jk3juh3o.png" alt="TrueMoney"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">TrueMoney</div>
@@ -724,9 +853,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/pao.2j00-nxgex2yg.png" alt="เป๋าตัง" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/pao.2j00-nxgex2yg.png" alt="เป๋าตัง"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">เป๋าตัง</div>
@@ -735,9 +866,11 @@
         </div>
 
         <!-- Duplicated Set for Infinite Loop -->
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/k.2uromo63alc1_.png" alt="K PLUS" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/k.2uromo63alc1_.png" alt="K PLUS"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">K PLUS</div>
@@ -745,9 +878,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/scb.38e-ikrg1niqv.png" alt="SCB EASY" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/scb.38e-ikrg1niqv.png" alt="SCB EASY"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">SCB EASY</div>
@@ -755,9 +890,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/kt.36fh61q77ozax.png" alt="Krungthai NEXT" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/kt.36fh61q77ozax.png" alt="Krungthai NEXT"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Krungthai NEXT</div>
@@ -765,9 +902,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/bbl.1veqep98cav-i.png" alt="Bualuang" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/bbl.1veqep98cav-i.png" alt="Bualuang"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Bualuang mBanking</div>
@@ -775,9 +914,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/ttb.1nul11dskkxmj.png" alt="ttb touch" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/ttb.1nul11dskkxmj.png" alt="ttb touch"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">ttb touch</div>
@@ -785,9 +926,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/ks.0lqa_man9aj-y.png" alt="KMA Krungsri" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/ks.0lqa_man9aj-y.png" alt="KMA Krungsri"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">KMA Krungsri</div>
@@ -795,9 +938,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/mymo.23_gu3ygrerx4.png" alt="MyMo" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/mymo.23_gu3ygrerx4.png" alt="MyMo"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">MyMo (GSB)</div>
@@ -805,9 +950,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/true.3z5m5jk3juh3o.png" alt="TrueMoney" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/true.3z5m5jk3juh3o.png" alt="TrueMoney"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">TrueMoney</div>
@@ -815,9 +962,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/pao.2j00-nxgex2yg.png" alt="เป๋าตัง" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/pao.2j00-nxgex2yg.png" alt="เป๋าตัง"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">เป๋าตัง</div>
@@ -829,14 +978,20 @@
 
     <!-- Infinite Scrolling Marquee (Track 2: Right to Left) -->
     <div class="relative w-full overflow-hidden py-2 mt-2">
-      <div class="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-navy-low to-transparent z-10 pointer-events-none"></div>
-      <div class="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-navy-low to-transparent z-10 pointer-events-none"></div>
+      <div
+        class="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-navy-low to-transparent z-10 pointer-events-none">
+      </div>
+      <div
+        class="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-navy-low to-transparent z-10 pointer-events-none">
+      </div>
 
       <div class="marquee-track-right">
         <!-- Set 2 -->
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/make.1nj0qo87435si.png" alt="MAKE by KBank" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/make.1nj0qo87435si.png" alt="MAKE by KBank"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">MAKE by KBank</div>
@@ -844,9 +999,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/dime.008a63kjupjgx.png" alt="Dime!" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/dime.008a63kjupjgx.png" alt="Dime!"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Dime!</div>
@@ -854,9 +1011,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/kept.0m7myveitjygs.png" alt="Kept" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/kept.0m7myveitjygs.png" alt="Kept"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Kept</div>
@@ -864,9 +1023,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/baac.2hnn-tzimav9t.png" alt="BAAC" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/baac.2hnn-tzimav9t.png" alt="BAAC"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">A-Mobile Plus</div>
@@ -874,9 +1035,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/uob.2twi-22ccvrer.png" alt="UOB TMRW" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/uob.2twi-22ccvrer.png" alt="UOB TMRW"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">UOB TMRW</div>
@@ -884,9 +1047,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/cimb.2a1cd_dhu4p8l.png" alt="CIMB THAI" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/cimb.2a1cd_dhu4p8l.png" alt="CIMB THAI"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">CIMB Digital</div>
@@ -894,9 +1059,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/lhb.2_nrz1f2sw6nq.png" alt="LH Bank" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/lhb.2_nrz1f2sw6nq.png" alt="LH Bank"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">LHB You</div>
@@ -904,9 +1071,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/kkp-better.3ix6fjk1swkxs.png" alt="KKP Mobile" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/kkp-better.3ix6fjk1swkxs.png" alt="KKP Mobile"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">KKP Mobile</div>
@@ -915,9 +1084,11 @@
         </div>
 
         <!-- Duplicated Set 2 for Infinite Loop -->
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/make.1nj0qo87435si.png" alt="MAKE by KBank" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/make.1nj0qo87435si.png" alt="MAKE by KBank"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">MAKE by KBank</div>
@@ -925,9 +1096,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/dime.008a63kjupjgx.png" alt="Dime!" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/dime.008a63kjupjgx.png" alt="Dime!"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Dime!</div>
@@ -935,9 +1108,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/kept.0m7myveitjygs.png" alt="Kept" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/kept.0m7myveitjygs.png" alt="Kept"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">Kept</div>
@@ -945,9 +1120,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/baac.2hnn-tzimav9t.png" alt="BAAC" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/baac.2hnn-tzimav9t.png" alt="BAAC"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">A-Mobile Plus</div>
@@ -955,9 +1132,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/uob.2twi-22ccvrer.png" alt="UOB TMRW" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/uob.2twi-22ccvrer.png" alt="UOB TMRW"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">UOB TMRW</div>
@@ -965,9 +1144,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/cimb.2a1cd_dhu4p8l.png" alt="CIMB THAI" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/cimb.2a1cd_dhu4p8l.png" alt="CIMB THAI"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">CIMB Digital</div>
@@ -975,9 +1156,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/lhb.2_nrz1f2sw6nq.png" alt="LH Bank" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/lhb.2_nrz1f2sw6nq.png" alt="LH Bank"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">LHB You</div>
@@ -985,9 +1168,11 @@
           </div>
         </div>
 
-        <div class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
+        <div
+          class="bg-navy-card/95 hover:bg-navy-card px-5 py-3 rounded-2xl border border-navy hover:border-mjbrand-main flex items-center gap-3.5 shadow-md shrink-0 transition-transform duration-300 hover:scale-105">
           <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
-            <img src="showcase_assets/bank_logos/kkp-better.3ix6fjk1swkxs.png" alt="KKP Mobile" class="w-full h-full object-contain" />
+            <img src="showcase_assets/bank_logos/kkp-better.3ix6fjk1swkxs.png" alt="KKP Mobile"
+              class="w-full h-full object-contain" />
           </div>
           <div class="text-left">
             <div class="font-bold text-sm text-white whitespace-nowrap">KKP Mobile</div>
@@ -998,8 +1183,10 @@
     </div>
 
     <div class="text-center mt-8">
-      <div class="inline-flex items-center gap-2 bg-navy-card px-5 py-2.5 rounded-full border border-navy text-xs text-subtle shadow-sm">
-        <span>🛡️</span> <strong>100% On-Device Privacy:</strong> ระบบอ่านแจ้งเตือนทำงานภายในเครื่องโดยตรง ไม่ต้องให้รหัสผ่านธนาคาร ไม่มีการส่งออกข้อมูล
+      <div
+        class="inline-flex items-center gap-2 bg-navy-card px-5 py-2.5 rounded-full border border-navy text-xs text-subtle shadow-sm">
+        <span>🛡️</span> <strong>100% On-Device Privacy:</strong> ระบบอ่านแจ้งเตือนทำงานภายในเครื่องโดยตรง
+        ไม่ต้องให้รหัสผ่านธนาคาร ไม่มีการส่งออกข้อมูล
       </div>
     </div>
   </section>
@@ -1007,19 +1194,22 @@
   <!-- 6.5 NOTIFICATION CAPTURE ENGINE (REAL FEATURES) -->
   <section class="bg-navy-mid py-24 px-6 lg:px-10 text-white border-t border-white/5 relative">
     <div class="max-w-6xl mx-auto">
-      
+
       <div class="text-center mb-16 relative">
         <!-- Peeking Dog Mascot -->
         <div class="flex items-center justify-center mb-4">
           <div class="relative">
-            <img src="assets/images/mascot_dog_peek.png" alt="เจ้าตูบตรวจจับแจ้งเตือน" class="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl" />
-            <span class="absolute -bottom-1 right-0 bg-[#FF7A00] text-slate-950 font-black text-[11px] px-2 py-0.5 rounded-full shadow-md animate-pulse">
+            <img src="assets/images/mascot_dog_peek.png" alt="เจ้าตูบตรวจจับแจ้งเตือน"
+              class="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl" />
+            <span
+              class="absolute -bottom-1 right-0 bg-[#FF7A00] text-slate-950 font-black text-[11px] px-2 py-0.5 rounded-full shadow-md animate-pulse">
               โอนปุ๊บ รู้ปั๊บ! ⚡
             </span>
           </div>
         </div>
 
-        <div class="inline-flex items-center gap-2 bg-amber-950/80 text-amber-400 border border-amber-800/60 px-4 py-1.5 rounded-full text-xs font-bold mb-3 shadow-xs">
+        <div
+          class="inline-flex items-center gap-2 bg-amber-950/80 text-amber-400 border border-amber-800/60 px-4 py-1.5 rounded-full text-xs font-bold mb-3 shadow-xs">
           ⚡ NOTIFICATION CAPTURE ENGINE
         </div>
         <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-[1.3]">
@@ -1031,18 +1221,21 @@
       </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+
         <!-- Feature 1: Real-time Listener -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl mb-4 border border-emerald-500/20">
+            <div
+              class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl mb-4 border border-emerald-500/20">
               ⚡
             </div>
             <h3 class="text-lg font-bold text-white mb-2 leading-snug">
               ตรวจจับแจ้งเตือนทันที
             </h3>
             <p class="text-subtle text-xs leading-relaxed">
-              ทำงานทันทีเมื่อได้รับข้อความแจ้งเตือนเงินเข้าหรือออกจาก 13 แอปธนาคารไทย ถอดรหัสยอดเงิน เวลา และร้านค้าได้อัตโนมัติในเสี้ยววินาที
+              ทำงานทันทีเมื่อได้รับข้อความแจ้งเตือนเงินเข้าหรือออกจาก 13 แอปธนาคารไทย ถอดรหัสยอดเงิน เวลา
+              และร้านค้าได้อัตโนมัติในเสี้ยววินาที
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-white/10 text-[11px] font-semibold text-emerald-400">
@@ -1051,16 +1244,19 @@
         </div>
 
         <!-- Feature 2: Pending Queue & Swipe to Confirm -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-2xl mb-4 border border-amber-500/20">
+            <div
+              class="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-2xl mb-4 border border-amber-500/20">
               👉
             </div>
             <h3 class="text-lg font-bold text-white mb-2 leading-snug">
               ถาดพักรายการ & ปัดคอนเฟิร์ม
             </h3>
             <p class="text-subtle text-xs leading-relaxed">
-              รายการที่ตรวจพบจะถูกเก็บไว้ใน "ถาดพักรออนุมัติ (Pending Queue)" ให้คุณปัดขวาเพื่อยืนยัน (Swipe Right) หรือปัดซ้ายเพื่อยกเลิก มั่นใจได้ว่าไม่มีบันทึกมั่ว
+              รายการที่ตรวจพบจะถูกเก็บไว้ใน "ถาดพักรออนุมัติ (Pending Queue)" ให้คุณปัดขวาเพื่อยืนยัน (Swipe Right)
+              หรือปัดซ้ายเพื่อยกเลิก มั่นใจได้ว่าไม่มีบันทึกมั่ว
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-white/10 text-[11px] font-semibold text-amber-400">
@@ -1069,16 +1265,19 @@
         </div>
 
         <!-- Feature 3: Bank Parsers -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-2xl mb-4 border border-blue-500/20">
+            <div
+              class="w-12 h-12 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-2xl mb-4 border border-blue-500/20">
               🧩
             </div>
             <h3 class="text-lg font-bold text-white mb-2 leading-snug">
               Parser แยกธนาคารเฉพาะทาง
             </h3>
             <p class="text-subtle text-xs leading-relaxed">
-              พัฒนา Regex Parser ประจำแต่ละแอปโดยเฉพาะ รองรับทั้ง K PLUS, SCB EASY, Krungthai NEXT, Bualuang, ttb, KMA, MyMo และ TrueMoney สกัดยอดเงินได้แม่นยำ
+              พัฒนา Regex Parser ประจำแต่ละแอปโดยเฉพาะ รองรับทั้ง K PLUS, SCB EASY, Krungthai NEXT, Bualuang, ttb, KMA,
+              MyMo และ TrueMoney สกัดยอดเงินได้แม่นยำ
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-white/10 text-[11px] font-semibold text-blue-400">
@@ -1087,16 +1286,19 @@
         </div>
 
         <!-- Feature 4: On-Device Privacy -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy hover:border-mjbrand-primary transition duration-300 flex flex-col justify-between shadow-lg">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-2xl mb-4 border border-purple-500/20">
+            <div
+              class="w-12 h-12 rounded-2xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-2xl mb-4 border border-purple-500/20">
               🔒
             </div>
             <h3 class="text-lg font-bold text-white mb-2 leading-snug">
               ปลอดภัยในเครื่อง 100%
             </h3>
             <p class="text-subtle text-xs leading-relaxed">
-              ทำงานผ่าน Android Notification Listener ภายในเครื่องเท่านั้น ไม่มีการส่งข้อมูลสลิปหรือบัญชีออกนอกเครื่องเด็ดขาด ฐานข้อมูล Local SQLite ไร้กังวล
+              ทำงานผ่าน Android Notification Listener ภายในเครื่องเท่านั้น
+              ไม่มีการส่งข้อมูลสลิปหรือบัญชีออกนอกเครื่องเด็ดขาด ฐานข้อมูล Local SQLite ไร้กังวล
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-white/10 text-[11px] font-semibold text-purple-400">
@@ -1112,26 +1314,24 @@
   <!-- 7. RECONCILIATION & PRIVACY DETAIL SECTION -->
   <section id="reconcile" class="bg-navy-mid py-24 px-6 lg:px-10 text-white border-t border-white/5">
     <div class="max-w-6xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
-      
+
       <!-- Left: Real App Screenshot -->
       <div class="lg:col-span-6 flex justify-center">
         <div class="bg-slate-900 p-3 rounded-[40px] shadow-2xl border-4 border-slate-800 max-w-xs w-full">
-          <img 
-            src="showcase_assets/feat02_eye_privacy.png" 
-            alt="Privacy Eye Mask & Reconciliation" 
-            class="rounded-[32px] w-full object-cover"
-          />
+          <img src="showcase_assets/feat02_eye_privacy.png" alt="Privacy Eye Mask & Reconciliation"
+            class="rounded-[32px] w-full object-cover" />
         </div>
       </div>
 
       <!-- Right: Content -->
       <div class="lg:col-span-6 space-y-6">
-        <div class="inline-flex items-center gap-2 bg-blue-950/80 text-blue-400 border border-blue-800 px-3.5 py-1 rounded-full text-xs font-bold">
+        <div
+          class="inline-flex items-center gap-2 bg-blue-950/80 text-blue-400 border border-blue-800 px-3.5 py-1 rounded-full text-xs font-bold">
           ⚖️ UNIQUE FEATURE
         </div>
-        
+
         <h2 class="text-3xl sm:text-4xl font-black leading-[1.3] text-white">
-          กระทบยอดเงินจริง (Reconciliation) <br/>
+          กระทบยอดเงินจริง (Reconciliation) <br />
           <span class="text-mjbrand-main">& โหมดตาปิด Privacy Mask 🙈</span>
         </h2>
 
@@ -1144,21 +1344,24 @@
             <h4 class="font-bold text-white text-base flex items-center gap-2">
               <span>⚖️</span> ระบบ Reconciliation Bottom Sheet
             </h4>
-            <p class="text-xs text-subtle mt-1.5 leading-relaxed">พิมพ์ยอดเงินจริงจากแอปธนาคาร ระบบคำนวณผลต่าง และสร้างรายการปรับยอด (Adjustment) ให้อัตโนมัติทันที</p>
+            <p class="text-xs text-subtle mt-1.5 leading-relaxed">พิมพ์ยอดเงินจริงจากแอปธนาคาร ระบบคำนวณผลต่าง
+              และสร้างรายการปรับยอด (Adjustment) ให้อัตโนมัติทันที</p>
           </div>
 
           <div class="bg-navy-card p-5 rounded-2xl border border-navy">
             <h4 class="font-bold text-white text-base flex items-center gap-2">
               <span>🙈</span> โหมดตาปิด (Privacy Mask Mode)
             </h4>
-            <p class="text-xs text-subtle mt-1.5 leading-relaxed">แตะปุ่มดวงตาบนการ์ดยอดรวม ตัวเลขเงินทั้งหมดบนแดชบอร์ดจะกลายเป็น <code>••••••</code> ทันที ป้องกันคนแอบมองในที่สาธารณะ</p>
+            <p class="text-xs text-subtle mt-1.5 leading-relaxed">แตะปุ่มดวงตาบนการ์ดยอดรวม
+              ตัวเลขเงินทั้งหมดบนแดชบอร์ดจะกลายเป็น <code>••••••</code> ทันที ป้องกันคนแอบมองในที่สาธารณะ</p>
           </div>
 
           <div class="bg-navy-card p-5 rounded-2xl border border-navy">
             <h4 class="font-bold text-white text-base flex items-center gap-2">
               <span>🔒</span> รหัสล็อกแอป PIN Screen & Biometrics
             </h4>
-            <p class="text-xs text-subtle mt-1.5 leading-relaxed">ตั้งรหัส PIN 4-6 หลัก และสแกนใบหน้า Face ID ก่อนเข้าใช้งาน ปลอดภัยไร้กังวล</p>
+            <p class="text-xs text-subtle mt-1.5 leading-relaxed">ตั้งรหัส PIN 4-6 หลัก และสแกนใบหน้า Face ID
+              ก่อนเข้าใช้งาน ปลอดภัยไร้กังวล</p>
           </div>
         </div>
       </div>
@@ -1169,7 +1372,7 @@
   <!-- 8. WHO IS THIS FOR (MEOWJOT AUDIENCE SECTION) -->
   <section id="audience" class="bg-navy-low py-20 px-6 lg:px-10 text-white border-t border-white/5">
     <div class="max-w-6xl mx-auto">
-      
+
       <div class="text-center mb-14">
         <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-[1.3]">
           เจ้าตูบจด <span class="text-mjbrand-main">เหมาะกับใคร?</span>
@@ -1180,7 +1383,7 @@
       </div>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+
         <div class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between">
           <div>
             <div class="text-3xl mb-3">😴</div>
@@ -1228,9 +1431,10 @@
   <!-- 8.5 REVIEWS & SOCIAL PROOF (MEOWJOT BENCHMARK STYLE) -->
   <section class="bg-navy-low py-20 px-6 lg:px-10 text-white border-t border-white/5 relative">
     <div class="max-w-6xl mx-auto">
-      
+
       <div class="text-center mb-14">
-        <div class="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-4 py-1 rounded-full text-xs font-bold mb-3 shadow-xs">
+        <div
+          class="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-4 py-1 rounded-full text-xs font-bold mb-3 shadow-xs">
           <span>🐾</span> COMMUNITY TRUST
         </div>
         <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-[1.3]">
@@ -1242,26 +1446,30 @@
 
         <!-- Rating Stars Overview -->
         <div class="flex items-center justify-center gap-3 mt-6">
-          <img src="showcase_assets/bank_logos/rating-stars.27lk-x1f63-qs.svg" alt="5 Stars Rating" class="h-5 w-auto" />
+          <img src="showcase_assets/bank_logos/rating-stars.27lk-x1f63-qs.svg" alt="5 Stars Rating"
+            class="h-5 w-auto" />
           <span class="text-sm font-bold text-white">4.9 / 5.0 คะแนน</span>
           <span class="text-xs text-subtle">• ทั้งบน App Store & Google Play</span>
         </div>
       </div>
 
       <div class="grid md:grid-cols-3 gap-6">
-        
+
         <!-- Review Card 1 -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between shadow-md hover:border-mjbrand-primary transition duration-300">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between shadow-md hover:border-mjbrand-primary transition duration-300">
           <div>
             <div class="flex items-center gap-1 text-amber-400 text-sm mb-3">
               ★★★★★
             </div>
             <p class="text-sm text-slate-200 leading-relaxed italic mb-6">
-              “เป็นแอปรายรับรายจ่ายที่ดีมากเพราะชีวิตเราใช้เงินจุกจิก บางทีโอนค่านู้นค่านี่แล้วลืม ถ้าไม่ได้จดวันต่อวันลืมแน่นอน มันประหยัดเวลาในชีวิตไปแบบเยอะสุด ๆ”
+              “เป็นแอปรายรับรายจ่ายที่ดีมากเพราะชีวิตเราใช้เงินจุกจิก บางทีโอนค่านู้นค่านี่แล้วลืม
+              ถ้าไม่ได้จดวันต่อวันลืมแน่นอน มันประหยัดเวลาในชีวิตไปแบบเยอะสุด ๆ”
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-white/10">
-            <img src="showcase_assets/bank_logos/reviewer-aom.1tv056cjh1k_z.png" alt="Aom Ponchuda" class="w-11 h-11 rounded-full object-cover border border-amber-400/40" />
+            <img src="showcase_assets/bank_logos/reviewer-aom.1tv056cjh1k_z.png" alt="Aom Ponchuda"
+              class="w-11 h-11 rounded-full object-cover border border-amber-400/40" />
             <div>
               <div class="font-bold text-white text-sm">Aom Ponchuda</div>
               <div class="text-[11px] text-subtle">Content Creator & Shopper</div>
@@ -1270,17 +1478,20 @@
         </div>
 
         <!-- Review Card 2 -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between shadow-md hover:border-mjbrand-primary transition duration-300">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between shadow-md hover:border-mjbrand-primary transition duration-300">
           <div>
             <div class="flex items-center gap-1 text-amber-400 text-sm mb-3">
               ★★★★★
             </div>
             <p class="text-sm text-slate-200 leading-relaxed italic mb-6">
-              “เราไม่ต้องเข้าไปจดเองทีละรายการ ผมเองเข้าแค่ตอนก่อนนอนวันละครั้ง ก็คือจบเลย รายจ่ายมารอให้ครบ ตรวจสอบง่ายมาก กระทบยอดเงินเป๊ะ”
+              “เราไม่ต้องเข้าไปจดเองทีละรายการ ผมเองเข้าแค่ตอนก่อนนอนวันละครั้ง ก็คือจบเลย รายจ่ายมารอให้ครบ
+              ตรวจสอบง่ายมาก กระทบยอดเงินเป๊ะ”
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-white/10">
-            <img src="showcase_assets/bank_logos/reviewer-wealth.1bpelutftq8ro.png" alt="Wealth Blossoms" class="w-11 h-11 rounded-full object-cover border border-amber-400/40" />
+            <img src="showcase_assets/bank_logos/reviewer-wealth.1bpelutftq8ro.png" alt="Wealth Blossoms"
+              class="w-11 h-11 rounded-full object-cover border border-amber-400/40" />
             <div>
               <div class="font-bold text-white text-sm">Wealth Blossoms</div>
               <div class="text-[11px] text-subtle">Financial Planner & Investor</div>
@@ -1289,17 +1500,20 @@
         </div>
 
         <!-- Review Card 3 -->
-        <div class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between shadow-md hover:border-mjbrand-primary transition duration-300">
+        <div
+          class="bg-navy-card p-6 rounded-3xl border border-navy flex flex-col justify-between shadow-md hover:border-mjbrand-primary transition duration-300">
           <div>
             <div class="flex items-center gap-1 text-amber-400 text-sm mb-3">
               ★★★★★
             </div>
             <p class="text-sm text-slate-200 leading-relaxed italic mb-6">
-              “ทำให้จัดการการเงินได้ดีกว่าเดิม ชัดเจน จากที่เคยลองใช้แอปมาทั้งหมด ตัวนี้สะดวกและตรงกับพฤติกรรมการโอนของคนไทยที่สุด”
+              “ทำให้จัดการการเงินได้ดีกว่าเดิม ชัดเจน จากที่เคยลองใช้แอปมาทั้งหมด
+              ตัวนี้สะดวกและตรงกับพฤติกรรมการโอนของคนไทยที่สุด”
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-white/10">
-            <img src="showcase_assets/bank_logos/reviewer-gean.43x6ayb123mrb.png" alt="ยีนส์" class="w-11 h-11 rounded-full object-cover border border-amber-400/40" />
+            <img src="showcase_assets/bank_logos/reviewer-gean.43x6ayb123mrb.png" alt="ยีนส์"
+              class="w-11 h-11 rounded-full object-cover border border-amber-400/40" />
             <div>
               <div class="font-bold text-white text-sm">ยีนส์ (Gean)</div>
               <div class="text-[11px] text-subtle">Freelance Designer</div>
@@ -1315,51 +1529,67 @@
   <!-- 9. FAQ ACCORDION (MEOWJOT FAQ STYLE) -->
   <section id="faq" class="bg-navy-mid py-20 px-6 lg:px-10 text-white border-t border-white/5">
     <div class="max-w-3xl mx-auto">
-      
+
       <div class="text-center mb-12">
         <h2 class="text-3xl font-black mb-3 leading-[1.3]">คำถามที่พบบ่อย (FAQ)</h2>
         <p class="text-subtle text-sm">ข้อสงสัยยอดฮิตเกี่ยวกับการใช้งานเจ้าตูบจด</p>
       </div>
 
       <div class="space-y-4" id="faq-container">
-        
+
         <div class="bg-navy-card border border-navy rounded-2xl overflow-hidden shadow-sm">
-          <button class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition" onclick="toggleFaq(this)">
-            <span class="text-sm sm:text-base pr-4">ระบบ Auto-Sync อ่านการแจ้งเตือนธนาคารทำงานอย่างไร? ปลอดภัยไหม?</span>
+          <button
+            class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition"
+            onclick="toggleFaq(this)">
+            <span class="text-sm sm:text-base pr-4">ระบบ Auto-Sync อ่านการแจ้งเตือนธนาคารทำงานอย่างไร?
+              ปลอดภัยไหม?</span>
             <span class="text-xl text-mjbrand-main font-bold transition-transform shrink-0">+</span>
           </button>
           <div class="hidden p-5 pt-0 text-sm text-subtle border-t border-white/10 leading-relaxed">
-            ระบบทำงานผ่าน Android Notification Listener ภายในเครื่องโดยตรง เมื่อมีข้อความแจ้งเตือนเงินเข้าหรืออกจากแอปธนาคาร ระบบอัจฉริยะจะอ่านเฉพาะตัวเลขและข้อมูลร้านค้าเพื่อนำมาลงบันทึก โดยประมวลผลแบบ <strong>On-Device 100%</strong> ไม่มีการส่งรูปหรือข้อมูลออกนอกเครื่อง และไม่มีการขอรหัสผ่านธนาคารใดๆ ทั้งสิ้น
+            ระบบทำงานผ่าน Android Notification Listener ภายในเครื่องโดยตรง
+            เมื่อมีข้อความแจ้งเตือนเงินเข้าหรืออกจากแอปธนาคาร
+            ระบบอัจฉริยะจะอ่านเฉพาะตัวเลขและข้อมูลร้านค้าเพื่อนำมาลงบันทึก โดยประมวลผลแบบ <strong>On-Device
+              100%</strong> ไม่มีการส่งรูปหรือข้อมูลออกนอกเครื่อง และไม่มีการขอรหัสผ่านธนาคารใดๆ ทั้งสิ้น
           </div>
         </div>
 
         <div class="bg-navy-card border border-navy rounded-2xl overflow-hidden shadow-sm">
-          <button class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition" onclick="toggleFaq(this)">
+          <button
+            class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition"
+            onclick="toggleFaq(this)">
             <span class="text-sm sm:text-base pr-4">ระบบ Reconciliation (กระทบยอดเงิน) ช่วยอะไร?</span>
             <span class="text-xl text-mjbrand-main font-bold transition-transform shrink-0">+</span>
           </button>
           <div class="hidden p-5 pt-0 text-sm text-subtle border-t border-white/10 leading-relaxed">
-            ช่วยแก้ปัญหาคลาสสิกที่ยอดเงินในแอปจดบัญชีไม่ตรงกับเงินในบัญชีจริง โดยคุณสามารถเปิด Reconciliation Bottom Sheet และพิมพ์ยอดเงินจริงจากแอปธนาคาร ระบบจะคำนวณผลต่าง (Difference) และสร้างรายการปรับยอด (Adjustment) ให้อัตโนมัติทันที
+            ช่วยแก้ปัญหาคลาสสิกที่ยอดเงินในแอปจดบัญชีไม่ตรงกับเงินในบัญชีจริง โดยคุณสามารถเปิด Reconciliation Bottom
+            Sheet และพิมพ์ยอดเงินจริงจากแอปธนาคาร ระบบจะคำนวณผลต่าง (Difference) และสร้างรายการปรับยอด (Adjustment)
+            ให้อัตโนมัติทันที
           </div>
         </div>
 
         <div class="bg-navy-card border border-navy rounded-2xl overflow-hidden shadow-sm">
-          <button class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition" onclick="toggleFaq(this)">
+          <button
+            class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition"
+            onclick="toggleFaq(this)">
             <span class="text-sm sm:text-base pr-4">สามารถจดบันทึกเงินสด หรือเพิ่มรายการเองได้ไหม?</span>
             <span class="text-xl text-mjbrand-main font-bold transition-transform shrink-0">+</span>
           </button>
           <div class="hidden p-5 pt-0 text-sm text-subtle border-t border-white/10 leading-relaxed">
-            สามารถทำได้ตลอดเวลาครับ ผ่านหน้า Add Transaction Sheet โดยรองรับทั้ง รายรับ (Income), รายจ่าย (Expense), และการโอนย้ายระหว่างบัญชี (Transfer) พร้อมเลือกหมวดหมู่ ไอคอน และใส่แท็ก <code>#Tags</code> ได้อย่างอิสระ
+            สามารถทำได้ตลอดเวลาครับ ผ่านหน้า Add Transaction Sheet โดยรองรับทั้ง รายรับ (Income), รายจ่าย (Expense),
+            และการโอนย้ายระหว่างบัญชี (Transfer) พร้อมเลือกหมวดหมู่ ไอคอน และใส่แท็ก <code>#Tags</code> ได้อย่างอิสระ
           </div>
         </div>
 
         <div class="bg-navy-card border border-navy rounded-2xl overflow-hidden shadow-sm">
-          <button class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition" onclick="toggleFaq(this)">
+          <button
+            class="w-full text-left p-5 font-bold text-white flex justify-between items-center hover:bg-white/5 transition"
+            onclick="toggleFaq(this)">
             <span class="text-sm sm:text-base pr-4">โหมดตาปิด (Privacy Mask 🙈) ใช้งานอย่างไร?</span>
             <span class="text-xl text-mjbrand-main font-bold transition-transform shrink-0">+</span>
           </button>
           <div class="hidden p-5 pt-0 text-sm text-subtle border-t border-white/10 leading-relaxed">
-            เพียงแตะที่ไอคอนรูปดวงตาบนการ์ดยอดคงเหลือ ตัวเลขยอดเงินในแดชบอร์ด บัตรธนาคาร และงบประมาณจะถูกเซ็นเซอร์เป็นจุดทันที และแตะอีกครั้งเพื่อแสดงยอดตามปกติ
+            เพียงแตะที่ไอคอนรูปดวงตาบนการ์ดยอดคงเหลือ ตัวเลขยอดเงินในแดชบอร์ด บัตรธนาคาร
+            และงบประมาณจะถูกเซ็นเซอร์เป็นจุดทันที และแตะอีกครั้งเพื่อแสดงยอดตามปกติ
           </div>
         </div>
 
@@ -1369,34 +1599,38 @@
   </section>
 
   <!-- 10. FINAL DOWNLOAD CTA BANNER -->
-  <section id="download" class="py-24 bg-gradient-to-b from-[#0B132B] via-[#131E3A] to-[#0B132B] text-white text-center relative overflow-hidden border-t border-[#22355E]">
+  <section id="download"
+    class="py-24 bg-gradient-to-b from-[#0B132B] via-[#131E3A] to-[#0B132B] text-white text-center relative overflow-hidden border-t border-[#22355E]">
     <!-- Ambient Radial Glow -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-r from-[#FF7A00]/20 via-[#2563EB]/15 to-transparent blur-3xl pointer-events-none"></div>
+    <div
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-r from-[#FF7A00]/20 via-[#2563EB]/15 to-transparent blur-3xl pointer-events-none">
+    </div>
 
     <div class="max-w-4xl mx-auto px-6 relative z-10">
-      
+
       <!-- Celebrate Mascot Image -->
       <div class="mb-5">
-        <img 
-          src="assets/images/mascot_dog_celebrate.png" 
-          alt="เจ้าตูบฉลองความสำเร็จทางการเงิน" 
-          class="w-36 h-36 sm:w-44 sm:h-44 mx-auto object-contain drop-shadow-2xl hover:scale-105 transition transform duration-300"
-        />
+        <img src="assets/images/mascot_dog_celebrate.png" alt="เจ้าตูบฉลองความสำเร็จทางการเงิน"
+          class="w-36 h-36 sm:w-44 sm:h-44 mx-auto object-contain drop-shadow-2xl hover:scale-105 transition transform duration-300" />
       </div>
-      
+
       <h2 class="text-3xl sm:text-5xl font-black mb-4 leading-[1.35] text-white">
-        เริ่มต้นจัดการเงินง่ายๆ <br/>ดาวน์โหลด <span class="bg-gradient-to-r from-[#FFA726] via-[#FF7A00] to-[#EA580C] text-transparent bg-clip-text">เจ้าตูบจด</span> วันนี้
+        เริ่มต้นจัดการเงินง่ายๆ <br />ดาวน์โหลด <span
+          class="bg-gradient-to-r from-[#FFA726] via-[#FF7A00] to-[#EA580C] text-transparent bg-clip-text">เจ้าตูบจด</span>
+        วันนี้
       </h2>
-      
+
       <p class="text-slate-300 font-medium text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
         เซฟเวลา ไม่ต้องปวดหัวกับการทำบัญชี ให้เจ้าตูบช่วยจัดระเบียบทุกการใช้จ่ายของคุณ
       </p>
-      
+
       <div class="flex flex-wrap justify-center gap-4">
-        <a href="#" class="bg-gradient-to-r from-[#FF7A00] to-[#EA580C] hover:from-[#FB923C] hover:to-[#FF7A00] text-white px-8 py-3.5 rounded-full font-bold shadow-xl shadow-orange-500/25 transition transform hover:-translate-y-0.5 text-base">
+        <a href="#"
+          class="bg-gradient-to-r from-[#FF7A00] to-[#EA580C] hover:from-[#FB923C] hover:to-[#FF7A00] text-white px-8 py-3.5 rounded-full font-bold shadow-xl shadow-orange-500/25 transition transform hover:-translate-y-0.5 text-base">
           ดาวน์โหลดฟรี (iOS & Android)
         </a>
-        <a href="feature_book.html" class="bg-[#18264A] hover:bg-[#1F325E] text-white border border-[#22355E] px-8 py-3.5 rounded-full font-bold shadow-md transition text-base">
+        <a href="feature_book.html"
+          class="bg-[#18264A] hover:bg-[#1F325E] text-white border border-[#22355E] px-8 py-3.5 rounded-full font-bold shadow-md transition text-base">
           เปิดดู Feature Book
         </a>
       </div>
@@ -1406,7 +1640,7 @@
   <!-- 11. FOOTER (OFFICIAL TOOBJOD APP THEME) -->
   <footer class="py-14 px-6 lg:px-10 bg-[#080E20] text-slate-300 text-sm border-t border-[#22355E]">
     <div class="max-w-7xl mx-auto space-y-8">
-      
+
       <div class="flex flex-col md:flex-row justify-between items-start gap-8">
         <!-- Brand Summary -->
         <div class="space-y-3 max-w-sm">
@@ -1414,10 +1648,12 @@
             <div class="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-[#18264A]">
               <img src="assets/images/app_icon_512.png" alt="ToobJod Logo" class="w-full h-full object-cover" />
             </div>
-            <span>Toob<span class="text-[#FF7A00]">Jod</span> <span class="text-sm font-normal text-slate-400">(เจ้าตูบจด)</span></span>
+            <span>Toob<span class="text-[#FF7A00]">Jod</span> <span
+                class="text-sm font-normal text-slate-400">(เจ้าตูบจด)</span></span>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
-            แอปพลิเคชันบันทึกรายรับ-รายจ่ายอัตโนมัติจากแจ้งเตือนธนาคาร (Auto-Sync 13 ธนาคารไทย) จัดการหลายบัญชีพร้อมระบบกระทบยอดเงินจริง และคุมงบประมาณอย่างมีประสิทธิภาพ
+            แอปพลิเคชันบันทึกรายรับ-รายจ่ายอัตโนมัติจากแจ้งเตือนธนาคาร (Auto-Sync 13 ธนาคารไทย)
+            จัดการหลายบัญชีพร้อมระบบกระทบยอดเงินจริง และคุมงบประมาณอย่างมีประสิทธิภาพ
           </p>
         </div>
 
@@ -1453,7 +1689,8 @@
         </div>
       </div>
 
-      <div class="border-t border-[#22355E]/60 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
+      <div
+        class="border-t border-[#22355E]/60 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
         <div>© 2026 ToobJod (เจ้าตูบจด) - Project Budget Planner. สงวนลิขสิทธิ์ทุกประการ.</div>
         <div class="flex items-center gap-2">
           <button class="font-bold text-slate-300">ภาษาไทย</button>
@@ -1484,14 +1721,14 @@
       const content = btn.nextElementSibling;
       const icon = btn.querySelector('span:last-child');
       const isExpanded = !content.classList.contains('hidden');
-      
+
       // Close all
       document.querySelectorAll('#faq-container > div > div').forEach(c => c.classList.add('hidden'));
       document.querySelectorAll('#faq-container button span:last-child').forEach(i => {
         i.textContent = '+';
         i.style.transform = 'rotate(0deg)';
       });
-      
+
       if (!isExpanded) {
         content.classList.remove('hidden');
         icon.textContent = '−';
@@ -1500,4 +1737,5 @@
     }
   </script>
 </body>
+
 </html>

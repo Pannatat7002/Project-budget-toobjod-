@@ -96,13 +96,31 @@ class IconHelper {
 
   /// Get 3D asset image path for category if available
   static String? getCategoryAsset(String? categoryId, {String? categoryName, String? title}) {
-    if (categoryId != null &&
-        categoryId.isNotEmpty &&
-        categoryId != 'other' &&
-        categoryId != 'other_income' &&
-        categoryId != 'uncategorized' &&
-        categoryId != 'unknown') {
-      return 'assets/images/categories/cat_$categoryId.png';
+    if (categoryId != null && categoryId.isNotEmpty) {
+      final cid = categoryId.toLowerCase().trim();
+      if (cid == 'reconciliation_income') {
+        return 'assets/images/categories/cat_savings.png';
+      }
+      const knownCategories = {
+        'food',
+        'transport',
+        'bills',
+        'debts',
+        'shopping',
+        'entertainment',
+        'health',
+        'savings',
+        'other',
+        'salary',
+        'bonus',
+        'investment',
+        'freelance',
+        'transfer',
+        'other_income',
+      };
+      if (knownCategories.contains(cid)) {
+        return 'assets/images/categories/cat_$cid.png';
+      }
     }
 
     final query = '${categoryName ?? ''} ${title ?? ''}'.toLowerCase();
@@ -142,10 +160,16 @@ class IconHelper {
     if (query.contains('ฟรีแลนซ์') || query.contains('งานเสริม') || query.contains('freelance')) {
       return 'assets/images/categories/cat_freelance.png';
     }
-
-    if (categoryId != null && categoryId.isNotEmpty) {
-      return 'assets/images/categories/cat_$categoryId.png';
+    if (query.contains('โอน') || query.contains('transfer')) {
+      return 'assets/images/categories/cat_transfer.png';
     }
-    return null;
+    if (query.contains('รายรับ') || query.contains('income')) {
+      return 'assets/images/categories/cat_other_income.png';
+    }
+
+    if (categoryId != null && categoryId.isNotEmpty && categoryId != 'uncategorized' && categoryId != 'unknown') {
+      return 'assets/images/categories/cat_other.png';
+    }
+    return 'assets/images/categories/cat_other.png';
   }
 }

@@ -1,3 +1,4 @@
+import 'package:budget_planner/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -175,24 +176,34 @@ class _TransactionsViewState extends State<TransactionsView> {
             }).toList();
 
             // Calculate monthly summary for the selected active month
-            final monthIncome = monthAllTxs.where((t) {
-              if (t.isIncome) return true;
-              if (t.isTransfer && state.selectedBankId != null) {
-                return (t.targetAccountId == state.selectedBankId ||
-                    (t.targetAccountId != null && t.targetAccountId!.toLowerCase().contains(state.selectedBankId!.toLowerCase())));
-              }
-              return false;
-            }).fold(0.0, (sum, t) => sum + t.amount);
+            final monthIncome = monthAllTxs
+                .where((t) {
+                  if (t.isIncome) return true;
+                  if (t.isTransfer && state.selectedBankId != null) {
+                    return (t.targetAccountId == state.selectedBankId ||
+                        (t.targetAccountId != null &&
+                            t.targetAccountId!.toLowerCase().contains(
+                              state.selectedBankId!.toLowerCase(),
+                            )));
+                  }
+                  return false;
+                })
+                .fold(0.0, (sum, t) => sum + t.amount);
 
-            final monthExpense = monthAllTxs.where((t) {
-              if (t.isExpense) return true;
-              if (t.isTransfer && state.selectedBankId != null) {
-                return (t.bankAccountId == state.selectedBankId ||
-                    t.bankId == state.selectedBankId ||
-                    (t.bankAccountId != null && t.bankAccountId!.toLowerCase().contains(state.selectedBankId!.toLowerCase())));
-              }
-              return false;
-            }).fold(0.0, (sum, t) => sum + t.amount);
+            final monthExpense = monthAllTxs
+                .where((t) {
+                  if (t.isExpense) return true;
+                  if (t.isTransfer && state.selectedBankId != null) {
+                    return (t.bankAccountId == state.selectedBankId ||
+                        t.bankId == state.selectedBankId ||
+                        (t.bankAccountId != null &&
+                            t.bankAccountId!.toLowerCase().contains(
+                              state.selectedBankId!.toLowerCase(),
+                            )));
+                  }
+                  return false;
+                })
+                .fold(0.0, (sum, t) => sum + t.amount);
             final monthNet = monthIncome - monthExpense;
 
             return Scaffold(
@@ -216,11 +227,8 @@ class _TransactionsViewState extends State<TransactionsView> {
                   IconButton(
                     icon: const Icon(Icons.ios_share_rounded),
                     tooltip: 'ส่งออกรายงาน',
-                    onPressed: () => _openExportSheet(
-                      context,
-                      monthAllTxs,
-                      activeMonth,
-                    ),
+                    onPressed: () =>
+                        _openExportSheet(context, monthAllTxs, activeMonth),
                   ),
                 ],
               ),
@@ -287,8 +295,8 @@ class _TransactionsViewState extends State<TransactionsView> {
                                       isDense: true,
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
+                                            vertical: 10,
+                                          ),
                                     ),
                                     style: GoogleFonts.prompt(
                                       fontSize: 13.5,
@@ -358,10 +366,14 @@ class _TransactionsViewState extends State<TransactionsView> {
                                 activeMonth,
                               ),
                               onPrev: canPrev
-                                  ? () => _changeMonth(availableMonths[currentMonthIdx - 1])
+                                  ? () => _changeMonth(
+                                      availableMonths[currentMonthIdx - 1],
+                                    )
                                   : null,
                               onNext: canNext
-                                  ? () => _changeMonth(availableMonths[currentMonthIdx + 1])
+                                  ? () => _changeMonth(
+                                      availableMonths[currentMonthIdx + 1],
+                                    )
                                   : null,
                               canPrev: canPrev,
                               canNext: canNext,
@@ -372,7 +384,9 @@ class _TransactionsViewState extends State<TransactionsView> {
                               filterType: state.filterType,
                               onFilterType: (t) {
                                 HapticFeedback.selectionClick();
-                                context.read<TransactionCubit>().setFilterType(t);
+                                context.read<TransactionCubit>().setFilterType(
+                                  t,
+                                );
                               },
                             ),
 
@@ -524,7 +538,11 @@ class _TransactionsViewState extends State<TransactionsView> {
                                                 group.items[i],
                                               ),
                                           onDelete: () {
-                                            context.read<TransactionCubit>().deleteTransaction(group.items[i].id);
+                                            context
+                                                .read<TransactionCubit>()
+                                                .deleteTransaction(
+                                                  group.items[i].id,
+                                                );
                                           },
                                         ),
                                     ],
@@ -539,7 +557,6 @@ class _TransactionsViewState extends State<TransactionsView> {
                   ),
                 ),
               ),
-
             );
           },
         );
@@ -638,14 +655,18 @@ class _TransactionsViewState extends State<TransactionsView> {
                         style: GoogleFonts.prompt(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(width: 2),
                       Icon(
                         Icons.arrow_drop_down_rounded,
                         size: 16,
-                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF64748B),
                       ),
                     ],
                   ),
@@ -653,7 +674,10 @@ class _TransactionsViewState extends State<TransactionsView> {
               ),
               // count badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 2.5,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.darkCard : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(6),
@@ -663,7 +687,9 @@ class _TransactionsViewState extends State<TransactionsView> {
                   style: GoogleFonts.prompt(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : const Color(0xFF64748B),
                   ),
                 ),
               ),
@@ -673,7 +699,10 @@ class _TransactionsViewState extends State<TransactionsView> {
                 onTap: () => context.push('/analytics'),
                 borderRadius: BorderRadius.circular(6),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 2,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1798,8 +1827,21 @@ class _TransactionsViewState extends State<TransactionsView> {
                                   txState.selectedCategoryId == cat.id;
                               return _buildSheetPill(
                                 label: cat.name,
-                                icon: cat.icon,
-                                iconColor: cat.color,
+                                leadingWidget: Image.asset(
+                                  cat.imageAsset,
+                                  width: 16,
+                                  height: 16,
+                                  cacheWidth: 48,
+                                  cacheHeight: 48,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    cat.icon,
+                                    size: 14,
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : cat.color,
+                                  ),
+                                ),
                                 isSelected: isSelected,
                                 onTap: () {
                                   context
@@ -2067,7 +2109,12 @@ class _TransactionsViewState extends State<TransactionsView> {
             if (bankName != null) ...[
               _buildActiveChip(
                 label: 'บัญชี: $bankName',
-                icon: Icons.account_balance_wallet_rounded,
+                leadingWidget: BankLogoBadge(
+                  bankId: state.selectedBankId,
+                  fallbackShortName: bankName,
+                  size: 15,
+                  showBorder: false,
+                ),
                 onClear: () {
                   context.read<TransactionCubit>().setSelectedBankId(null);
                   context.read<AccountCubit>().selectBank(null);
@@ -2079,7 +2126,23 @@ class _TransactionsViewState extends State<TransactionsView> {
             if (catName != null) ...[
               _buildActiveChip(
                 label: 'หมวด: $catName',
-                icon: Icons.category_rounded,
+                leadingWidget: Image.asset(
+                  IconHelper.getCategoryAsset(
+                        state.selectedCategoryId,
+                        categoryName: catName,
+                      ) ??
+                      'assets/images/categories/cat_other.png',
+                  width: 15,
+                  height: 15,
+                  cacheWidth: 45,
+                  cacheHeight: 45,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.category_rounded,
+                    size: 13,
+                    color: AppColors.primary,
+                  ),
+                ),
                 onClear: () {
                   context.read<TransactionCubit>().setSelectedCategory(null);
                 },
@@ -2122,7 +2185,8 @@ class _TransactionsViewState extends State<TransactionsView> {
 
   Widget _buildActiveChip({
     required String label,
-    required IconData icon,
+    IconData? icon,
+    Widget? leadingWidget,
     required VoidCallback onClear,
     required bool isDark,
   }) {
@@ -2139,8 +2203,13 @@ class _TransactionsViewState extends State<TransactionsView> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: AppColors.primary),
-          const SizedBox(width: 5),
+          if (leadingWidget != null) ...[
+            leadingWidget,
+            const SizedBox(width: 5),
+          ] else if (icon != null) ...[
+            Icon(icon, size: 13, color: AppColors.primary),
+            const SizedBox(width: 5),
+          ],
           Text(
             label,
             style: GoogleFonts.prompt(
@@ -2222,14 +2291,11 @@ class _TransactionsViewState extends State<TransactionsView> {
     return map.entries.map((entry) {
       final items = entry.value;
       final date = items.first.date;
-      final dailyNet = items.fold(
-        0.0,
-        (sum, t) {
-          if (t.isIncome) return sum + t.amount;
-          if (t.isExpense) return sum - t.amount;
-          return sum;
-        },
-      );
+      final dailyNet = items.fold(0.0, (sum, t) {
+        if (t.isIncome) return sum + t.amount;
+        if (t.isExpense) return sum - t.amount;
+        return sum;
+      });
 
       return _TransactionGroup(
         dateTitle: DateFormatter.formatRelative(date),

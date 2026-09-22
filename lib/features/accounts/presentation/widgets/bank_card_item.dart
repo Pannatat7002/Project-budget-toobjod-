@@ -509,9 +509,10 @@ class BankCardItem extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ClipOval(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
         child: Padding(
-          padding: const EdgeInsets.all(6.0),
+          padding: const EdgeInsets.all(4.0),
           child: Image.asset(
             acc.logoAsset,
             cacheWidth: 90,

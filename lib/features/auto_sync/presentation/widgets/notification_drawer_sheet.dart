@@ -863,7 +863,12 @@ class _DismissibleNotificationCardState
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Image.asset(
-                                IconHelper.getCategoryAsset(_categoryId) ?? '',
+                                IconHelper.getCategoryAsset(
+                                      _categoryId,
+                                      categoryName: _categoryName,
+                                      title: tx.title,
+                                    ) ??
+                                    'assets/images/categories/cat_other.png',
                                 width: 14,
                                 height: 14,
                                 cacheWidth: 42,

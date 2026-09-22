@@ -22,10 +22,13 @@ class BankLogoBadge extends StatelessWidget {
   });
 
   BankProfile? get _resolvedProfile {
-    if (packageName != null && packageName!.isNotEmpty) {
-      final found = BankProfile.findByPackage(packageName!);
-      if (found != null) return found;
-    }
+    final profile = BankProfile.resolveBank(
+      bankId: bankId,
+      bankName: fallbackShortName,
+      packageName: packageName,
+    );
+    if (profile != null) return profile;
+
     if (bankId != null && bankId!.isNotEmpty) {
       final found = BankProfile.findById(bankId!);
       if (found != null) return found;
@@ -73,14 +76,18 @@ class BankLogoBadge extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(r - 1),
-          child: Image.asset(
-            profile.logoAsset,
-            width: size,
-            height: size,
-            cacheWidth: (size * 3).round(),
-            cacheHeight: (size * 3).round(),
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildFallback(brandColor, profile.icon, profile.shortName, r),
+          child: Padding(
+            padding: EdgeInsets.all(size * 0.08),
+            child: Image.asset(
+              profile.logoAsset,
+              width: size * 0.84,
+              height: size * 0.84,
+              cacheWidth: (size * 3).round(),
+              cacheHeight: (size * 3).round(),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  _buildFallback(brandColor, profile.icon, profile.shortName, r),
+            ),
           ),
         ),
       );

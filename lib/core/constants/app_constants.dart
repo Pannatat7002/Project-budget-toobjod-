@@ -143,5 +143,8 @@ class CategoryItem {
 
   IconData get icon => IconHelper.getIcon(iconCode);
   Color get color => Color(colorValue);
-  String get imageAsset => assetPath ?? 'assets/images/categories/cat_$id.png';
+  String get imageAsset =>
+      assetPath ??
+      (IconHelper.getCategoryAsset(id, categoryName: name) ??
+          'assets/images/categories/cat_other.png');
 }
