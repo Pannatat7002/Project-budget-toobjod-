@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,7 +23,7 @@ import '../../../transactions/presentation/state/transaction_state.dart';
 import '../../../transactions/presentation/views/add_transaction_sheet.dart';
 import '../../../transactions/presentation/widgets/delete_transaction_dialog.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
-import '../widgets/dashboard_actions_grid.dart';
+import '../widgets/dashboard_speed_dial.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -32,7 +33,17 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
+  final GlobalKey<DashboardSpeedDialState> _speedDialKey =
+      GlobalKey<DashboardSpeedDialState>();
+  bool _isSpeedDialOpen = false;
   String _dogName = AppConstants.appName;
+
+  void _closeSpeedDialIfOpen() {
+    if (_isSpeedDialOpen) {
+      _speedDialKey.currentState?.close();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -78,95 +89,713 @@ class _DashboardViewState extends State<DashboardView> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 16,
-        title: InkWell(
-          onTap: () => _showRenameDogDialog(context),
-          borderRadius: BorderRadius.circular(16),
-          hoverColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Mascot Avatar Logo (Spacious & Clean)
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFFDB813),
-                      width: 2.2,
+    return PopScope(
+      canPop: !_isSpeedDialOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isSpeedDialOpen) {
+          _closeSpeedDialIfOpen();
+        }
+      },
+      child: Scaffold(
+        floatingActionButton: BlocBuilder<AccountCubit, AccountState>(
+          buildWhen: (prev, curr) => prev.accounts != curr.accounts,
+          builder: (context, accountState) {
+            return DashboardSpeedDial(
+              key: _speedDialKey,
+              onOpenChanged: (isOpen) {
+                if (mounted) {
+                  setState(() => _isSpeedDialOpen = isOpen);
+                }
+              },
+              onAddIncome: () => _handleTransactionAction(
+                context,
+                accountState,
+                TransactionType.income,
+              ),
+              onAddExpense: () => _handleTransactionAction(
+                context,
+                accountState,
+                TransactionType.expense,
+              ),
+              onTransfer: () => _handleTransactionAction(
+                context,
+                accountState,
+                TransactionType.transfer,
+              ),
+            );
+          },
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        appBar: AppBar(
+          titleSpacing: 16,
+          title: InkWell(
+            onTap: () {
+              _closeSpeedDialIfOpen();
+              _showRenameDogDialog(context);
+            },
+            borderRadius: BorderRadius.circular(16),
+            hoverColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Mascot Avatar Logo (Spacious & Clean)
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFDB813),
+                        width: 2.2,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/mascot_dog_peek.png',
+                        cacheWidth: 126,
+                        cacheHeight: 126,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.pets,
+                          color: Color(0xFFFDB813),
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/mascot_dog_peek.png',
-                      cacheWidth: 126,
-                      cacheHeight: 126,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.pets,
-                        color: Color(0xFFFDB813),
-                        size: 20,
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _dogName,
+                                style: GoogleFonts.prompt(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : const Color(0xFF0F172A),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Container(
+                              padding: const EdgeInsets.all(2.5),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFFDB813,
+                                ).withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.edit_rounded,
+                                size: 11,
+                                color: Color(0xFFD97706),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _getDynamicDogGreeting(),
+                          style: GoogleFonts.prompt(
+                            fontSize: 11.5,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            const NotificationBellButton(),
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.settings,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              onSelected: (val) {
+                _closeSpeedDialIfOpen();
+                if (val == 'rename_dog') {
+                  _showRenameDogDialog(context);
+                } else if (val == 'security_settings') {
+                  context.push('/security-settings');
+                } else if (val == 'auto_sync') {
+                  context.push('/auto-sync-settings');
+                } else if (val == 'reset') {
+                  _showResetConfirmDialog(context);
+                } else if (val == 'theme_light') {
+                  context.read<ThemeCubit>().setTheme(ThemeMode.light);
+                } else if (val == 'theme_dark') {
+                  context.read<ThemeCubit>().setTheme(ThemeMode.dark);
+                } else if (val == 'theme_system') {
+                  context.read<ThemeCubit>().setTheme(ThemeMode.system);
+                }
+              },
+              itemBuilder: (ctx) {
+                final currentMode = ctx.read<ThemeCubit>().state;
+                return [
+                  const PopupMenuItem(
+                    value: 'security_settings',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.shield_rounded,
+                          color: AppColors.primaryOrange,
+                          size: 18,
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          'ความปลอดภัย & รหัส PIN',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'auto_sync',
+                    child: Row(
+                      children: [
+                        Icon(Icons.bolt, color: AppColors.primary, size: 18),
+                        SizedBox(width: 10),
+                        Text(
+                          'ตั้งค่าตรวจจับธนาคาร',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ─── Theme 3-Way Toggle ───────────────────────────
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    enabled: false,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    child: _ThemeModeSegmentedToggle(
+                      currentMode: currentMode,
+                      onThemeChanged: (mode) {
+                        ctx.read<ThemeCubit>().setTheme(mode);
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  ),
+                  // ─── Danger zone ──────────────────────────────────
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'reset',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          color: AppColors.expense,
+                          size: 18,
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          'ล้างข้อมูลทั้งหมด',
+                          style: TextStyle(
+                            color: AppColors.expense,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ];
+              },
+            ),
+            const SizedBox(width: 6),
+          ],
+        ),
+        body: Stack(
+          children: [
+            BlocBuilder<AccountCubit, AccountState>(
+              // Only rebuild when accounts list, selected bank, eye-view or loading state changes
+              buildWhen: (prev, curr) =>
+                  prev.accounts != curr.accounts ||
+                  prev.selectedBankId != curr.selectedBankId ||
+                  prev.isEyeViewHidden != curr.isEyeViewHidden ||
+                  prev.isLoading != curr.isLoading,
+              builder: (context, accountState) {
+                return BlocBuilder<TransactionCubit, TransactionState>(
+                  buildWhen: (previous, current) =>
+                      previous.transactions != current.transactions ||
+                      previous.status != current.status,
+                  builder: (context, txState) {
+                    if (txState.status == TransactionStatus.loading &&
+                        txState.transactions.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final selectedBankId = accountState.selectedBankId;
+                    final bankTransactions = selectedBankId == null
+                        ? txState.transactions
+                        : txState.getTransactionsForBank(selectedBankId);
+                    final recentTransactions = bankTransactions
+                        .take(6)
+                        .toList();
+                    final hasMoreTransactions =
+                        bankTransactions.length > recentTransactions.length;
+                    final remainingTransactionsCount =
+                        bankTransactions.length - recentTransactions.length;
+
+                    final recentHeaderTitle = selectedBankId == null
+                        ? 'รายการล่าสุด (ทุกบัญชี)'
+                        : 'รายการล่าสุด (${accountState.selectedAccount?.shortName ?? 'บัญชีที่เลือก'})';
+
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        final txCubit = context.read<TransactionCubit>();
+                        final budgetCubit = context.read<BudgetCubit>();
+                        final autoSyncCubit = context.read<AutoSyncCubit>();
+                        final accCubit = context.read<AccountCubit>();
+                        await txCubit.loadTransactions();
+                        await budgetCubit.loadBudgets();
+                        await accCubit.loadAccounts();
+                        await autoSyncCubit.syncNativeBuffer();
+                      },
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          if (_isSpeedDialOpen &&
+                              notification is ScrollUpdateNotification) {
+                            _closeSpeedDialIfOpen();
+                          }
+                          return false;
+                        },
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+
+                              // Auto-Sync Detected Transaction / Setup Banner
+                              const AutoSyncBanner(),
+
+                              // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
+                              BankCardsCarousel(
+                                accounts: accountState.accounts,
+                                selectedBankId: accountState.selectedBankId,
+                                totalBalance: txState.totalBalance,
+                                totalMonthlyIncome: txState.totalIncome,
+                                totalMonthlyExpense: txState.totalExpense,
+                                getBankBalance: (bankId) =>
+                                    txState.getBankBalance(bankId),
+                                getBankIncome: (bankId) =>
+                                    txState.getBankIncome(bankId),
+                                getBankExpense: (bankId) =>
+                                    txState.getBankExpense(bankId),
+                                isEyeViewHidden: accountState.isEyeViewHidden,
+                                onToggleEyeView: () => context
+                                    .read<AccountCubit>()
+                                    .toggleEyeView(),
+                                onBankSelected: (bankId) => context
+                                    .read<AccountCubit>()
+                                    .selectBank(bankId),
+                                onAddBankTap: () {
+                                  _closeSpeedDialIfOpen();
+                                  context.push('/bank-selection');
+                                },
+                              ),
+                              const SizedBox(height: 10),
+
+                              // 2. วิเคราะห์ & ตั้งงบ (แสดงเล็กลง แบบ 2 Col)
+                              _buildAnalyticsAndBudgetRow(context, isDark),
+                              const SizedBox(height: 10),
+
+                              // 3. Budget Health Preview Widget
+                              // _buildBudgetHealthPreview(context, isDark),
+                              // const SizedBox(height: 12),
+
+                              // 6. Recent Transactions Header (Dynamic by selected bank)
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            recentHeaderTitle,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: GoogleFonts.prompt(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 16,
+                                              letterSpacing: -0.3,
+                                              color: isDark
+                                                  ? AppColors.darkTextPrimary
+                                                  : const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ),
+                                        if (selectedBankId != null) ...[
+                                          const SizedBox(width: 6),
+                                          GestureDetector(
+                                            onTap: () => context
+                                                .read<AccountCubit>()
+                                                .selectBank(null),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? AppColors.darkCard
+                                                    : AppColors.lightBackground,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: isDark
+                                                      ? AppColors
+                                                            .darkBorderSubtle
+                                                      : AppColors.lightBorder,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    'ล้าง',
+                                                    style: GoogleFonts.prompt(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 2),
+                                                  const Icon(
+                                                    Icons.close,
+                                                    size: 10,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+
+                              // 7. Recent Transactions List (Grouped Apple Wallet Style)
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                child: KeyedSubtree(
+                                  key: ValueKey(
+                                    'recent_${selectedBankId ?? 'all'}',
+                                  ),
+                                  child: recentTransactions.isEmpty
+                                      ? EmptyStateWidget(
+                                          imageAsset:
+                                              'assets/images/mascot_dog_writing.png',
+                                          title: selectedBankId != null
+                                              ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
+                                              : 'ยังไม่มีรายการเลยนะโฮ่ง!',
+                                          onAction: () {
+                                            if (accountState.accounts.isEmpty) {
+                                              _showNoBankWarningDialog(context);
+                                            } else {
+                                              AddTransactionSheet.show(context);
+                                            }
+                                          },
+                                        )
+                                      : Column(
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? AppColors.darkSurface
+                                                    : Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(18),
+                                                border: Border.all(
+                                                  color: isDark
+                                                      ? AppColors
+                                                            .darkBorderSubtle
+                                                      : const Color(0xFFE2E8F0),
+                                                  width: 0.9,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withValues(
+                                                          alpha: isDark
+                                                              ? 0.12
+                                                              : 0.025,
+                                                        ),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  for (
+                                                    int i = 0;
+                                                    i <
+                                                        recentTransactions
+                                                            .length;
+                                                    i++
+                                                  )
+                                                    TransactionTile(
+                                                      transaction:
+                                                          recentTransactions[i],
+                                                      isGrouped: true,
+                                                      showDivider:
+                                                          i <
+                                                          recentTransactions
+                                                                  .length -
+                                                              1,
+                                                      onTap: () =>
+                                                          AddTransactionSheet.show(
+                                                            context,
+                                                            existingTransaction:
+                                                                recentTransactions[i],
+                                                          ),
+                                                      confirmDelete: () =>
+                                                          DeleteTransactionDialog.show(
+                                                            context,
+                                                            recentTransactions[i],
+                                                          ),
+                                                      onDelete: () {
+                                                        final item =
+                                                            recentTransactions[i];
+                                                        context
+                                                            .read<
+                                                              TransactionCubit
+                                                            >()
+                                                            .deleteTransaction(
+                                                              item.id,
+                                                            );
+                                                      },
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            _buildViewAllTransactionsButton(
+                                              context,
+                                              hasMore: hasMoreTransactions,
+                                              remainingCount:
+                                                  remainingTransactionsCount,
+                                              selectedBankId: selectedBankId,
+                                              isDark: isDark,
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 60),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+
+            // ─── Scrim Backdrop (แตะพื้นที่ว่าง/จุดอื่นเพื่อปิด Speed Dial ทันที) ───
+            if (_isSpeedDialOpen)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _closeSpeedDialIfOpen,
+                  child: Container(
+                    color: Colors.black.withValues(alpha: isDark ? 0.38 : 0.20),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsAndBudgetRow(BuildContext context, bool isDark) {
+    return Row(
+      children: [
+        // ─── 1. ปุ่มวิเคราะห์ (Col 1) ───────────────────────────
+        Expanded(
+          child: _buildCompactActionCard(
+            context: context,
+            isDark: isDark,
+            title: 'วิเคราะห์',
+            subtitle: 'สถิติ & กราฟสรุป',
+            imageAsset: 'assets/images/action_analytics.png',
+            fallbackIcon: Icons.insights_rounded,
+            accentColor: AppColors.darkTextMuted,
+            onTap: () {
+              _closeSpeedDialIfOpen();
+              HapticFeedback.lightImpact();
+              context.push('/analytics');
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // ─── 2. ปุ่มตั้งงบ (Col 2) ──────────────────────────────
+        Expanded(
+          child: _buildCompactActionCard(
+            context: context,
+            isDark: isDark,
+            title: 'ตั้งงบ',
+            subtitle: 'คุมงบประมาณ 🐾',
+            imageAsset: 'assets/images/action_budget.png',
+            fallbackIcon: Icons.pie_chart_rounded,
+            accentColor: AppColors.darkTextMuted,
+            onTap: () {
+              _closeSpeedDialIfOpen();
+              HapticFeedback.lightImpact();
+              context.push('/budgets');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactActionCard({
+    required BuildContext context,
+    required bool isDark,
+    required String title,
+    required String subtitle,
+    required String imageAsset,
+    required IconData fallbackIcon,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark
+              ? accentColor.withValues(alpha: 0.22)
+              : accentColor.withValues(alpha: 0.16),
+          width: 1.1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: isDark ? 0.12 : 0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          splashColor: accentColor.withValues(alpha: 0.12),
+          highlightColor: accentColor.withValues(alpha: 0.06),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8.5),
+            child: Row(
+              children: [
+                // 3D Picture Icon (Compact 34x34)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: isDark ? 0.16 : 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Image.asset(
+                        imageAsset,
+                        cacheWidth: 108,
+                        cacheHeight: 108,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) =>
+                            Icon(fallbackIcon, color: accentColor, size: 18),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Flexible(
+                const SizedBox(width: 8),
+
+                // Title & Subtitle
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              _dogName,
-                              style: GoogleFonts.prompt(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : const Color(0xFF0F172A),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Container(
-                            padding: const EdgeInsets.all(2.5),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFFFDB813,
-                              ).withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.edit_rounded,
-                              size: 11,
-                              color: Color(0xFFD97706),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
                       Text(
-                        _getDynamicDogGreeting(),
+                        title,
                         style: GoogleFonts.prompt(
-                          fontSize: 11.5,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.prompt(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
                           color: isDark
                               ? AppColors.darkTextMuted
                               : AppColors.lightTextMuted,
-                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -174,388 +803,19 @@ class _DashboardViewState extends State<DashboardView> {
                     ],
                   ),
                 ),
+
+                // Small arrow indicator
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 9,
+                  color: isDark
+                      ? AppColors.darkTextMuted.withValues(alpha: 0.6)
+                      : const Color(0xFF94A3B8),
+                ),
               ],
             ),
           ),
         ),
-        actions: [
-          const NotificationBellButton(),
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.settings,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            onSelected: (val) {
-              if (val == 'rename_dog') {
-                _showRenameDogDialog(context);
-              } else if (val == 'security_settings') {
-                context.push('/security-settings');
-              } else if (val == 'auto_sync') {
-                context.push('/auto-sync-settings');
-              } else if (val == 'reset') {
-                _showResetConfirmDialog(context);
-              } else if (val == 'theme_light') {
-                context.read<ThemeCubit>().setTheme(ThemeMode.light);
-              } else if (val == 'theme_dark') {
-                context.read<ThemeCubit>().setTheme(ThemeMode.dark);
-              } else if (val == 'theme_system') {
-                context.read<ThemeCubit>().setTheme(ThemeMode.system);
-              }
-            },
-            itemBuilder: (ctx) {
-              final currentMode = ctx.read<ThemeCubit>().state;
-              return [
-                const PopupMenuItem(
-                  value: 'security_settings',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.shield_rounded,
-                        color: AppColors.primaryOrange,
-                        size: 18,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'ความปลอดภัย & รหัส PIN',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'auto_sync',
-                  child: Row(
-                    children: [
-                      Icon(Icons.bolt, color: AppColors.primary, size: 18),
-                      SizedBox(width: 10),
-                      Text(
-                        'ตั้งค่าตรวจจับธนาคาร',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                // ─── Theme 3-Way Toggle ───────────────────────────
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  enabled: false,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  child: _ThemeModeSegmentedToggle(
-                    currentMode: currentMode,
-                    onThemeChanged: (mode) {
-                      ctx.read<ThemeCubit>().setTheme(mode);
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                ),
-                // ─── Danger zone ──────────────────────────────────
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 'reset',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete_outline,
-                        color: AppColors.expense,
-                        size: 18,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'ล้างข้อมูลทั้งหมด',
-                        style: TextStyle(
-                          color: AppColors.expense,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ];
-            },
-          ),
-          const SizedBox(width: 6),
-        ],
-      ),
-      body: BlocBuilder<AccountCubit, AccountState>(
-        // Only rebuild when accounts list, selected bank, eye-view or loading state changes
-        buildWhen: (prev, curr) =>
-            prev.accounts != curr.accounts ||
-            prev.selectedBankId != curr.selectedBankId ||
-            prev.isEyeViewHidden != curr.isEyeViewHidden ||
-            prev.isLoading != curr.isLoading,
-        builder: (context, accountState) {
-          return BlocBuilder<TransactionCubit, TransactionState>(
-            buildWhen: (previous, current) =>
-                previous.transactions != current.transactions ||
-                previous.status != current.status,
-            builder: (context, txState) {
-              if (txState.status == TransactionStatus.loading &&
-                  txState.transactions.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final selectedBankId = accountState.selectedBankId;
-              final bankTransactions = selectedBankId == null
-                  ? txState.transactions
-                  : txState.getTransactionsForBank(selectedBankId);
-              final recentTransactions = bankTransactions.take(6).toList();
-              final hasMoreTransactions =
-                  bankTransactions.length > recentTransactions.length;
-              final remainingTransactionsCount =
-                  bankTransactions.length - recentTransactions.length;
-
-              final recentHeaderTitle = selectedBankId == null
-                  ? 'รายการล่าสุด (ทุกบัญชี)'
-                  : 'รายการล่าสุด (${accountState.selectedAccount?.shortName ?? 'บัญชีที่เลือก'})';
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  final txCubit = context.read<TransactionCubit>();
-                  final budgetCubit = context.read<BudgetCubit>();
-                  final autoSyncCubit = context.read<AutoSyncCubit>();
-                  final accCubit = context.read<AccountCubit>();
-                  await txCubit.loadTransactions();
-                  await budgetCubit.loadBudgets();
-                  await accCubit.loadAccounts();
-                  await autoSyncCubit.syncNativeBuffer();
-                },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-
-                      // Auto-Sync Detected Transaction / Setup Banner
-                      const AutoSyncBanner(),
-
-                      // 1. Multi-Bank Cards Carousel (Swipe Left/Right to Switch Bank)
-                      BankCardsCarousel(
-                        accounts: accountState.accounts,
-                        selectedBankId: accountState.selectedBankId,
-                        totalBalance: txState.totalBalance,
-                        totalMonthlyIncome: txState.totalIncome,
-                        totalMonthlyExpense: txState.totalExpense,
-                        getBankBalance: (bankId) =>
-                            txState.getBankBalance(bankId),
-                        getBankIncome: (bankId) =>
-                            txState.getBankIncome(bankId),
-                        getBankExpense: (bankId) =>
-                            txState.getBankExpense(bankId),
-                        isEyeViewHidden: accountState.isEyeViewHidden,
-                        onToggleEyeView: () =>
-                            context.read<AccountCubit>().toggleEyeView(),
-                        onBankSelected: (bankId) =>
-                            context.read<AccountCubit>().selectBank(bankId),
-                        onAddBankTap: () => context.push('/bank-selection'),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // 2. Unified Dashboard Actions Grid (ซ้าย: วิเคราะห์ขยายเต็ม / ขวา: รับเงิน, จ่ายเงิน, โอนย้าย)
-                      DashboardActionsGrid(
-                        onAddIncome: () => _handleTransactionAction(
-                          context,
-                          accountState,
-                          TransactionType.income,
-                        ),
-                        onAddExpense: () => _handleTransactionAction(
-                          context,
-                          accountState,
-                          TransactionType.expense,
-                        ),
-                        onTransfer: () => _handleTransactionAction(
-                          context,
-                          accountState,
-                          TransactionType.transfer,
-                        ),
-                        onAnalytics: () => context.push('/analytics'),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // 6. Budget Health Preview Widget
-                      _buildBudgetHealthPreview(context, isDark),
-                      const SizedBox(height: 12),
-
-                      // 6. Recent Transactions Header (Dynamic by selected bank)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    recentHeaderTitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.prompt(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 16,
-                                      letterSpacing: -0.3,
-                                      color: isDark
-                                          ? AppColors.darkTextPrimary
-                                          : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                                if (selectedBankId != null) ...[
-                                  const SizedBox(width: 6),
-                                  GestureDetector(
-                                    onTap: () => context
-                                        .read<AccountCubit>()
-                                        .selectBank(null),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? AppColors.darkCard
-                                            : AppColors.lightBackground,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: isDark
-                                              ? AppColors.darkBorderSubtle
-                                              : AppColors.lightBorder,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            'ล้าง',
-                                            style: GoogleFonts.prompt(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 2),
-                                          const Icon(Icons.close, size: 10),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // 7. Recent Transactions List (Grouped Apple Wallet Style)
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        child: KeyedSubtree(
-                          key: ValueKey('recent_${selectedBankId ?? 'all'}'),
-                          child: recentTransactions.isEmpty
-                              ? EmptyStateWidget(
-                                  imageAsset:
-                                      'assets/images/mascot_dog_writing.png',
-                                  title: selectedBankId != null
-                                      ? 'ยังไม่มีรายการของบัญชีนี้นะโฮ่ง!'
-                                      : 'ยังไม่มีรายการเลยนะโฮ่ง!',
-                                  onAction: () {
-                                    if (accountState.accounts.isEmpty) {
-                                      _showNoBankWarningDialog(context);
-                                    } else {
-                                      AddTransactionSheet.show(context);
-                                    }
-                                  },
-                                )
-                              : Column(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? AppColors.darkSurface
-                                            : Colors.white,
-                                        borderRadius: BorderRadius.circular(18),
-                                        border: Border.all(
-                                          color: isDark
-                                              ? AppColors.darkBorderSubtle
-                                              : const Color(0xFFE2E8F0),
-                                          width: 0.9,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: isDark ? 0.12 : 0.025,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          for (
-                                            int i = 0;
-                                            i < recentTransactions.length;
-                                            i++
-                                          )
-                                            TransactionTile(
-                                              transaction:
-                                                  recentTransactions[i],
-                                              isGrouped: true,
-                                              showDivider:
-                                                  i <
-                                                  recentTransactions.length - 1,
-                                              onTap: () =>
-                                                  AddTransactionSheet.show(
-                                                    context,
-                                                    existingTransaction:
-                                                        recentTransactions[i],
-                                                  ),
-                                              confirmDelete: () =>
-                                                  DeleteTransactionDialog.show(
-                                                    context,
-                                                    recentTransactions[i],
-                                                  ),
-                                              onDelete: () {
-                                                final item =
-                                                    recentTransactions[i];
-                                                context
-                                                    .read<TransactionCubit>()
-                                                    .deleteTransaction(item.id);
-                                              },
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    _buildViewAllTransactionsButton(
-                                      context,
-                                      hasMore: hasMoreTransactions,
-                                      remainingCount:
-                                          remainingTransactionsCount,
-                                      selectedBankId: selectedBankId,
-                                      isDark: isDark,
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 60),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
       ),
     );
   }
@@ -869,7 +1129,9 @@ class _DashboardViewState extends State<DashboardView> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                      color: statusColor.withValues(
+                        alpha: isDark ? 0.15 : 0.08,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: statusColor.withValues(alpha: 0.25),
@@ -883,8 +1145,8 @@ class _DashboardViewState extends State<DashboardView> {
                             progress > 1.0
                                 ? '🛑 หงิง... เดือนนี้ใช้เกินงบแล้ว พักก่อนนะเจ้านาย'
                                 : (progress >= 0.8
-                                    ? '⚠️ โฮ่ง! งบใกล้หมดแล้วนะ ตูบเริ่มเฝ้าระวัง'
-                                    : '🐾 เงินเหลือสบายใจ ตูบยกสองเท้าหน้าให้เลยโฮ่ง! ✨'),
+                                      ? '⚠️ โฮ่ง! งบใกล้หมดแล้วนะ ตูบเริ่มเฝ้าระวัง'
+                                      : '🐾 เงินเหลือสบายใจ ตูบยกสองเท้าหน้าให้เลยโฮ่ง! ✨'),
                             style: GoogleFonts.prompt(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w600,
@@ -1300,17 +1562,16 @@ class _DashboardViewState extends State<DashboardView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
-    final textSecondary =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final textSecondary = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         backgroundColor: backgroundColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         icon: Center(
@@ -1320,10 +1581,7 @@ class _DashboardViewState extends State<DashboardView> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFFDB813).withValues(alpha: 0.15),
-              border: Border.all(
-                color: const Color(0xFFFDB813),
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFFFDB813), width: 2),
             ),
             child: ClipOval(
               child: Image.asset(
@@ -1331,11 +1589,8 @@ class _DashboardViewState extends State<DashboardView> {
                 cacheWidth: 160,
                 cacheHeight: 160,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.pets,
-                  color: Color(0xFFFDB813),
-                  size: 32,
-                ),
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.pets, color: Color(0xFFFDB813), size: 32),
               ),
             ),
           ),
@@ -1429,8 +1684,9 @@ class _ThemeModeSegmentedToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final containerBg =
-        isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+    final containerBg = isDark
+        ? const Color(0xFF0F172A)
+        : const Color(0xFFF1F5F9);
 
     final items = [
       (ThemeMode.light, Icons.light_mode_rounded, 'สว่าง'),
@@ -1486,21 +1742,22 @@ class _ThemeModeSegmentedToggle extends StatelessWidget {
                       color: isSelected
                           ? AppColors.primaryOrange
                           : (isDark
-                              ? const Color(0xFF94A3B8)
-                              : const Color(0xFF64748B)),
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B)),
                     ),
                     const SizedBox(width: 5),
                     Text(
                       label,
                       style: GoogleFonts.prompt(
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: isSelected
                             ? (isDark ? Colors.white : const Color(0xFF0F172A))
                             : (isDark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF64748B)),
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B)),
                       ),
                     ),
                   ],
@@ -1513,4 +1770,3 @@ class _ThemeModeSegmentedToggle extends StatelessWidget {
     );
   }
 }
-
