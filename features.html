@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ฟีเจอร์เด่น | เจ้าตูบจด (ToobJod) - แอปบันทึกรายรับรายจ่าย & คุมงบอัจฉริยะ</title>
+  <meta name="description" content="ค้นพบฟีเจอร์เด่นของ เจ้าตูบจด (ToobJod) แอปจดรายรับรายจ่าย สแกนสลิปอัตโนมัติ วางแผนงบประมาณ และวิเคราะห์การเงินที่ช่วยให้คุณมีเงินเก็บมากขึ้น" />
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="ฟีเจอร์เด่น | เจ้าตูบจด (ToobJod)" />
+  <meta property="og:description" content="แอปบันทึกรายรับรายจ่ายสุดฉลาด อ่านสลิป 20 ธนาคาร คุมงบอยู่หมัด สนุกกับสตรีคน้องตูบ" />
+  <meta property="og:type" content="website" />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Brand Palette */
+      --brand-primary: #FF7A00;
+      --brand-primary-hover: #FF8F26;
+      --brand-primary-dark: #E65A00;
+      --brand-light: #FFF3E6;
+      --brand-gradient: linear-gradient(135deg, #FF9E44 0%, #FF6500 100%);
+      --brand-glow: rgba(255, 122, 0, 0.35);
+      
+      --accent-blue: #0A84FF;
+      --accent-blue-hover: #2997FF;
+      --accent-cyan: #00D2FF;
+      --accent-green: #10B981;
+      --accent-purple: #8B5CF6;
+      --accent-gold: #F59E0B;
+      
+      /* Dark Theme (Official ToobJod App Theme) */
+      --bg-canvas: #0B132B;
+      --bg-surface-mid: #131E3A;
+      --bg-surface-top: #18264A;
+      --bg-card: #18264A;
+      --bg-card-hover: #1F325E;
+      --bg-bubble: #1E293B;
+      
+      --border-subtle: #22355E;
+      --border-strong: #2D487F;
+      --border-focus: #FF7A00;
+      
+      --text-main: #F8FAFC;
+      --text-subtle: #94A3B8;
+      --text-muted: #64748B;
+      --text-brand: #FFA048;
+      
+      --nav-bg: rgba(11, 19, 43, 0.92);
+      --nav-border: #22355E;
+      
+      --card-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      --badge-bg: rgba(255, 122, 0, 0.15);
+      --badge-text: #FFA048;
+    }
+
+    [data-theme="light"] {
+      --bg-canvas: #F8FAFC;
+      --bg-surface-mid: #F1F5F9;
+      --bg-surface-top: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-bubble: #FFF4EB;
+      
+      --border-subtle: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --border-focus: #FF7A00;
+      
+      --text-main: #0F172A;
+      --text-subtle: #475569;
+      --text-muted: #94A3B8;
+      --text-brand: #E65A00;
+      
+      --nav-bg: rgba(255, 255, 255, 0.9);
+      --nav-border: #E2E8F0;
+      
+      --card-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      --badge-bg: #FFF3E6;
+      --badge-text: #D95D00;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Kanit', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .container-sm {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Typography Utilities */
+    .font-eng {
+      font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #FFB366 0%, #FF7A00 50%, #FFA84A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gradient-text-blue {
+      background: linear-gradient(135deg, #38BDF8 0%, #0A84FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Header & Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--nav-border);
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .nav-container-fluid {
+      width: 100%;
+      padding: 0 24px;
+      box-sizing: border-box;
+    }
+
+    @media (min-width: 768px) {
+      .nav-container-fluid {
+        padding: 0 40px;
+      }
+    }
+
+    .nav-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      width: 100%;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--brand-gradient);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 16px var(--brand-glow);
+      transform: rotate(-3deg);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .logo-group:hover .logo-icon {
+      transform: rotate(0deg) scale(1.08);
+    }
+
+    .logo-tag {
+      font-size: 0.7rem;
+      background: rgba(255, 122, 0, 0.2);
+      color: #FF9E44;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-link {
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: var(--text-subtle);
+      transition: color 0.2s, border-color 0.2s;
+      padding: 8px 2px;
+      position: relative;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-main);
+    }
+
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--brand-primary);
+      border-radius: 2px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--bg-surface-top);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--brand-gradient);
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 10px 22px;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px var(--brand-glow);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(255, 122, 0, 0.5);
+    }
+
+    .btn-cta:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-top);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-strong);
+    }
+
+    /* Mobile Menu Toggle */
+    .mobile-menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      font-size: 1.5rem;
+      color: var(--text-main);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      position: relative;
+      padding: 60px 0 80px 0;
+      background: radial-gradient(circle at 50% 20%, rgba(255, 122, 0, 0.12) 0%, transparent 60%);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 122, 0, 0.2);
+    }
+
+    .hero-title {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--text-subtle);
+      max-width: 680px;
+      margin: 0 auto 32px auto;
+      font-weight: 400;
+    }
+
+    .mascot-bubble {
+      position: relative;
+      display: inline-block;
+      background: var(--bg-bubble);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 122, 0, 0.3);
+      padding: 14px 24px;
+      border-radius: 20px;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 40px;
+      box-shadow: var(--card-shadow);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .mascot-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 12px solid var(--bg-bubble);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Hero Showcase Devices */
+    .hero-mockup-wrapper {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-mockup-frame {
+      position: relative;
+      width: 320px;
+      height: 640px;
+      background: #000000;
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 122, 0, 0.2);
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 24px;
+      background: #1E293B;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 10;
+    }
+
+    .phone-screen-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    /* Floating Showcase Badges */
+    .floating-chip {
+      position: absolute;
+      background: rgba(16, 42, 69, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      padding: 12px 18px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      z-index: 3;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    [data-theme="light"] .floating-chip {
+      background: rgba(255, 255, 255, 0.95);
+      color: #0F172A;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .floating-chip:hover {
+      transform: scale(1.05);
+    }
+
+    .chip-left-1 {
+      top: 15%;
+      left: 4%;
+      animation: float 5s ease-in-out infinite 0.5s;
+    }
+
+    .chip-right-1 {
+      top: 25%;
+      right: 4%;
+      animation: float 6s ease-in-out infinite 1.2s;
+    }
+
+    .chip-left-2 {
+      bottom: 20%;
+      left: 6%;
+      animation: float 5.5s ease-in-out infinite 2s;
+    }
+
+    .chip-right-2 {
+      bottom: 15%;
+      right: 6%;
+      animation: float 6.5s ease-in-out infinite 0.8s;
+    }
+
+    .chip-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .chip-icon.kbank { background: #00A950; color: #FFF; }
+    .chip-icon.streak { background: #FF9E44; color: #FFF; }
+    .chip-icon.budget { background: #3B82F6; color: #FFF; }
+    .chip-icon.shield { background: #10B981; color: #FFF; }
+
+    .chip-text-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    .chip-text-sub {
+      font-size: 0.75rem;
+      color: var(--text-subtle);
+      text-align: left;
+    }
+
+    /* Store Download Row */
+    .store-downloads {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-surface-top);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 22px;
+      border-radius: 16px;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+    }
+
+    .store-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--brand-primary);
+      transform: translateY(-2px);
+    }
+
+    .store-btn-text {
+      text-align: left;
+      line-height: 1.2;
+    }
+
+    .store-btn-small {
+      font-size: 0.7rem;
+      color: var(--text-subtle);
+    }
+
+    .store-btn-big {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    /* Quick Feature Nav Filter Bar */
+    .feature-nav-section {
+      position: sticky;
+      top: 72px;
+      z-index: 90;
+      background: var(--bg-canvas);
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(12px);
+    }
+
+    .filter-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface-mid);
+      color: var(--text-subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .filter-pill:hover, .filter-pill.active {
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      border-color: var(--brand-primary);
+    }
+
+    /* Common Section Styles */
+    section {
+      padding: 90px 0;
+      position: relative;
+    }
+
+    .section-title-wrap {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 60px auto;
+    }
+
+    .section-tag {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--brand-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .section-heading {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 14px;
+    }
+
+    .section-subtext {
+      font-size: 1.05rem;
+      color: var(--text-subtle);
+    }
+
+    /* Feature Grid Section 1: Know Your Spending Habits (3 Cards) */
+    .cards-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--card-shadow);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 122, 0, 0.4);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-img-holder {
+      height: 240px;
+      background: var(--bg-surface-top);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .card-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+      transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover .card-img {
+      transform: scale(1.05);
+    }
+
+    .card-body {
+      padding: 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .card-text {
+      font-size: 0.92rem;
+      color: var(--text-subtle);
+      line-height: 1.6;
+    }
+
+    /* Mascot Fun Streak Section */
+    .streak-banner {
+      background: linear-gradient(135deg, #122842 0%, #0A1C30 100%);
+      border: 1px solid rgba(255, 122, 0, 0.3);
+      border-radius: 32px;
+      padding: 50px 40px;
+      display: flex;
+      align-items: center;
+      gap: 50px;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    [data-theme="light"] .streak-banner {
+      background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+      border-color: #FDBA74;
+    }
+
+    .streak-banner::before {
+      content: '🦴';
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      font-size: 14rem;
+      opacity: 0.05;
+      pointer-events: none;
+    }
+
+    .streak-visual {
+      flex: 1;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .streak-mascot-box {
+      width: 100%;
+      height: 280px;
+      background: rgba(255, 122, 0, 0.1);
+      border-radius: 24px;
+      border: 1px dashed rgba(255, 122, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .streak-days-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--brand-primary);
+      color: #FFF;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .streak-mascot-emoji {
+      font-size: 6rem;
+      animation: bounce 2s infinite ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .streak-content {
+      flex: 1.2;
+    }
+
+    .streak-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .streak-benefits {
+      list-style: none;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .streak-benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: var(--text-subtle);
+    }
+
+    .streak-benefit-item strong {
+      color: var(--text-main);
+    }
+
+    .benefit-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand-primary);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Alternating Feature Showcase Rows */
+    .feature-showcase-row {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      margin-bottom: 90px;
+    }
+
+    .feature-showcase-row:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+
+    .feature-showcase-visual {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .feature-img-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 28px;
+      padding: 16px;
+      box-shadow: var(--card-shadow);
+      max-width: 440px;
+      width: 100%;
+    }
+
+    .feature-img-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 20px;
+      display: block;
+    }
+
+    .feature-showcase-info {
+      flex: 1;
+    }
+
+    .feature-tag-pill {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-primary);
+      background: var(--badge-bg);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .feature-info-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+
+    .feature-info-desc {
+      font-size: 1rem;
+      color: var(--text-subtle);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .feature-bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-bullet-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    /* Interactive Live Slip Scanner Demo */
+    .slip-demo-box {
+      background: var(--bg-surface-mid);
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      padding: 24px;
+      margin-top: 30px;
+    }
+
+    .bank-btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .bank-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .bank-chip-img {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .bank-chip.active {
+      background: var(--brand-primary);
+      color: #FFF;
+      border-color: var(--brand-primary);
+    }
+
+    .slip-result-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .slip-result-icon {
+      font-size: 2rem;
+    }
+
+    .slip-result-details {
+      flex: 1;
+    }
+
+    .slip-result-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .slip-result-sub {
+      font-size: 0.8rem;
+      color: var(--text-subtle);
+    }
+
+    .slip-result-amount {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #EF4444;
+    }
+
+    /* Comparison Table Section */
+    .comparison-table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .comp-table th, .comp-table td {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .comp-table th {
+      background: var(--bg-surface-top);
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .comp-table th.highlight, .comp-table td.highlight {
+      background: rgba(255, 122, 0, 0.08);
+    }
+
+    .comp-feature-name {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .comp-feature-sub {
+      font-size: 0.8rem;
+      color: var(--text-subtle);
+    }
+
+    .comp-status {
+      font-size: 1.25rem;
+      text-align: center;
+    }
+
+    .comp-status.yes { color: #10B981; }
+    .comp-status.no { color: #64748B; font-size: 1rem; }
+    .comp-status.pro { color: var(--brand-primary); font-weight: 700; font-size: 0.9rem; }
+
+    /* FAQ Section */
+    .faq-accordion {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-strong);
+    }
+
+    .faq-question {
+      width: 100%;
+      padding: 20px 24px;
+      text-align: left;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-icon {
+      transition: transform 0.3s ease;
+      font-size: 1.2rem;
+      color: var(--brand-primary);
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      padding: 0 24px 20px 24px;
+      font-size: 0.95rem;
+      color: var(--text-subtle);
+      line-height: 1.6;
+      display: none;
+    }
+
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+
+    /* CTA Download Banner */
+    .cta-banner-section {
+      padding: 60px 0 100px 0;
+    }
+
+    .cta-card {
+      background: var(--brand-gradient);
+      border-radius: 36px;
+      padding: 60px 48px;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 25px 50px rgba(255, 101, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::after {
+      content: '🐾';
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      font-size: 16rem;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .cta-text-side {
+      max-width: 540px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 3.5vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .cta-desc {
+      font-size: 1.05rem;
+      opacity: 0.92;
+      margin-bottom: 28px;
+    }
+
+    .cta-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-cta-white {
+      background: #FFFFFF;
+      color: #E65A00;
+      padding: 12px 28px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s;
+    }
+
+    .btn-cta-white:hover {
+      transform: translateY(-2px);
+      background: #FFF7ED;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--bg-surface-mid);
+      border-top: 1px solid var(--border-subtle);
+      padding: 70px 0 40px 0;
+      font-size: 0.9rem;
+      color: var(--text-subtle);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 50px;
+    }
+
+    .footer-brand h4 {
+      font-size: 1.2rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-col h5 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-links a:hover {
+      color: var(--brand-primary);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .cards-grid-3 { grid-template-columns: 1fr; }
+      .feature-showcase-row, .feature-showcase-row:nth-child(even) { flex-direction: column; gap: 36px; }
+      .streak-banner { flex-direction: column; text-align: center; }
+      .cta-card { flex-direction: column; text-align: center; gap: 30px; }
+      .cta-btns { justify-content: center; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .floating-chip { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .store-downloads { flex-direction: column; }
+    }
+
+    @media (max-width: 640px) {
+      .nav-actions .btn-cta { display: none; }
+    }
+
+    /* Mobile Drawer */
+    .mobile-drawer {
+      display: none;
+      position: absolute;
+      top: 72px;
+      left: 0;
+      right: 0;
+      background: var(--bg-surface-mid);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      z-index: 99;
+      padding: 20px 24px;
+    }
+    .mobile-drawer.open {
+      display: block;
+    }
+    .mobile-nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mobile-nav-links a {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: block;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .mobile-nav-links a:hover {
+      color: var(--brand-primary);
+    }
+    .mobile-drawer-cta {
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Header -->
+  <header>
+    <div class="nav-container-fluid">
+      <div class="nav-wrapper">
+        <a href="#" class="logo-group">
+          <div class="logo-icon" style="background:none; box-shadow:none; padding:0; overflow:hidden; border-radius:12px; width:44px; height:44px;">
+            <img src="assets/images/app_icon_512.png" alt="ToobJod Logo" style="width:100%; height:100%; object-fit:cover;" />
+          </div>
+          <div>
+            <span>Toob<span style="color:var(--brand-primary);">Jod</span></span>
+            <span style="font-weight:400; font-size:1.1rem; color:var(--text-subtle);">เจ้าตูบจด</span>
+            <span class="logo-tag">PRO v2.4</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <ul class="nav-links">
+          <li><a href="#features" class="nav-link active">ฟีเจอร์เด่น</a></li>
+          <li><a href="#autosync" class="nav-link">สลิป & ออโต้ซิงค์</a></li>
+          <li><a href="#analytics" class="nav-link">กราฟวิเคราะห์</a></li>
+          <li><a href="#budget" class="nav-link">คุมงบประมาณ</a></li>
+          <li><a href="#streak" class="nav-link">สตรีคน้องตูบ</a></li>
+          <li><a href="#security" class="nav-link">ความปลอดภัย</a></li>
+          <li><a href="#comparison" class="nav-link">เปรียบเทียบ</a></li>
+          <li><a href="#faq" class="nav-link">FAQ</a></li>
+        </ul>
+
+        <!-- Action Buttons & Theme Switcher -->
+        <div class="nav-actions">
+          <button class="theme-toggle-btn" id="themeToggleBtn" title="สลับโหมดมืด/สว่าง">
+            <span id="themeIcon">🌙</span>
+          </button>
+          <a href="#download" class="btn-cta">
+            <span>ดาวน์โหลดฟรี</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
+          </a>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="เมนู">☰</button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div id="featuresMobileDrawer" class="mobile-drawer">
+        <ul class="mobile-nav-links">
+          <li><a href="#features" onclick="toggleFeaturesMenu()">🌟 ฟีเจอร์เด่น</a></li>
+          <li><a href="#autosync" onclick="toggleFeaturesMenu()">⚡ สลิป & ออโต้ซิงค์</a></li>
+          <li><a href="#analytics" onclick="toggleFeaturesMenu()">📊 กราฟวิเคราะห์</a></li>
+          <li><a href="#budget" onclick="toggleFeaturesMenu()">🎯 คุมงบประมาณ</a></li>
+          <li><a href="#streak" onclick="toggleFeaturesMenu()">🦴 สตรีคน้องตูบ</a></li>
+          <li><a href="#security" onclick="toggleFeaturesMenu()">🔒 ความปลอดภัย</a></li>
+          <li><a href="#comparison" onclick="toggleFeaturesMenu()">⚖️ เปรียบเทียบ</a></li>
+          <li><a href="#faq" onclick="toggleFeaturesMenu()">❓ FAQ</a></li>
+        </ul>
+        <div class="mobile-drawer-cta">
+          <a href="#download" class="btn-cta" style="width:100%; text-align:center;" onclick="toggleFeaturesMenu()">ดาวน์โหลดฟรี (iOS & Android)</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-badge">
+        <span>✨ เวอร์ชันใหม่ 2.4 พร้อมระบบ Auto-Sync 13 ธนาคารไทย</span>
+      </div>
+      
+      <h1 class="hero-title">
+        วางแผนการเงินง่าย ๆ<br/>
+        กับฟีเจอร์น่าใช้ของ <span class="gradient-text">เจ้าตูบจด 🐶</span>
+      </h1>
+
+      <div class="mascot-bubble" style="display:inline-flex; align-items:center; gap:16px; text-align:left; max-width:620px;">
+        <img src="assets/images/mascot_dog_writing.png" alt="ToobJod Mascot" style="width:54px; height:54px; object-fit:contain; shrink-0;" />
+        <span>อยากรู้ไหมใช้เจ้าตูบจดแล้วดียังไง? 🐾<br/>
+        ไปดูกันว่าทำไมถึงเป็นแอปจดเงินและคุมงบที่คนใช้แล้วติดใจที่สุด!</span>
+      </div>
+
+      <!-- Hero Mockup with Floating Interactive Badges -->
+      <div class="hero-mockup-wrapper">
+        <!-- Floating Chip Left 1: Slip Auto Sync -->
+        <div class="floating-chip chip-left-1">
+          <div class="chip-icon" style="background:#FFFFFF; padding:4px; display:flex; align-items:center; justify-content:center; border-radius:10px;">
+            <img src="assets/images/banks/kbank.png" alt="K PLUS" style="width:100%; height:100%; object-fit:contain;" />
+          </div>
+          <div>
+            <div class="chip-text-title">ตรวจพบเงินออก K PLUS</div>
+            <div class="chip-text-sub">จดหมวด "อาหาร" ฿180 ให้ทันที</div>
+          </div>
+        </div>
+
+        <!-- Floating Chip Right 1: Celebrate -->
+        <div class="floating-chip chip-right-1">
+          <div class="chip-icon" style="background:rgba(255, 122, 0, 0.15); display:flex; align-items:center; justify-content:center; border-radius:10px;">
+            <img src="assets/images/mascot_dog_celebrate.png" alt="Celebrate" style="width:24px; height:24px; object-fit:contain;" />
+          </div>
+          <div>
+            <div class="chip-text-title">สตรีคจดเงินครบ 14 วัน!</div>
+            <div class="chip-text-sub">รับ "กระดูกทองคำ" ปลดล็อกสกิน</div>
+          </div>
+        </div>
+
+        <!-- Floating Chip Left 2: Budget Progress -->
+        <div class="floating-chip chip-left-2">
+          <div class="chip-icon" style="background:rgba(37, 99, 235, 0.15); display:flex; align-items:center; justify-content:center; border-radius:10px;">
+            <img src="assets/images/action_budget.png" alt="Budget" style="width:24px; height:24px; object-fit:contain;" />
+          </div>
+          <div>
+            <div class="chip-text-title">งบช้อปปิ้งเดือนนี้</div>
+            <div class="chip-text-sub">ใช้ไป ฿2,450 / เหลืออีก ฿2,550</div>
+          </div>
+        </div>
+
+        <!-- Floating Chip Right 2: Privacy -->
+        <div class="floating-chip chip-right-2">
+          <div class="chip-icon shield">🔒</div>
+          <div>
+            <div class="chip-text-title">Privacy Eye Active 🙈</div>
+            <div class="chip-text-sub">ซ่อนยอดเงินในที่สาธารณะ</div>
+          </div>
+        </div>
+
+        <!-- Center Phone Mockup -->
+        <div class="phone-mockup-frame">
+          <div class="phone-notch"></div>
+          <img src="showcase_assets/v2_dashboard.png" alt="ToobJod Dashboard" class="phone-screen-img" onerror="this.src='https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=600&q=80'" />
+        </div>
+      </div>
+
+      <!-- Store Download Badges -->
+      <div class="store-downloads">
+        <a href="#download" class="store-btn">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.61 1.34-.55.63-1.03 1.68-.9 2.71 1 .08 2.02-.51 2.59-1.2"/></svg>
+          <div class="store-btn-text">
+            <div class="store-btn-small">Download on the</div>
+            <div class="store-btn-big">App Store</div>
+          </div>
+        </a>
+
+        <a href="#download" class="store-btn">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a2.22 2.22 0 0 1-.61-.954V2.768c.15-.36.368-.69.609-.954zm11.241 11.245l2.298 2.298-10.73 6.131 8.432-8.429zm0-2.118L6.418 2.512l10.73 6.131-2.298 2.298zm3.237 1.059l2.846 1.626c.867.495.867 1.305 0 1.8l-2.846 1.626-2.355-2.355 2.355-2.697z"/></svg>
+          <div class="store-btn-text">
+            <div class="store-btn-small">GET IT ON</div>
+            <div class="store-btn-big">Google Play</div>
+          </div>
+        </a>
+
+        <a href="#download" class="store-btn">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <div class="store-btn-text">
+            <div class="store-btn-small">Web Application</div>
+            <div class="store-btn-big">เปิดใช้งานบนเว็บ</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sticky Feature Quick Navigation Tabs -->
+  <div class="feature-nav-section" id="features">
+    <div class="container">
+      <div class="filter-scroll">
+        <a href="#habits" class="filter-pill active">🌟 ฟีเจอร์หลัก</a>
+        <a href="#autosync" class="filter-pill">⚡ สลิป & ซิงค์ 20 ธนาคาร</a>
+        <a href="#streak" class="filter-pill">🦴 สตรีค & ของรางวัลตูบ</a>
+        <a href="#budget" class="filter-pill">🎯 คุมงบ & แท็ก (#Tags)</a>
+        <a href="#analytics" class="filter-pill">📊 วิเคราะห์กราฟ & AI</a>
+        <a href="#security" class="filter-pill">🔒 ความปลอดภัย & Privacy</a>
+        <a href="#comparison" class="filter-pill">🏆 เปรียบเทียบแพ็กเกจ</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: Know Your Spending Habits (3 Bento Cards) -->
+  <section id="habits">
+    <div class="container">
+      <div class="section-title-wrap">
+        <div class="section-tag">SPENDING AWARENESS</div>
+        <h2 class="section-heading">
+          รู้นิสัยการใช้จ่ายของตัวเอง <span class="gradient-text">จากการจด</span>
+        </h2>
+        <p class="section-subtext">
+          เปลี่ยนเรื่องเงินที่น่าเบื่อให้เข้าใจง่าย เห็นทุกกระแสเงินเข้าออก และตัดรายจ่ายที่ไม่จำเป็นได้ทันที
+        </p>
+      </div>
+
+      <div class="cards-grid-3">
+        <!-- Card 1 -->
+        <div class="feature-card">
+          <div class="card-img-holder">
+            <img src="showcase_assets/v2_auto_sync_clean.png" alt="สแกนสลิปอัตโนมัติ" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=500&q=80'" />
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">รู้ทันทุกการใช้จ่าย</h3>
+            <p class="card-text">
+              เห็นยอดรวมการใช้จ่ายทุกรายการในแต่ละเดือน แค่โอนเงินเสร็จ สลิปจะถูกอ่านและบันทึกหมวดหมู่อัตโนมัติจากกว่า 20 แอปธนาคารไทย ไม่ต้องจำ ไม่ต้องพิมพ์เอง
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="feature-card">
+          <div class="card-img-holder">
+            <img src="showcase_assets/app_analytics.png" alt="กราฟวิเคราะห์แนวโน้ม" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=500&q=80'" />
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">รู้แนวโน้มการใช้เงิน</h3>
+            <p class="card-text">
+              รีวิวสุขภาพการเงินผ่าน กราฟสรุปอัจฉริยะ ดูเปรียบเทียบสัปดาห์ต่อสัปดาห์ เดือนต่อเดือน พร้อมประเมินเงินคงเหลือสุทธิ (Net Cash Flow) ให้คุณวางแผนอนาคตได้แม่นยำ
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="feature-card">
+          <div class="card-img-holder">
+            <img src="showcase_assets/app_ai_advice.png" alt="ตอบข้อสงสัยเงินหายไปไหน" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=500&q=80'" />
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">ตอบข้อสงสัย เงินหายไปไหนก็รู้</h3>
+            <p class="card-text">
+              น้องตูบช่วยแยกแยะหมวดหมู่อย่างละเอียด พร้อม AI สรุปไฮไลท์ค่าใช้จ่ายก้อนโต รู้ว่าเสียเงินไปกับอะไรมากเกินไป แล้วตั้งเป้าลดรายจ่ายได้อย่างตรงจุด
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Dog Mascot Streak & Gamification -->
+  <section id="streak" style="background: var(--bg-surface-mid);">
+    <div class="container">
+      <div class="streak-banner">
+        <div class="streak-visual">
+          <div class="streak-mascot-box">
+            <div class="streak-days-badge">🔥 14 วันติดกัน!</div>
+            <div class="streak-mascot-emoji">🐶</div>
+            <div style="font-weight: 700; margin-top: 10px; color: var(--brand-primary);">
+              "โฮ่ง! พี่จดครบทุกวันเลย มีเงินเก็บแน่นอน!"
+            </div>
+          </div>
+        </div>
+
+        <div class="streak-content">
+          <div class="section-tag">HABIT BUILDING & REWARDS</div>
+          <h2 class="streak-title">
+            สนุกไปกับการจดรายจ่าย <span class="gradient-text">ได้อย่างต่อเนื่อง</span>
+          </h2>
+          <p style="color: var(--text-subtle); line-height: 1.6; margin-bottom: 16px;">
+            หมดปัญหาการจดได้ 3 วันแล้วเลิก! ด้วยระบบสตรีคสุดน่ารักของ <strong>น้องตูบ</strong> ที่จะคอยเป็นเพื่อนร่วมทางทางการเงิน แจกกระดูกทองคำและเหรียญสะสมเมื่อคุณบันทึกครบทุกวัน
+          </p>
+
+          <ul class="streak-benefits">
+            <li class="streak-benefit-item">
+              <div class="benefit-check">✓</div>
+              <div><strong>สะสมสตรีค & แลกของรางวัล:</strong> ปลดล็อกสกินน้องตูบ ธีมแอปสุดพิเศษ และไอคอนลิมิเต็ด</div>
+            </li>
+            <li class="streak-benefit-item">
+              <div class="benefit-check">✓</div>
+              <div><strong>ระบบแจ้งเตือนแบบไม่กวนใจ:</strong> เลือกช่วงเวลาที่สะดวกให้น้องตูบเห่าเตือนจดเงินก่อนนอน</div>
+            </li>
+            <li class="streak-benefit-item">
+              <div class="benefit-check">✓</div>
+              <div><strong>เปลี่ยนพฤติกรรมระยะยาว:</strong> สร้างวินัยทางการเงินอย่างเป็นธรรมชาติ เห็นเงินออมโตขึ้นทุกเดือน</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Smart Slip Reader & Auto Sync -->
+  <section id="autosync">
+    <div class="container">
+      <div class="feature-showcase-row">
+        <div class="feature-showcase-visual">
+          <div class="feature-img-card">
+            <img src="showcase_assets/app_bank_selection_success.png" alt="Auto Sync Banks" onerror="this.src='https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=600&q=80'" />
+          </div>
+        </div>
+
+        <div class="feature-showcase-info">
+          <span class="feature-tag-pill">⚡ AI SLIP OCR & NOTIFICATION</span>
+          <h3 class="feature-info-title">
+            อ่านสลิป & ซิงค์อัตโนมัติ<br/>
+            <span class="gradient-text">รองรับกว่า 20 แอปธนาคารไทย</span>
+          </h3>
+          <p class="feature-info-desc">
+            ไม่ต้องเหนื่อยมานั่งพิมพ์ตัวเลขทีละรายการ แค่แคปสลิปหรือโอนเงินผ่าน Mobile Banking ระบบ OCR อัจฉริยะจะสแกนยอดเงิน, วันเวลา, ผู้รับเงิน และเลือกหมวดหมู่ให้โดยอัตโนมัติทันที
+          </p>
+
+          <ul class="feature-bullet-list">
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              รองรับ KBank, SCB, KTB, BBL, TTB, GSB, TrueMoney และธนาคารชั้นนำครบครัน
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              ระบบป้องกันสลิปซ้ำ (Duplicate Detection) ไม่ต้องกลัวบันทึกเบิ้ล
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              กระทบยอดเงินในบัญชี (Reconciliation) เป๊ะ ไม่คลาดเคลื่อนแม้แต่สตางค์เดียว
+            </li>
+          </ul>
+
+          <!-- Interactive Slip Live Demo Widget -->
+          <div class="slip-demo-box">
+            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-subtle);">
+              ทดลองคลิกเลือกธนาคารเพื่อดูการจำลองสแกนสลิป:
+            </div>
+            <div class="bank-btn-group">
+              <button class="bank-chip active" onclick="simulateSlip('kbank', event)">
+                <img src="showcase_assets/bank_logos/k.2uromo63alc1_.png" class="bank-chip-img" alt="K PLUS" />
+                <span>K PLUS</span>
+              </button>
+              <button class="bank-chip" onclick="simulateSlip('scb', event)">
+                <img src="showcase_assets/bank_logos/scb.38e-ikrg1niqv.png" class="bank-chip-img" alt="SCB EASY" />
+                <span>SCB EASY</span>
+              </button>
+              <button class="bank-chip" onclick="simulateSlip('ktb', event)">
+                <img src="showcase_assets/bank_logos/kt.36fh61q77ozax.png" class="bank-chip-img" alt="Krungthai NEXT" />
+                <span>Krungthai NEXT</span>
+              </button>
+              <button class="bank-chip" onclick="simulateSlip('bbl', event)">
+                <img src="showcase_assets/bank_logos/bbl.1veqep98cav-i.png" class="bank-chip-img" alt="Bualuang" />
+                <span>Bualuang</span>
+              </button>
+              <button class="bank-chip" onclick="simulateSlip('ttb', event)">
+                <img src="showcase_assets/bank_logos/ttb.1nul11dskkxmj.png" class="bank-chip-img" alt="ttb touch" />
+                <span>ttb touch</span>
+              </button>
+              <button class="bank-chip" onclick="simulateSlip('truemoney', event)">
+                <img src="showcase_assets/bank_logos/true.3z5m5jk3juh3o.png" class="bank-chip-img" alt="TrueMoney" />
+                <span>TrueMoney</span>
+              </button>
+            </div>
+            <div class="slip-result-card" id="slipResultBox">
+              <div class="slip-result-icon">🧾</div>
+              <div class="slip-result-details">
+                <div class="slip-result-name" id="slipVendor">ร้านข้าวซอยแม่มณี (K PLUS)</div>
+                <div class="slip-result-sub" id="slipMeta">หมวดหมู่: อาหารและเครื่องดื่ม • วันนี้ 12:30 น.</div>
+              </div>
+              <div class="slip-result-amount" id="slipAmount">- ฿120.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Budget Planning & Custom Tags -->
+  <section id="budget" style="background: var(--bg-surface-mid);">
+    <div class="container">
+      <div class="feature-showcase-row">
+        <div class="feature-showcase-visual">
+          <div class="feature-img-card">
+            <img src="showcase_assets/v2_budgets_opened.png" alt="คุมงบประมาณรายหมวด" onerror="this.src='https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80'" />
+          </div>
+        </div>
+
+        <div class="feature-showcase-info">
+          <span class="feature-tag-pill">🎯 BUDGET & SMART TAGS</span>
+          <h3 class="feature-info-title">
+            เริ่มวางแผน คุมงบให้อยู่หมัด<br/>
+            <span class="gradient-text">ด้วยการตั้งงบรายหมวด & แท็ก #</span>
+          </h3>
+          <p class="feature-info-desc">
+            ตั้งงบประมาณแยกตามหมวดหมู่ที่คุณกังวล เช่น ค่ากิน, ค่าช้อปปิ้ง, หรือค่าน้ำมัน พร้อมระบบแจ้งเตือนเมื่อใกล้แตะ 80% และเตือนทันทีก่อนที่เงินจะหมดกระเป๋า
+          </p>
+
+          <ul class="feature-bullet-list">
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>คุมงบเฉพาะเรื่องด้วย #Tags:</strong> ติดแท็ก <code>#ทริปญี่ปุ่น</code> <code>#คอนโดใหม่</code> <code>#งานแต่ง</code> ดูยอดรวมแยกโปรเจกต์ได้ทันที
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>ปรับแต่งหมวดหมู่ได้อิสระ:</strong> มีไอคอนและสีสันให้เลือกกว่า 300+ แบบ
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>Progress Bar แบบเรียลไทม์:</strong> เปลี่ยนสีเตือนจาก เขียว -> ส้ม -> แดง เมื่อใกล้เกินงบ
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Financial Analytics & AI Advice -->
+  <section id="analytics">
+    <div class="container">
+      <div class="feature-showcase-row">
+        <div class="feature-showcase-visual">
+          <div class="feature-img-card">
+            <img src="showcase_assets/app_spending_plan.png" alt="Financial Analytics & Plan" onerror="this.src='https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80'" />
+          </div>
+        </div>
+
+        <div class="feature-showcase-info">
+          <span class="feature-tag-pill">📊 DEEP FINANCIAL INSIGHTS</span>
+          <h3 class="feature-info-title">
+            แดชบอร์ดสรุปผลการเงิน<br/>
+            <span class="gradient-text">เปรียบเทียบข้ามเดือน แม่นยำทุกมิติ</span>
+          </h3>
+          <p class="feature-info-desc">
+            ดูภาพรวมการเติบโตของสินทรัพย์ (Net Worth) และวิเคราะห์สัดส่วนรายรับรายจ่ายด้วยกราฟวงกลมและกราฟแท่งที่เข้าใจง่าย พร้อมสรุปรายสัปดาห์ รายเดือน และรายปี
+          </p>
+
+          <ul class="feature-bullet-list">
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>เปรียบเทียบเดือนต่อเดือน:</strong> เช็คดูว่าเดือนนี้ประหยัดกว่าเดือนก่อนไปกี่เปอร์เซ็นต์
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>ส่งออกข้อมูลได้ง่ายดาย:</strong> Export รายงานเป็น Excel, CSV หรือ PDF ส่งนักบัญชีได้ทันที
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>AI สรุปคำแนะนำ:</strong> เคล็ดลับการเงินส่วนบุคคลตามพฤติกรรมจริงของคุณ
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Privacy & Biometric Security -->
+  <section id="security" style="background: var(--bg-surface-mid);">
+    <div class="container">
+      <div class="feature-showcase-row">
+        <div class="feature-showcase-visual">
+          <div class="feature-img-card">
+            <img src="showcase_assets/feat02_eye_privacy.png" alt="Privacy & Eye Mask Mode" onerror="this.src='https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=600&q=80'" />
+          </div>
+        </div>
+
+        <div class="feature-showcase-info">
+          <span class="feature-tag-pill">🔒 PRIVACY & SECURITY</span>
+          <h3 class="feature-info-title">
+            สบายใจในทุกการใช้งาน<br/>
+            <span class="gradient-text">ปลอดภัยระดับสูงด้วย Local-First Data</span>
+          </h3>
+          <p class="feature-info-desc">
+            ข้อมูลการเงินเป็นเรื่องส่วนตัวสูงสุด เจ้าตูบจดให้ความสำคัญกับความปลอดภัยและไพรเวซี่ของคุณเป็นอันดับหนึ่ง
+          </p>
+
+          <ul class="feature-bullet-list">
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>Privacy Mask Mode (โหมดตาปิด 🙈):</strong> แตะปุ่มเดียวเพื่อเซ็นเซอร์ตัวเลขเงินในที่สาธารณะ ป้องกันคนแอบมอง
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>ล็อกแอปด้วย Biometrics:</strong> รองรับ Face ID, Touch ID และรหัสผ่าน PIN 6 หลัก
+            </li>
+            <li class="feature-bullet-item">
+              <span style="color:var(--brand-primary); font-weight:700;">•</span>
+              <strong>Local-First Encryption:</strong> ข้อมูลของคุณถูกเข้ารหัสบนอุปกรณ์และสำรองบน Cloud ส่วนตัวของคุณอย่างปลอดภัย
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 7: Free vs Pro Feature Comparison Matrix -->
+  <section id="comparison">
+    <div class="container">
+      <div class="section-title-wrap">
+        <div class="section-tag">COMPARE PLANS</div>
+        <h2 class="section-heading">
+          เลือกแพ็กเกจที่เหมาะกับคุณ <span class="gradient-text">ฟรี & โปร</span>
+        </h2>
+        <p class="section-subtext">
+          เริ่มต้นใช้งานฟรีได้ทันที หรืออัปเกรดเป็น ToobJod Pro เพื่อปลดล็อกฟีเจอร์ระดับพรีเมียมไร้ขีดจำกัด
+        </p>
+      </div>
+
+      <div class="comparison-table-wrapper">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th style="width: 45%;">ฟีเจอร์การใช้งาน</th>
+              <th style="width: 25%; text-align: center;">ToobJod ฟรี</th>
+              <th style="width: 30%; text-align: center;" class="highlight">
+                <span class="gradient-text" style="font-weight: 700;">🐶 ToobJod PRO</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="comp-feature-name">บันทึกรายรับ-รายจ่ายพื้นฐาน</div>
+                <div class="comp-feature-sub">จดเงินได้ทุกวันไม่จำกัดจำนวนรายการ</div>
+              </td>
+              <td class="comp-status yes">✓</td>
+              <td class="comp-status yes highlight">✓</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="comp-feature-name">ระบบอ่านสลิปโอนเงินอัตโนมัติ (AI Slip OCR)</div>
+                <div class="comp-feature-sub">สแกนสลิปจาก 20 ธนาคาร ไม่ต้องคีย์เอง</div>
+              </td>
+              <td class="comp-status pro">30 ครั้ง/เดือน</td>
+              <td class="comp-status pro highlight">⚡ ไม่จำกัดจำนวนครั้ง</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="comp-feature-name">จัดการหลายบัญชี & บัตรเครดิต</div>
+                <div class="comp-feature-sub">เงินสด, บัญชีเงินฝาก, บัตรเครดิต, E-Wallet</div>
+              </td>
+              <td class="comp-status pro">สูงสุด 3 บัญชี</td>
+              <td class="comp-status pro highlight">🌟 ไม่จำกัดบัญชี</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="comp-feature-name">ระบบตั้งงบประมาณรายหมวด & แท็ก #Tags</div>
+                <div class="comp-feature-sub">คุมงบพร้อมแจ้งเตือนก่อนเกินงบ</div>
+              </td>
+              <td class="comp-status yes">✓</td>
+              <td class="comp-status yes highlight">✓ (ขั้นสูง + ลิมิตแท็กไม่จำกัด)</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="comp-feature-name">ระบบสตรีคน้องตูบ & ปลดล็อกคอสตูม</div>
+                <div class="comp-feature-sub">สะสมกระดูกทองคำ แลกของรางวัล</div>
+              </td>
+              <td class="comp-status yes">✓ (สกินพื้นฐาน)</td>
+              <td class="comp-status yes highlight">👑 ปลดล็อกทุกธีมและสกินลิมิเต็ด</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="comp-feature-name">กราฟวิเคราะห์แนวโน้ม & Net Worth</div>
+                <div class="comp-feature-sub">ดูเปรียบเทียบย้อนหลังรายปี และส่งออก Excel/CSV</div>
+              </td>
+              <td class="comp-status pro">ย้อนหลัง 3 เดือน</td>
+              <td class="comp-status pro highlight">📊 ไม่จำกัด + Export ไฟล์ได้ทันที</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="comp-feature-name">ระบบความปลอดภัย & Privacy Mask ตาปิด</div>
+                <div class="comp-feature-sub">Face ID / Touch ID / ซ่อนยอดเงิน</div>
+              </td>
+              <td class="comp-status yes">✓</td>
+              <td class="comp-status yes highlight">✓</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 8: FAQ Accordion -->
+  <section id="faq" style="background: var(--bg-surface-mid);">
+    <div class="container">
+      <div class="section-title-wrap">
+        <div class="section-tag">FREQUENTLY ASKED QUESTIONS</div>
+        <h2 class="section-heading">คำถามที่พบบ่อย</h2>
+        <p class="section-subtext">มีข้อสงสัยเกี่ยวกับการใช้งานเจ้าตูบจด? เราได้รวบรวมคำตอบไว้ให้คุณแล้ว</p>
+      </div>
+
+      <div class="faq-accordion">
+        <div class="faq-item active">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>เจ้าตูบจดปลอดภัยไหม? ข้อมูลการเงินจะรั่วไหลหรือไม่?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            ปลอดภัยสูงสุดครับ! เจ้าตูบจดใช้สถาปัตยกรรมแบบ Local-First โดยข้อมูลทั้งหมดจะถูกเก็บและเข้ารหัสอยู่บนอุปกรณ์ของคุณ และไม่มีการเข้าถึงรหัสผ่านหรือแอปธนาคารใด ๆ ของคุณทั้งสิ้น
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>ระบบอ่านสลิปอัตโนมัติรองรับธนาคารอะไรบ้าง?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            เรารองรับสลิปจากแอปธนาคารไทยหลักทุกแห่ง เช่น K PLUS (กสิกรไทย), SCB EASY (ไทยพาณิชย์), Krungthai NEXT (กรุงไทย), Bangkok Bank (กรุงเทพ), ttb touch (ทีทีบี), MyMo (ออมสิน), TrueMoney Wallet และพร้อมเพย์มาตรฐาน
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>สามารถใช้งานร่วมกันหลายเครื่อง หรือซิงค์ข้อมูลได้ไหม?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            สามารถซิงค์ข้อมูลระหว่างสมาร์ตโฟน แท็บเล็ต และคอมพิวเตอร์ (Web App) ได้อย่างสะดวก เพียงเข้าสู่ระบบด้วยบัญชีเดียวกัน ข้อมูลจะถูกสำรองและอัปเดตแบบเรียลไทม์
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>สามารถส่งออกข้อมูลไปทำบัญชีใน Excel ได้หรือไม่?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            ได้แน่นอนครับ คุณสามารถกดส่งออก (Export) ข้อมูลรายการทั้งหมดเป็นไฟล์ Excel (.xlsx), CSV หรือ PDF ได้ตลอดเวลาตามช่วงวันที่ที่ต้องการ
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 9: CTA Download Section -->
+  <section class="cta-banner-section" id="download">
+    <div class="container">
+      <div class="cta-card">
+        <div class="cta-text-side">
+          <h2 class="cta-title">
+            เริ่มวางแผนการเงินวันนี้<br/>
+            กับ <span style="text-decoration: underline;">เจ้าตูบจด 🐶</span>
+          </h2>
+          <p class="cta-desc">
+            ดาวน์โหลดฟรีวันนี้บน iOS, Android และใช้งานบนเว็บ เปลี่ยนเรื่องเงินให้เป็นเรื่องง่ายและสนุก พร้อมมีเงินเก็บเพิ่มขึ้นไปด้วยกัน!
+          </p>
+          <div class="cta-btns">
+            <a href="#" class="btn-cta-white">📱 ดาวน์โหลดบน iOS</a>
+            <a href="#" class="btn-cta-white">🤖 ดาวน์โหลดบน Android</a>
+            <a href="#" class="btn-cta-white" style="background:rgba(255,255,255,0.2); color:#FFF; border:1px solid #FFF;">🌐 เข้าสู่ Web App</a>
+          </div>
+        </div>
+
+        <div style="position: relative; z-index: 2; text-align: center;">
+          <div style="background:#FFF; padding:16px; border-radius:20px; display:inline-block; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <!-- QR Code Placeholder SVG -->
+            <svg width="140" height="140" viewBox="0 0 24 24" fill="#0F172A">
+              <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14 2h4v4h-4v-4zm-4-2h2v2h-2v-2zm2 4h2v2h-2v-2zm-2-4v-2h4v2h-4zm4-4h2v4h-2v-4zm-4 0h2v2h-2v-2z"/>
+            </svg>
+            <div style="color:#0F172A; font-size:0.75rem; font-weight:700; margin-top:6px;">สแกนเพื่อดาวน์โหลด</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4><span style="font-size:1.4rem;">🐶</span> เจ้าตูบจด (ToobJod)</h4>
+          <p style="margin-bottom: 16px; line-height: 1.6;">
+            แอปพลิเคชันบันทึกรายรับ-รายจ่าย สแกนสลิปอัจฉริยะ และวางแผนการเงินส่วนบุคคล สร้างวินัยด้วยสตรีคและน้องตูบแสนรู้
+          </p>
+          <div style="display:flex; gap:12px; font-size:1.2rem;">
+            <a href="#" title="Facebook">📘</a>
+            <a href="#" title="Twitter/X">🐦</a>
+            <a href="#" title="Instagram">📷</a>
+            <a href="#" title="TikTok">🎵</a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h5>ฟีเจอร์เด่น</h5>
+          <ul class="footer-links">
+            <li><a href="#autosync">สแกนสลิป 20 ธนาคาร</a></li>
+            <li><a href="#budget">คุมงบประมาณ & แท็ก</a></li>
+            <li><a href="#analytics">กราฟวิเคราะห์ & Cash Flow</a></li>
+            <li><a href="#streak">สตรีคน้องตูบสะสมรางวัล</a></li>
+            <li><a href="#security">ระบบความปลอดภัย Face ID</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>การสนับสนุน</h5>
+          <ul class="footer-links">
+            <li><a href="#faq">คำถามที่พบบ่อย (FAQ)</a></li>
+            <li><a href="#">คู่มือการใช้งานเริ่มต้น</a></li>
+            <li><a href="#">วิธีเชื่อมต่อสลิปธนาคาร</a></li>
+            <li><a href="#">แจ้งปัญหาการใช้งาน</a></li>
+            <li><a href="#">ติดต่อทีมงาน</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>ข้อกำหนด & ความเป็นส่วนตัว</h5>
+          <ul class="footer-links">
+            <li><a href="#">นโยบายความเป็นส่วนตัว (Privacy)</a></li>
+            <li><a href="#">ข้อกำหนดการให้บริการ (Terms)</a></li>
+            <li><a href="#">การรักษาความปลอดภัยข้อมูล</a></li>
+            <li><a href="#">เวอร์ชันและอัปเดตระบบ</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 ToobJod (เจ้าตูบจด). สงวนลิขสิทธิ์ทุกประการ.</div>
+        <div style="display:flex; gap:20px;">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Security</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript Interactions -->
+  <script>
+    // Theme Switcher (Dark / Light)
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const htmlEl = document.documentElement;
+
+    function setTheme(theme) {
+      htmlEl.setAttribute('data-theme', theme);
+      if (theme === 'light') {
+        themeIcon.textContent = '☀️';
+      } else {
+        themeIcon.textContent = '🌙';
+      }
+      localStorage.setItem('toobjod_theme', theme);
+    }
+
+    const savedTheme = localStorage.getItem('toobjod_theme') || 'dark';
+    setTheme(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // FAQ Accordion
+    function toggleFaq(btn) {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('active');
+      
+      // Close other items
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
+      
+      if (!isOpen) {
+        item.classList.add('active');
+      }
+    }
+
+    // Slip Simulation Interactive Widget
+    const slipData = {
+      kbank: { vendor: 'ร้านข้าวซอยแม่มณี (K PLUS)', meta: 'หมวดหมู่: อาหารและเครื่องดื่ม • วันนี้ 12:30 น.', amount: '- ฿120.00' },
+      scb: { vendor: 'เติมน้ำมัน PTT Station (SCB EASY)', meta: 'หมวดหมู่: ยานพาหนะ & เดินทาง • วันนี้ 09:15 น.', amount: '- ฿800.00' },
+      ktb: { vendor: 'ร้านยาฟาร์มาซี (Krungthai NEXT)', meta: 'หมวดหมู่: สุขภาพและการแพทย์ • เมื่อวาน 18:40 น.', amount: '- ฿350.00' },
+      bbl: { vendor: 'GrabFood Delivery (Bualuang)', meta: 'หมวดหมู่: อาหารและเครื่องดื่ม • วันนี้ 19:10 น.', amount: '- ฿245.00' },
+      ttb: { vendor: 'Shopee Official Store (ttb touch)', meta: 'หมวดหมู่: ช้อปปิ้ง • วันนี้ 15:45 น.', amount: '- ฿1,420.00' },
+      truemoney: { vendor: '7-Eleven สาขาอารีย์ (TrueMoney)', meta: 'หมวดหมู่: ของใช้ทั่วไป • วันนี้ 08:20 น.', amount: '- ฿95.00' }
+    };
+
+    function simulateSlip(bankKey, ev) {
+      // Update chip active states
+      document.querySelectorAll('.bank-chip').forEach(c => c.classList.remove('active'));
+      if (ev && ev.currentTarget) {
+        ev.currentTarget.classList.add('active');
+      }
+
+      const data = slipData[bankKey];
+      if (!data) return;
+      const resultBox = document.getElementById('slipResultBox');
+      const vendorEl = document.getElementById('slipVendor');
+      const metaEl = document.getElementById('slipMeta');
+      const amountEl = document.getElementById('slipAmount');
+
+      // Subtle animation
+      resultBox.style.opacity = '0.3';
+      resultBox.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        vendorEl.textContent = data.vendor;
+        metaEl.textContent = data.meta;
+        amountEl.textContent = data.amount;
+        resultBox.style.opacity = '1';
+        resultBox.style.transform = 'scale(1)';
+      }, 150);
+    }
+
+    // Mobile Drawer Toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const featuresMobileDrawer = document.getElementById('featuresMobileDrawer');
+    if (mobileMenuBtn && featuresMobileDrawer) {
+      mobileMenuBtn.addEventListener('click', () => {
+        featuresMobileDrawer.classList.toggle('open');
+      });
+    }
+
+    function toggleFeaturesMenu() {
+      if (featuresMobileDrawer) {
+        featuresMobileDrawer.classList.remove('open');
+      }
+    }
+
+    // Smooth Scrolling for Filter Pills & Nav Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const targetId = this.getAttribute('href');
+        if (targetId !== '#') {
+          const target = document.querySelector(targetId);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth' });
+            
+            // Update active state on filter pills
+            if (this.classList.contains('filter-pill')) {
+              document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+              this.classList.add('active');
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
