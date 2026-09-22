@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -129,6 +128,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
         behavior: HitTestBehavior.opaque,
         onTap: _goToDashboard, // Tap anywhere to skip splash instantly
         child: Scaffold(
+          backgroundColor: const Color(0xFFFF7A00),
           body: Container(
             width: double.infinity,
             height: double.infinity,

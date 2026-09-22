@@ -79,10 +79,7 @@ class _PinDotsIndicatorState extends State<PinDotsIndicator>
           if (widget.isError) {
             dotColor = AppColors.error;
             borderColor = AppColors.error;
-          } else if (widget.isSuccess) {
-            dotColor = AppColors.success;
-            borderColor = AppColors.success;
-          } else if (isFilled) {
+          } else if (widget.isSuccess || isFilled) {
             dotColor = AppColors.primaryOrange;
             borderColor = AppColors.primaryOrange;
           } else {
@@ -96,21 +93,21 @@ class _PinDotsIndicatorState extends State<PinDotsIndicator>
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             margin: const EdgeInsets.symmetric(horizontal: 14),
-            width: isFilled ? 18 : 16,
-            height: isFilled ? 18 : 16,
+            width: (isFilled || widget.isSuccess) ? 18 : 16,
+            height: (isFilled || widget.isSuccess) ? 18 : 16,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: dotColor,
               border: Border.all(
                 color: borderColor,
-                width: isFilled ? 0 : 2,
+                width: (isFilled || widget.isSuccess) ? 0 : 2,
               ),
-              boxShadow: isFilled && !widget.isError && !widget.isSuccess
+              boxShadow: (isFilled || widget.isSuccess) && !widget.isError
                   ? [
                       BoxShadow(
-                        color: AppColors.primaryOrange.withValues(alpha: 0.35),
-                        blurRadius: 8,
-                        spreadRadius: 1,
+                        color: AppColors.primaryOrange.withValues(alpha: widget.isSuccess ? 0.5 : 0.35),
+                        blurRadius: widget.isSuccess ? 10 : 8,
+                        spreadRadius: widget.isSuccess ? 2 : 1,
                       )
                     ]
                   : null,

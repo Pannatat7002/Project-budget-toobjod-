@@ -27,20 +27,35 @@ class CashFlowBarChart extends StatelessWidget {
       return Container(
         height: 160,
         alignment: Alignment.center,
-        child: Text(
-          'ไม่มีข้อมูลกระแสเงินสดในช่วงเวลานี้',
-          style: GoogleFonts.prompt(
-            fontSize: 12,
-            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bar_chart_rounded,
+              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'ไม่มีข้อมูลกระแสเงินสดในช่วงเวลานี้',
+              style: GoogleFonts.prompt(
+                fontSize: 12,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+            ),
+          ],
         ),
       );
     }
 
     double maxVal = 0.0;
+    double totalIn = 0.0;
+    double totalEx = 0.0;
     for (final g in groups) {
       if (g.income > maxVal) maxVal = g.income;
       if (g.expense > maxVal) maxVal = g.expense;
+      totalIn += g.income;
+      totalEx += g.expense;
     }
     if (maxVal <= 0) maxVal = 1000.0;
     final maxY = maxVal * 1.25;
@@ -48,22 +63,24 @@ class CashFlowBarChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Legend
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        // Legend with quick totals
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             _buildLegendItem(
               color: AppColors.income,
-              label: 'เงินเข้า (Inflow)',
+              label: 'เงินเข้า: +${CurrencyFormatter.formatCompact(totalIn)}',
             ),
-            const SizedBox(width: 14),
             _buildLegendItem(
               color: AppColors.expense,
-              label: 'เงินออก (Outflow)',
+              label: 'เงินออก: -${CurrencyFormatter.formatCompact(totalEx)}',
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
 
         // Bar Chart
         SizedBox(
@@ -82,7 +99,7 @@ class CashFlowBarChart extends StatelessWidget {
                     return BarTooltipItem(
                       '$title\n${CurrencyFormatter.format(rod.toY)} บ.',
                       GoogleFonts.prompt(
-                        color: isIncomeRod ? const Color(0xFF34D399) : const Color(0xFFF87171),
+                        color: isIncomeRod ? const Color(0xFF38BDF8) : const Color(0xFFFB923C),
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
                       ),
@@ -102,7 +119,7 @@ class CashFlowBarChart extends StatelessWidget {
                       final idx = val.toInt();
                       if (idx < 0 || idx >= groups.length) return const SizedBox.shrink();
                       return Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           groups[idx].label,
                           style: GoogleFonts.prompt(
@@ -113,7 +130,7 @@ class CashFlowBarChart extends StatelessWidget {
                         ),
                       );
                     },
-                    reservedSize: 26,
+                    reservedSize: 28,
                   ),
                 ),
               ),
@@ -136,14 +153,14 @@ class CashFlowBarChart extends StatelessWidget {
                     BarChartRodData(
                       toY: g.income,
                       color: AppColors.income,
-                      width: 10,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      width: 11,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
                     ),
                     BarChartRodData(
                       toY: g.expense,
                       color: AppColors.expense,
-                      width: 10,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      width: 11,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
                     ),
                   ],
                 );
@@ -156,27 +173,38 @@ class CashFlowBarChart extends StatelessWidget {
   }
 
   Widget _buildLegendItem({required Color color, required String label}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2.5),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.16 : 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withValues(alpha: 0.25),
+          width: 0.8,
         ),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: GoogleFonts.prompt(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.prompt(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

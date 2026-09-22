@@ -250,17 +250,41 @@ class TransactionTile extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-
-            // Amount
-            Text(
-              '$amountPrefix฿${currencyFormatter.format(transaction.amount)}',
-              style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: amountColor,
-                letterSpacing: -0.3,
-              ),
+            // Amount & Compact Time in bottom right corner
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$amountPrefix฿${currencyFormatter.format(transaction.amount)}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: amountColor,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2.5),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      size: 10,
+                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(width: 2.5),
+                    Text(
+                      DateFormat('HH:mm').format(transaction.date),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
