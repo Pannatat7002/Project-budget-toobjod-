@@ -274,8 +274,22 @@ class AutoSyncRepositoryImpl implements AutoSyncRepository {
   }
 
   @override
-  Future<void> clearSwipeHistory() {
-    return localDataSource.clearSwipeHistory();
+  Future<void> clearSwipeHistory() async {
+    await clearNativeBuffer();
+    await localDataSource.clearSwipeHistory();
+  }
+
+  @override
+  Future<void> clearNativeBuffer() async {
+    try {
+      await _methodChannel.invokeMethod('clearPendingNotifications');
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> resetAllAutoSyncData() async {
+    await clearNativeBuffer();
+    await localDataSource.clearAllData();
   }
 
   @override

@@ -32,6 +32,9 @@ abstract class AutoSyncLocalDataSource {
 
   Future<List<String>> getDismissedBannerTransactionIds();
   Future<void> saveDismissedBannerTransactionIds(List<String> ids);
+
+  void clearMemoryCache();
+  Future<void> clearAllData();
 }
 
 class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
@@ -231,9 +234,27 @@ class AutoSyncLocalDataSourceImpl implements AutoSyncLocalDataSource {
   }
 
   @override
+  void clearMemoryCache() {
+    _cachedPending = null;
+    _cachedHistory = null;
+    _cachedSwipeHistory = null;
+  }
+
+  @override
   Future<void> clearSwipeHistory() async {
     _cachedSwipeHistory = [];
+    _cachedHistory = [];
     await sharedPreferences.remove(_keySwipeHistory);
+    await sharedPreferences.remove(_keyHistoryTxs);
+  }
+
+  @override
+  Future<void> clearAllData() async {
+    clearMemoryCache();
+    await sharedPreferences.remove(_keyPendingTxs);
+    await sharedPreferences.remove(_keyHistoryTxs);
+    await sharedPreferences.remove(_keySwipeHistory);
+    await sharedPreferences.remove(_keyDismissedBannerTxIds);
   }
 
   @override

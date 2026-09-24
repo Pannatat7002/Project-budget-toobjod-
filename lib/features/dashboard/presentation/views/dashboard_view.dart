@@ -1301,10 +1301,14 @@ class _DashboardViewState extends State<DashboardView> {
               final accCubit = context.read<AccountCubit>();
               final nav = Navigator.of(ctx);
 
+              // 1. Reset all auto-sync caches, persistent records, and native buffers
+              await autoSyncCubit.clearAllData();
+
+              // 2. Clear all remaining SharedPreferences
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
 
-              await autoSyncCubit.clearAllPending();
+              // 3. Reload all Cubits fresh
               await txCubit.loadTransactions();
               await budgetCubit.loadBudgets();
               await accCubit.loadAccounts();

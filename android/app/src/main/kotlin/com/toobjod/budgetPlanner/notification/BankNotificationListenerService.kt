@@ -69,10 +69,11 @@ class BankNotificationListenerService : NotificationListenerService() {
         )
 
         /**
-         * Robust Rebind Mechanism:
+         * Safe Rebind Mechanism:
          * 1. Uses requestRebind on Android 7+ (API 24+)
-         * 2. Uses Component Enabled State toggle to force Android NotificationManagerService
-         *    to reconnect the listener if Android OS dropped it in the background.
+         * 2. Only performs component toggle if explicitly requested with forceToggle = true.
+         *    Regular routine checks MUST NOT toggle component state as it causes Android 11+
+         *    to kill/drop the service permanently.
          */
         @Synchronized
         fun rebindService(context: Context, forceToggle: Boolean = false): Boolean {
@@ -82,8 +83,8 @@ class BankNotificationListenerService : NotificationListenerService() {
             return try {
                 val cn = ComponentName(context, BankNotificationListenerService::class.java)
                 
-                if (forceToggle || instance == null || !isServiceConnected) {
-                    // Component toggling trick to kickstart NotificationManagerService
+                if (forceToggle) {
+                    // Only toggle component state when explicitly forced (e.g. manual user recovery)
                     val pm = context.packageManager
                     pm.setComponentEnabledSetting(
                         cn,
@@ -95,7 +96,7 @@ class BankNotificationListenerService : NotificationListenerService() {
                         android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                         android.content.pm.PackageManager.DONT_KILL_APP
                     )
-                    Log.i(TAG, "⚡ [BankNotifListener] Component toggled to force OS re-binding.")
+                    Log.i(TAG, "⚡ [BankNotifListener] Component toggled for forced recovery.")
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -137,6 +138,8 @@ class BankNotificationListenerService : NotificationListenerService() {
         fun clearPendingNotifications(context: Context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().remove(KEY_PENDING_NOTIFS).apply()
+            recentNotifCache.clear()
+            Log.i(TAG, "🧹 [BankNotifListener] Cleared native pending buffer and debounce cache.")
         }
 
         @Synchronized

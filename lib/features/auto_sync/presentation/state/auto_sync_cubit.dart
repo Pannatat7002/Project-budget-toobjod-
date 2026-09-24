@@ -742,6 +742,7 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
   /// Clear all pending notifications directly
   Future<void> clearAllPending() async {
     await repository.clearPendingTransactions();
+    await repository.clearNativeBuffer();
     emit(state.copyWith(pendingTransactions: [], clearLatestDetected: true));
   }
 
@@ -753,6 +754,20 @@ class AutoSyncCubit extends Cubit<AutoSyncState> {
   Future<void> clearSwipeHistory() async {
     await repository.clearSwipeHistory();
     emit(state.copyWith(swipeHistory: []));
+  }
+
+  /// Complete reset of all auto-sync data (RAM caches, DB, native buffers)
+  Future<void> clearAllData() async {
+    await repository.resetAllAutoSyncData();
+    emit(
+      state.copyWith(
+        pendingTransactions: [],
+        swipeHistory: [],
+        clearLatestDetected: true,
+        dismissedBannerTransactionIds: [],
+        isDashboardBannerDismissed: false,
+      ),
+    );
   }
 
   /// Helper: สร้าง SwipeHistoryRecord จาก DetectedTransaction

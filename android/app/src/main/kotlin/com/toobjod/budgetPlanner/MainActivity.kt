@@ -249,7 +249,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun tryRebindNotificationListener() {
         if (!BankNotificationListenerService.isServiceConnected || BankNotificationListenerService.instance == null) {
-            BankNotificationListenerService.rebindService(this, forceToggle = true)
+            BankNotificationListenerService.rebindService(this, forceToggle = false)
         }
     }
 }

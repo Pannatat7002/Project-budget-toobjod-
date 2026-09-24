@@ -140,6 +140,16 @@ class FakeAutoSyncRepository implements AutoSyncRepository {
       ..clear()
       ..addAll(ids);
   }
+
+  @override
+  Future<void> clearNativeBuffer() async {}
+
+  @override
+  Future<void> resetAllAutoSyncData() async {
+    pendingStorage.clear();
+    _swipeHistory.clear();
+    _dismissedBannerTransactionIds.clear();
+  }
 }
 
 class FakeTransactionRepository implements TransactionRepository {
@@ -250,10 +260,21 @@ void main() {
     late AccountCubit accountCubit;
     late AutoSyncCubit autoSyncCubit;
 
-    setUp(() {
+    setUp(() async {
       fakeSyncRepo = FakeAutoSyncRepository();
       fakeTxRepo = FakeTransactionRepository();
       fakeAccountRepo = FakeAccountRepository();
+      await fakeAccountRepo.saveAccount(
+        BankAccountEntity(
+          id: 'acc_kbank',
+          bankId: 'kbank',
+          bankName: 'ธนาคารกสิกรไทย',
+          accountName: 'KBank Account',
+          brandColor: 0xFF138F2D,
+          isAutoSyncActive: true,
+          createdAt: DateTime.now(),
+        ),
+      );
       txCubit = TransactionCubit(
         getTransactionsUseCase: GetTransactionsUseCase(fakeTxRepo),
         addTransactionUseCase: AddTransactionUseCase(fakeTxRepo),
@@ -261,6 +282,7 @@ void main() {
         updateTransactionUseCase: UpdateTransactionUseCase(fakeTxRepo),
       );
       accountCubit = AccountCubit(repository: fakeAccountRepo);
+      await accountCubit.loadAccounts();
       autoSyncCubit = AutoSyncCubit(
         repository: fakeSyncRepo,
         transactionCubit: txCubit,

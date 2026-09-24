@@ -44,4 +44,7 @@ abstract class AutoSyncRepository {
 
   Future<List<String>> getDismissedBannerTransactionIds();
   Future<void> saveDismissedBannerTransactionIds(List<String> ids);
+
+  Future<void> clearNativeBuffer();
+  Future<void> resetAllAutoSyncData();
 }
