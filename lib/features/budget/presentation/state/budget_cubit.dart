@@ -74,7 +74,7 @@ class BudgetCubit extends Cubit<BudgetState> {
     return budgets.map((b) {
       final spent = currentMonthExpenses
           .where((t) => t.categoryId == b.categoryId)
-          .fold(0.0, (sum, t) => sum + t.amount);
+          .fold(0.0, (sum, t) => sum + t.amount.abs());
       return b.copyWith(spentAmount: spent);
     }).toList();
   }

@@ -18,6 +18,7 @@ class TransactionEntity extends Equatable {
   final String? bankShortName;
   final String? accountMask;
   final String? targetAccountId;
+  final List<String> tags;
 
   const TransactionEntity({
     required this.id,
@@ -35,6 +36,7 @@ class TransactionEntity extends Equatable {
     this.bankShortName,
     this.accountMask,
     this.targetAccountId,
+    this.tags = const [],
   });
 
   bool get isIncome => type == TransactionType.income;
@@ -78,6 +80,7 @@ class TransactionEntity extends Equatable {
     String? bankShortName,
     String? accountMask,
     String? targetAccountId,
+    List<String>? tags,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -95,6 +98,7 @@ class TransactionEntity extends Equatable {
       bankShortName: bankShortName ?? this.bankShortName,
       accountMask: accountMask ?? this.accountMask,
       targetAccountId: targetAccountId ?? this.targetAccountId,
+      tags: tags ?? this.tags,
     );
   }
 
@@ -115,5 +119,6 @@ class TransactionEntity extends Equatable {
         bankShortName,
         accountMask,
         targetAccountId,
+        tags,
       ];
 }

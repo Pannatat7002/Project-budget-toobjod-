@@ -655,11 +655,11 @@
       <section class="summary-banner">
         <div class="summary-content">
           <h2>🐶 เจ้าตูบจด Feature & Widget Showcase <span style="background: rgba(255, 122, 0, 0.2); border: 1px solid #FF7A00; color: #FFB370; font-size: 0.85rem; padding: 4px 12px; border-radius: 9999px; font-weight: 500;">☀️ Light Mode</span></h2>
-          <p>เอกสารสรุปและทดสอบระบบการทำงานของแอปพลิเคชันวางแผนการเงินและตรวจจับสลิปอัตโนมัติ ทดสอบสดบนโทรศัพท์จริง Samsung SM A075F ในโหมดสว่าง (Light Mode) คมชัดครบทั้ง 17 ฟังก์ชัน</p>
+          <p>เอกสารสรุปและทดสอบระบบการทำงานของแอปพลิเคชันวางแผนการเงินและตรวจจับสลิปอัตโนมัติ ครบถ้วนทั้งระบบรายการประจำอัตโนมัติ, Safe-to-Spend งบที่ใช้ได้วันนี้, และระบบหมวดหมู่ 50/30/20 พร้อมแท็ก คมชัดครบ 20 ฟังก์ชัน</p>
         </div>
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="val">17</div>
+            <div class="val">20</div>
             <div class="lbl">ฟีเจอร์ทดสอบครบ 100%</div>
           </div>
           <div class="stat-card">
@@ -991,6 +991,57 @@
               <p class="card-desc">คำแนะนำการเงินจากเจ้าตูบ พร้อมเทคนิคคุมงบไม่ให้บานปลายและให้กำลังใจผู้ใช้งาน</p>
               <div class="card-footer">
                 <code>toob_jod_ai_dialog.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 18 -->
+          <div class="feature-card" data-cat="transactions" onclick="previewFeature(this, 'showcase_assets/v2_dashboard.png', '18. รายการประจำอัตโนมัติ (Recurring Transactions)', 'ตั้งเวลาตัดรอบรายรับ/รายจ่าย/โอนเงินประจำ เช่น เงินเดือน ค่าเน็ต ผ่อนรถ พร้อมสวิตช์เปิด-ปิดและปุ่มทำรายการด่วน', 'recurring_transactions_sheet.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_dashboard.png" loading="lazy" alt="Recurring Transactions" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Transactions</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">รายการประจำอัตโนมัติ ⏰</h4>
+              <p class="card-desc">จัดการรายการที่ต้องจ่าย/รับซ้ำๆ ทุกวัน/สัปดาห์/เดือน พร้อมระบบ Auto-post และแจ้งเตือนเมื่อถึงกำหนด</p>
+              <div class="card-footer">
+                <code>recurring_transactions_sheet.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 19 -->
+          <div class="feature-card" data-cat="dashboard" onclick="previewFeature(this, 'showcase_assets/v2_dashboard.png', '19. งบที่ใช้ได้วันนี้ (Safe-to-Spend & Compact Card)', 'ปุ่มตั้งงบ 2 คอลัมน์แสดงงบวันนี้แบบย่อ และหน้างบประมาณผสาน Safe-to-Spend เต็มรูปแบบพร้อมเปรียบเทียบยอดเงินในบัญชีจริง', 'budget_view.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_dashboard.png" loading="lazy" alt="Safe-to-Spend" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Dashboard & Budget</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">งบที่ใช้ได้วันนี้ Safe-to-Spend 🛡️</h4>
+              <p class="card-desc">ปุ่มตั้งงบหน้าหลักแสดงยอดงบวันนี้แบบย่อ (วันนี้ได้ ฿150) และหน้างบประมาณผสาน Safe-to-Spend เทียบกับเงินในบัญชีจริง</p>
+              <div class="card-footer">
+                <code>budget_view.dart</code>
+                <button class="btn-preview">พรีวิว ➜</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 20 -->
+          <div class="feature-card" data-cat="transactions" onclick="previewFeature(this, 'showcase_assets/v2_add_sheet.png', '20. หมวดหมู่ 50/30/20 & แท็กยืดหยุ่น (Macro-grouping & Tags)', 'จัดหมวดหมู่เสาหลัก 50/30/20 (จำเป็น/ผันแปร/เงินออม) พร้อมระบบแท็กด่วน #มื้อเที่ยง #กาแฟ #Grab เพื่อการค้นหาที่กว้างและยืดหยุ่น', 'add_transaction_sheet.dart')">
+            <div class="card-thumb">
+              <img src="showcase_assets/v2_add_sheet.png" loading="lazy" alt="Macro & Tags" />
+              <span class="card-badge-status">✓ ผ่าน</span>
+              <span class="card-category">Transactions</span>
+            </div>
+            <div class="card-body">
+              <h4 class="card-title">หมวดหมู่ 50/30/20 & แท็กยืดหยุ่น 🏷️</h4>
+              <p class="card-desc">ฟิลเตอร์เลือกหมวดตามสัดส่วน 50/30/20 และแปะแท็กด่วนตามสถานการณ์ได้ไม่จำกัด ค้นหาด้วยแท็กได้ทันที</p>
+              <div class="card-footer">
+                <code>add_transaction_sheet.dart</code>
                 <button class="btn-preview">พรีวิว ➜</button>
               </div>
             </div>

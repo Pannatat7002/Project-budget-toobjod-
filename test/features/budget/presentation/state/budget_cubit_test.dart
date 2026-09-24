@@ -143,5 +143,33 @@ void main() {
       expect(cubit.state.budgets, isEmpty);
       expect(cubit.state.totalBudgetLimit, 0.0);
     });
+
+    test('Safe-to-Spend calculation calculates daily allowance and safe to spend today correctly', () async {
+      final b1 = const BudgetEntity(
+        id: 'b-1',
+        categoryId: 'food',
+        categoryName: 'อาหารและเครื่องดื่ม',
+        categoryIconCode: 0xe532,
+        categoryColorValue: 0xFFFF7A00,
+        limitAmount: 30000.0,
+      );
+      await cubit.setBudget(b1);
+
+      final state = cubit.state;
+      expect(state.totalBudgetLimit, 30000.0);
+      expect(state.daysInCurrentMonth, greaterThanOrEqualTo(28));
+      expect(state.daysRemainingInMonth, greaterThanOrEqualTo(1));
+      expect(state.dailyBaseAllowance, greaterThan(0));
+
+      // Test getSafeToSpendToday
+      // When spent today is 0
+      final safeInitial = state.getSafeToSpendToday(0.0);
+      expect(safeInitial, closeTo(state.totalBudgetRemaining / state.daysRemainingInMonth, 0.01));
+
+      // When spent today is 200 baht
+      final safeAfterSpent = state.getSafeToSpendToday(200.0);
+      expect(safeAfterSpent, closeTo(safeInitial - 200.0, 0.01));
+    });
   });
 }
+

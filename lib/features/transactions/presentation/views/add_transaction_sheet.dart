@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/dog_sound_helper.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
+import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../state/transaction_cubit.dart';
 import '../widgets/delete_transaction_dialog.dart';
@@ -78,6 +79,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   bool _hasUserManuallyUnlinked = false;
   String? _dogAutoSuggestedCategoryName;
   bool _hasUserManuallySelectedCategory = false;
+  List<String> _selectedTags = [];
+  bool _isRecurring = false;
+  int _recurringScheduledDay = DateTime.now().day;
+  final TextEditingController _customTagController = TextEditingController();
 
   @override
   void initState() {
@@ -86,6 +91,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
     _selectedType = existing?.type ?? widget.initialType;
     _selectedDate = existing?.date ?? DateTime.now();
+    _selectedTags = List<String>.from(existing?.tags ?? []);
 
     _titleController = TextEditingController(text: existing?.title ?? '');
     _titleController.addListener(_onTitleChanged);
@@ -177,6 +183,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     _titleController.dispose();
     _amountController.dispose();
     _noteController.dispose();
+    _customTagController.dispose();
     super.dispose();
   }
 
@@ -341,7 +348,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
-      final amount = double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0.0;
+      final amount = (double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0.0).abs();
       final id = widget.existingTransaction?.id ?? const Uuid().v4();
 
       final enteredTitle = _titleController.text.trim();
@@ -395,6 +402,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         bankShortName: selectedAcc?.shortName ?? widget.existingTransaction?.bankShortName,
         accountMask: selectedAcc?.accountMask ?? widget.existingTransaction?.accountMask,
         targetAccountId: targetAccId,
+        tags: _selectedTags,
       );
 
       final cubit = context.read<TransactionCubit>();
@@ -410,6 +418,30 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         await cubit.updateTransaction(transaction);
       } else {
         await cubit.addTransaction(transaction);
+      }
+
+      // 2.1 If recurring is checked, also save recurring rule
+      if (_isRecurring && widget.existingTransaction == null) {
+        final rule = RecurringTransactionEntity(
+          id: const Uuid().v4(),
+          title: finalTitle,
+          amount: amount,
+          type: finalType,
+          categoryId: isTransferMode ? 'transfer' : _selectedCategory.id,
+          categoryName: isTransferMode ? 'โอนย้ายเงิน' : _selectedCategory.name,
+          categoryIconCode: isTransferMode ? 0xe8d4 : _selectedCategory.iconCode,
+          categoryColorValue: isTransferMode ? 0xFF6366F1 : _selectedCategory.colorValue,
+          bankId: selectedAcc?.bankId,
+          bankAccountId: selectedAcc?.id,
+          bankShortName: selectedAcc?.shortName,
+          accountMask: selectedAcc?.accountMask,
+          targetAccountId: targetAccId,
+          scheduledDay: _recurringScheduledDay,
+          startDate: _selectedDate,
+          lastExecutedDate: _selectedDate,
+          tags: _selectedTags,
+        );
+        await cubit.saveRecurringRule(rule);
       }
 
       // 3. Recalculate balances with the updated transactions list
@@ -446,89 +478,144 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
   }
 
-  // Show Category Picker Bottom Sheet (Compact Grid)
+  // Show Category Picker Bottom Sheet (Compact Grid with Macro Pillar Groups)
   void _showCategoryPickerSheet(BuildContext context, bool isDark) {
     final categories = _selectedType == TransactionType.expense
         ? AppConstants.defaultExpenseCategories
         : AppConstants.defaultIncomeCategories;
+
+    MacroPillar? activePillar;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.70,
-          ),
-          padding: EdgeInsets.only(
-            top: 12,
-            left: 16,
-            right: 16,
-            bottom: 16 + MediaQuery.of(context).padding.bottom,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: isDark ? Border.all(color: AppColors.darkBorderSubtle, width: 1) : null,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBorder : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final displayCategories = activePillar == null
+                ? categories
+                : categories.where((c) => c.macroPillar == activePillar).toList();
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.72,
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: EdgeInsets.only(
+                top: 12,
+                left: 16,
+                right: 16,
+                bottom: 16 + MediaQuery.of(context).padding.bottom,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: isDark ? Border.all(color: AppColors.darkBorderSubtle, width: 1) : null,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'เลือกหมวดหมู่ (${_selectedType == TransactionType.income ? "รายรับ" : "รายจ่าย"})',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkBorder : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => Navigator.pop(ctx),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'เลือกหมวดหมู่ (${_selectedType == TransactionType.income ? "รายรับ" : "รายจ่าย"})',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Flexible(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    mainAxisExtent: 82,
-                  ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = categories[index];
-                    final isSelected = cat.id == _selectedCategory.id;
+                  const SizedBox(height: 10),
 
-                    return GestureDetector(
-                      onTap: () {
-                        final isTransfer = cat.id == 'transfer';
-                        setState(() {
-                          _selectedCategory = cat;
-                          _hasUserManuallySelectedCategory = true;
-                          _dogAutoSuggestedCategoryName = null;
+                  // Macro Pillar Filter Chips (Categorization แบบกว้างและยืดหยุ่น)
+                  if (_selectedType == TransactionType.expense) ...[
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildPillarFilterChip(
+                            label: 'ทั้งหมด',
+                            isSelected: activePillar == null,
+                            color: AppColors.primary,
+                            isDark: isDark,
+                            onTap: () => setSheetState(() => activePillar = null),
+                          ),
+                          const SizedBox(width: 6),
+                          _buildPillarFilterChip(
+                            label: '🏡 สิ่งจำเป็น (50%)',
+                            isSelected: activePillar == MacroPillar.needs,
+                            color: const Color(0xFF2563EB),
+                            isDark: isDark,
+                            onTap: () => setSheetState(() => activePillar = MacroPillar.needs),
+                          ),
+                          const SizedBox(width: 6),
+                          _buildPillarFilterChip(
+                            label: '✨ ความสุข (30%)',
+                            isSelected: activePillar == MacroPillar.wants,
+                            color: const Color(0xFFEC4899),
+                            isDark: isDark,
+                            onTap: () => setSheetState(() => activePillar = MacroPillar.wants),
+                          ),
+                          const SizedBox(width: 6),
+                          _buildPillarFilterChip(
+                            label: '🌱 เพื่ออนาคต (20%)',
+                            isSelected: activePillar == MacroPillar.savings,
+                            color: const Color(0xFF10B981),
+                            isDark: isDark,
+                            onTap: () => setSheetState(() => activePillar = MacroPillar.savings),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+
+                  Flexible(
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        mainAxisExtent: 82,
+                      ),
+                      itemCount: displayCategories.length,
+                      itemBuilder: (context, index) {
+                        final cat = displayCategories[index];
+                        final isSelected = cat.id == _selectedCategory.id;
+
+                        return GestureDetector(
+                          onTap: () {
+                            final isTransfer = cat.id == 'transfer';
+                            setState(() {
+                              _selectedCategory = cat;
+                              _hasUserManuallySelectedCategory = true;
+                              _dogAutoSuggestedCategoryName = null;
+                              if (_selectedTags.isEmpty && cat.defaultTags.isNotEmpty) {
+                                _selectedTags = [cat.defaultTags.first];
+                              }
                           if (isTransfer) {
                             _selectedType = TransactionType.transfer;
                             final accState = context.read<AccountCubit>().state;
@@ -605,7 +692,44 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ],
           ),
         );
+          },
+        );
       },
+    );
+  }
+
+  Widget _buildPillarFilterChip({
+    required String label,
+    required bool isSelected,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withValues(alpha: isDark ? 0.28 : 0.15)
+              : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? color : Colors.transparent,
+            width: 1.2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? color : (isDark ? AppColors.darkTextMuted : const Color(0xFF64748B)),
+          ),
+        ),
+      ),
     );
   }
 
@@ -2178,6 +2302,183 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
+
+                    // Card 5: Quick Hashtags (Categorization แบบกว้างและยืดหยุ่น)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.tag_rounded, size: 15, color: primaryThemeColor),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'แท็กยืดหยุ่น (#Tag)',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (_selectedTags.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () => setState(() => _selectedTags.clear()),
+                                  child: Text(
+                                    'ล้าง (${_selectedTags.length})',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 5,
+                            children: [
+                              ..._selectedCategory.defaultTags.map((tag) {
+                                final isChosen = _selectedTags.contains(tag);
+                                return InkWell(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() {
+                                      if (isChosen) {
+                                        _selectedTags.remove(tag);
+                                      } else {
+                                        _selectedTags.add(tag);
+                                      }
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 140),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                    decoration: BoxDecoration(
+                                      color: isChosen
+                                          ? primaryThemeColor.withValues(alpha: isDark ? 0.3 : 0.15)
+                                          : (isDark ? Colors.white10 : Colors.white),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isChosen
+                                            ? primaryThemeColor
+                                            : (isDark ? AppColors.darkBorderSubtle : const Color(0xFFE2E8F0)),
+                                        width: isChosen ? 1.2 : 0.8,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      tag,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: isChosen ? FontWeight.w700 : FontWeight.w500,
+                                        color: isChosen
+                                            ? primaryThemeColor
+                                            : (isDark ? AppColors.darkTextPrimary : const Color(0xFF334155)),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Card 6: Recurring Option (ทำรายการอัตโนมัติ)
+                    if (widget.existingTransaction == null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.autorenew_rounded, size: 16, color: Color(0xFFFF7A00)),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'ทำซ้ำอัตโนมัติ (รายการประจำ)',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Transform.scale(
+                                  scale: 0.75,
+                                  child: Switch.adaptive(
+                                    value: _isRecurring,
+                                    activeColor: const Color(0xFFFF7A00),
+                                    onChanged: (val) => setState(() => _isRecurring = val),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_isRecurring) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'บันทึกทุกเดือน ในวันที่:',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark ? AppColors.darkTextMuted : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFF7A00).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'วันที่ $_recurringScheduledDay',
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFFFF7A00),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Slider(
+                                value: _recurringScheduledDay.toDouble(),
+                                min: 1,
+                                max: 31,
+                                divisions: 30,
+                                activeColor: const Color(0xFFFF7A00),
+                                onChanged: (val) => setState(() => _recurringScheduledDay = val.round()),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ],
                 ),
               ),

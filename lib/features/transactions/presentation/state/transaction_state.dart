@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 enum TransactionStatus { initial, loading, success, failure }
@@ -13,6 +14,8 @@ class TransactionState extends Equatable {
   final String? selectedBankId;
   final String searchQuery;
   final String? errorMessage;
+  final List<RecurringTransactionEntity> recurringRules;
+  final int newlyAutoPostedCount;
 
   const TransactionState({
     this.transactions = const [],
@@ -22,6 +25,8 @@ class TransactionState extends Equatable {
     this.selectedBankId,
     this.searchQuery = '',
     this.errorMessage,
+    this.recurringRules = const [],
+    this.newlyAutoPostedCount = 0,
   });
 
   TransactionState copyWith({
@@ -34,6 +39,8 @@ class TransactionState extends Equatable {
     bool clearBank = false,
     String? searchQuery,
     String? errorMessage,
+    List<RecurringTransactionEntity>? recurringRules,
+    int? newlyAutoPostedCount,
   }) {
     return TransactionState(
       transactions: transactions ?? this.transactions,
@@ -46,6 +53,8 @@ class TransactionState extends Equatable {
           clearBank ? null : (selectedBankId ?? this.selectedBankId),
       searchQuery: searchQuery ?? this.searchQuery,
       errorMessage: errorMessage ?? this.errorMessage,
+      recurringRules: recurringRules ?? this.recurringRules,
+      newlyAutoPostedCount: newlyAutoPostedCount ?? this.newlyAutoPostedCount,
     );
   }
 
@@ -152,7 +161,8 @@ class TransactionState extends Equatable {
         final matchCategory = t.categoryName.toLowerCase().contains(query);
         final matchNote = (t.note ?? '').toLowerCase().contains(query);
         final matchBank = (t.bankShortName ?? '').toLowerCase().contains(query);
-        if (!matchTitle && !matchCategory && !matchNote && !matchBank) {
+        final matchTag = t.tags.any((tag) => tag.toLowerCase().contains(query));
+        if (!matchTitle && !matchCategory && !matchNote && !matchBank && !matchTag) {
           return false;
         }
       }
@@ -163,15 +173,26 @@ class TransactionState extends Equatable {
 
   double get totalIncome => transactions
       .where((t) => t.isIncome)
-      .fold(0.0, (sum, t) => sum + t.amount);
+      .fold(0.0, (sum, t) => sum + t.amount.abs());
 
   double get totalExpense => transactions
       .where((t) => t.isExpense)
-      .fold(0.0, (sum, t) => sum + t.amount);
+      .fold(0.0, (sum, t) => sum + t.amount.abs());
 
   double get balance => totalIncome - totalExpense;
 
   double get totalBalance => balance;
+
+  /// Expense incurred today
+  double get todayExpense {
+    final now = DateTime.now();
+    return transactions.where((t) {
+      return t.isExpense &&
+          t.date.year == now.year &&
+          t.date.month == now.month &&
+          t.date.day == now.day;
+    }).fold(0.0, (sum, t) => sum + t.amount.abs());
+  }
 
   @override
   List<Object?> get props => [
@@ -182,5 +203,7 @@ class TransactionState extends Equatable {
         selectedBankId,
         searchQuery,
         errorMessage,
+        recurringRules,
+        newlyAutoPostedCount,
       ];
 }

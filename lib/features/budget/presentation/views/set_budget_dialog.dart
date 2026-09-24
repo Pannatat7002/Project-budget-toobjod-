@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -122,26 +123,30 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/images/action_budget.png',
-                        width: 32,
-                        height: 32,
-                        cacheWidth: 96,
-                        cacheHeight: 96,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        isEditing ? 'แก้ไขงบประมาณ' : 'ตั้งงบประมาณใหม่',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                              letterSpacing: -0.3,
-                            ),
-                      ),
-                    ],
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/action_budget.png',
+                          width: 32,
+                          height: 32,
+                          cacheWidth: 96,
+                          cacheHeight: 96,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            isEditing ? 'แก้ไขงบประมาณ' : 'ตั้งงบประมาณใหม่',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  letterSpacing: -0.3,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -171,12 +176,16 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                           fontSize: 13,
                         ),
                   ),
-                  Text(
-                    _selectedCategory.name,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _selectedCategory.color,
+                  Flexible(
+                    child: Text(
+                      _selectedCategory.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _selectedCategory.color,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -290,6 +299,44 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                   final numVal = double.tryParse(val);
                   if (numVal == null || numVal <= 0) return 'วงเงินต้องมากกว่า 0';
                   return null;
+                },
+              ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _limitController,
+                builder: (context, val, _) {
+                  final limit = double.tryParse(val.text.replaceAll(',', '')) ?? 0.0;
+                  if (limit <= 0) return const SizedBox.shrink();
+                  final daysInMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
+                  final dailyAvg = limit / daysInMonth;
+
+                  return Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.09),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🐾', style: TextStyle(fontSize: 13)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'เฉลี่ย ~${dailyAvg.toStringAsFixed(0)} บ./วัน (คำนวณจาก $daysInMonth วันในเดือนนี้)',
+                            style: GoogleFonts.prompt(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? const Color(0xFFFFB370) : AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 22),

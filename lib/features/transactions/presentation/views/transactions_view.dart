@@ -21,6 +21,7 @@ import '../state/transaction_state.dart';
 import '../widgets/delete_transaction_dialog.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction_sheet.dart';
+import 'recurring_transactions_sheet.dart';
 
 class TransactionsView extends StatefulWidget {
   const TransactionsView({super.key});
@@ -217,6 +218,12 @@ class _TransactionsViewState extends State<TransactionsView> {
                   ),
                 ),
                 actions: [
+                  // Recurring Transactions
+                  IconButton(
+                    icon: const Icon(Icons.autorenew_rounded),
+                    tooltip: 'รายการประจำอัตโนมัติ',
+                    onPressed: () => RecurringTransactionsSheet.show(context),
+                  ),
                   // Search
                   IconButton(
                     icon: const Icon(Icons.search_rounded),

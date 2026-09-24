@@ -1,6 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
+import '../../domain/services/recurring_scheduler_service.dart';
 import '../../domain/usecases/add_transaction.dart';
 import '../../domain/usecases/delete_transaction.dart';
 import '../../domain/usecases/get_transactions.dart';
@@ -12,13 +15,15 @@ class TransactionCubit extends Cubit<TransactionState> {
   final AddTransactionUseCase addTransactionUseCase;
   final DeleteTransactionUseCase deleteTransactionUseCase;
   final UpdateTransactionUseCase updateTransactionUseCase;
+  final RecurringSchedulerService? schedulerService;
 
   TransactionCubit({
     required this.getTransactionsUseCase,
     required this.addTransactionUseCase,
     required this.deleteTransactionUseCase,
     required this.updateTransactionUseCase,
-  }) : super(TransactionState());
+    this.schedulerService,
+  }) : super(const TransactionState());
 
   Future<void> loadTransactions() async {
     if (state.transactions.isEmpty) {
@@ -26,9 +31,35 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
     try {
       final transactions = await getTransactionsUseCase(const NoParams());
+
+      // Check and process recurring transactions if schedulerService is provided
+      List<RecurringTransactionEntity> rules = state.recurringRules;
+      int newAutoPosted = 0;
+      if (schedulerService != null) {
+        rules = schedulerService!.loadRules();
+        final result = schedulerService!.processDueRules(rules);
+        if (result.hasAutoPosted) {
+          for (final tx in result.autoPostedTransactions) {
+            await addTransactionUseCase(tx);
+          }
+          await schedulerService!.saveRules(result.updatedRules);
+          rules = result.updatedRules;
+          newAutoPosted = result.autoPostedTransactions.length;
+          final refreshed = await getTransactionsUseCase(const NoParams());
+          emit(state.copyWith(
+            status: TransactionStatus.success,
+            transactions: refreshed,
+            recurringRules: rules,
+            newlyAutoPostedCount: newAutoPosted,
+          ));
+          return;
+        }
+      }
+
       emit(state.copyWith(
         status: TransactionStatus.success,
         transactions: transactions,
+        recurringRules: rules,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -112,5 +143,85 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   void setSearchQuery(String query) {
     emit(state.copyWith(searchQuery: query));
+  }
+
+  Future<void> saveRecurringRule(RecurringTransactionEntity rule) async {
+    if (schedulerService == null) return;
+    final rules = List<RecurringTransactionEntity>.from(state.recurringRules);
+    final index = rules.indexWhere((r) => r.id == rule.id);
+    if (index >= 0) {
+      rules[index] = rule;
+    } else {
+      rules.add(rule);
+    }
+    await schedulerService!.saveRules(rules);
+    emit(state.copyWith(recurringRules: rules));
+    await checkAndProcessRecurring();
+  }
+
+  Future<void> deleteRecurringRule(String ruleId) async {
+    if (schedulerService == null) return;
+    final rules = state.recurringRules.where((r) => r.id != ruleId).toList();
+    await schedulerService!.saveRules(rules);
+    emit(state.copyWith(recurringRules: rules));
+  }
+
+  Future<void> toggleRecurringRule(String ruleId) async {
+    if (schedulerService == null) return;
+    final rules = state.recurringRules.map((r) {
+      if (r.id == ruleId) {
+        return r.copyWith(isActive: !r.isActive);
+      }
+      return r;
+    }).toList();
+    await schedulerService!.saveRules(rules);
+    emit(state.copyWith(recurringRules: rules));
+  }
+
+  Future<void> triggerRecurringRuleNow(RecurringTransactionEntity rule) async {
+    final now = DateTime.now();
+    final autoNote = rule.note != null && rule.note!.isNotEmpty
+        ? '${rule.note} (บันทึกทันใจ 🐾)'
+        : 'รายการประจำ (บันทึกทันใจ 🐾)';
+
+    final tx = TransactionEntity(
+      id: const Uuid().v4(),
+      title: rule.title,
+      amount: rule.amount,
+      type: rule.type,
+      categoryId: rule.categoryId,
+      categoryName: rule.categoryName,
+      categoryIconCode: rule.categoryIconCode,
+      categoryColorValue: rule.categoryColorValue,
+      date: now,
+      note: autoNote,
+      bankId: rule.bankId,
+      bankAccountId: rule.bankAccountId,
+      bankShortName: rule.bankShortName,
+      accountMask: rule.accountMask,
+      targetAccountId: rule.targetAccountId,
+      tags: {...rule.tags, '#รายการประจำ'}.toList(),
+    );
+
+    await addTransaction(tx);
+    final updatedRule = rule.copyWith(lastExecutedDate: now);
+    await saveRecurringRule(updatedRule);
+  }
+
+  Future<void> checkAndProcessRecurring() async {
+    if (schedulerService == null) return;
+    final rules = schedulerService!.loadRules();
+    final result = schedulerService!.processDueRules(rules);
+    if (result.hasAutoPosted) {
+      for (final tx in result.autoPostedTransactions) {
+        await addTransactionUseCase(tx);
+      }
+      await schedulerService!.saveRules(result.updatedRules);
+      await loadTransactions();
+    }
+  }
+
+  void clearNewlyAutoPostedCount() {
+    emit(state.copyWith(newlyAutoPostedCount: 0));
   }
 }

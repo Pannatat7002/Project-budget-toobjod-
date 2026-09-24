@@ -1,7 +1,8 @@
+import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 
-class TransactionModel extends TransactionEntity {
-  const TransactionModel({
+class RecurringTransactionModel extends RecurringTransactionEntity {
+  const RecurringTransactionModel({
     required super.id,
     required super.title,
     required super.amount,
@@ -10,17 +11,23 @@ class TransactionModel extends TransactionEntity {
     required super.categoryName,
     required super.categoryIconCode,
     required super.categoryColorValue,
-    required super.date,
-    super.note,
     super.bankId,
     super.bankAccountId,
     super.bankShortName,
     super.accountMask,
     super.targetAccountId,
+    super.frequency = RecurringFrequency.monthly,
+    required super.scheduledDay,
+    required super.startDate,
+    super.endDate,
+    super.lastExecutedDate,
+    super.autoPost = true,
+    super.isActive = true,
+    super.note,
     super.tags = const [],
   });
 
-  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+  factory RecurringTransactionModel.fromJson(Map<String, dynamic> json) {
     final typeStr = json['type'] as String? ?? 'expense';
     final type = typeStr == 'income'
         ? TransactionType.income
@@ -28,56 +35,42 @@ class TransactionModel extends TransactionEntity {
             ? TransactionType.transfer
             : TransactionType.expense;
 
-    // Backward compatibility: detect bankId from note or title if missing or cash
-    String? bankId = json['bankId'] as String?;
-    String? bankShortName = json['bankShortName'] as String?;
-    if (bankId == null || bankId == 'cash') {
-      final text = '${json['title'] ?? ''} ${json['note'] ?? ''}'.toLowerCase();
-      if (text.contains('k plus') || text.contains('kbank') || text.contains('กสิกร')) {
-        bankId = 'kbank';
-        bankShortName = 'K PLUS';
-      } else if (text.contains('scb') || text.contains('ไทยพาณิชย์')) {
-        bankId = 'scb';
-        bankShortName = 'SCB EASY';
-      } else if (text.contains('next') || text.contains('กรุงไทย') || text.contains('ktb')) {
-        bankId = 'ktb';
-        bankShortName = 'Krungthai NEXT';
-      } else if (text.contains('truemoney') || text.contains('ทรูมันนี่')) {
-        bankId = 'truemoney';
-        bankShortName = 'TrueMoney';
-      } else if (text.contains('ttb') || text.contains('ทีทีบี')) {
-        bankId = 'ttb';
-        bankShortName = 'ttb touch';
-      } else if (text.contains('kma') || text.contains('กรุงศรี')) {
-        bankId = 'kma';
-        bankShortName = 'KMA Krungsri';
-      } else {
-        bankId = 'kbank';
-        bankShortName = 'K PLUS';
-      }
-    }
+    final freqStr = json['frequency'] as String? ?? 'monthly';
+    final freq = freqStr == 'daily'
+        ? RecurringFrequency.daily
+        : freqStr == 'weekly'
+            ? RecurringFrequency.weekly
+            : RecurringFrequency.monthly;
 
     final tagsRaw = json['tags'];
     final List<String> tags = tagsRaw is List
         ? tagsRaw.map((e) => e.toString()).toList()
         : const <String>[];
 
-    return TransactionModel(
+    return RecurringTransactionModel(
       id: json['id'] as String,
       title: json['title'] as String,
-      amount: (json['amount'] as num).toDouble().abs(),
+      amount: (json['amount'] as num).toDouble(),
       type: type,
       categoryId: json['categoryId'] as String,
       categoryName: json['categoryName'] as String,
       categoryIconCode: json['categoryIconCode'] as int,
       categoryColorValue: json['categoryColorValue'] as int,
-      date: DateTime.parse(json['date'] as String),
-      note: json['note'] as String?,
-      bankId: bankId,
+      bankId: json['bankId'] as String?,
       bankAccountId: json['bankAccountId'] as String?,
-      bankShortName: bankShortName,
+      bankShortName: json['bankShortName'] as String?,
       accountMask: json['accountMask'] as String?,
       targetAccountId: json['targetAccountId'] as String?,
+      frequency: freq,
+      scheduledDay: json['scheduledDay'] as int? ?? 1,
+      startDate: DateTime.parse(json['startDate'] as String),
+      endDate: json['endDate'] != null ? DateTime.parse(json['endDate'] as String) : null,
+      lastExecutedDate: json['lastExecutedDate'] != null
+          ? DateTime.parse(json['lastExecutedDate'] as String)
+          : null,
+      autoPost: json['autoPost'] as bool? ?? true,
+      isActive: json['isActive'] as bool? ?? true,
+      note: json['note'] as String?,
       tags: tags,
     );
   }
@@ -86,7 +79,7 @@ class TransactionModel extends TransactionEntity {
     return {
       'id': id,
       'title': title,
-      'amount': amount.abs(),
+      'amount': amount,
       'type': type == TransactionType.income
           ? 'income'
           : type == TransactionType.transfer
@@ -96,19 +89,29 @@ class TransactionModel extends TransactionEntity {
       'categoryName': categoryName,
       'categoryIconCode': categoryIconCode,
       'categoryColorValue': categoryColorValue,
-      'date': date.toIso8601String(),
-      'note': note,
       'bankId': bankId,
       'bankAccountId': bankAccountId,
       'bankShortName': bankShortName,
       'accountMask': accountMask,
       'targetAccountId': targetAccountId,
+      'frequency': frequency == RecurringFrequency.daily
+          ? 'daily'
+          : frequency == RecurringFrequency.weekly
+              ? 'weekly'
+              : 'monthly',
+      'scheduledDay': scheduledDay,
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'lastExecutedDate': lastExecutedDate?.toIso8601String(),
+      'autoPost': autoPost,
+      'isActive': isActive,
+      'note': note,
       'tags': tags,
     };
   }
 
-  factory TransactionModel.fromEntity(TransactionEntity entity) {
-    return TransactionModel(
+  factory RecurringTransactionModel.fromEntity(RecurringTransactionEntity entity) {
+    return RecurringTransactionModel(
       id: entity.id,
       title: entity.title,
       amount: entity.amount,
@@ -117,13 +120,19 @@ class TransactionModel extends TransactionEntity {
       categoryName: entity.categoryName,
       categoryIconCode: entity.categoryIconCode,
       categoryColorValue: entity.categoryColorValue,
-      date: entity.date,
-      note: entity.note,
       bankId: entity.bankId,
       bankAccountId: entity.bankAccountId,
       bankShortName: entity.bankShortName,
       accountMask: entity.accountMask,
       targetAccountId: entity.targetAccountId,
+      frequency: entity.frequency,
+      scheduledDay: entity.scheduledDay,
+      startDate: entity.startDate,
+      endDate: entity.endDate,
+      lastExecutedDate: entity.lastExecutedDate,
+      autoPost: entity.autoPost,
+      isActive: entity.isActive,
+      note: entity.note,
       tags: entity.tags,
     );
   }

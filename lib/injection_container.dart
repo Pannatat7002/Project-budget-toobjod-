@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'features/transactions/data/datasources/transaction_local_data_source.dart';
 import 'features/transactions/data/repositories/transaction_repository_impl.dart';
 import 'features/transactions/domain/repositories/transaction_repository.dart';
+import 'features/transactions/domain/services/recurring_scheduler_service.dart';
 import 'features/transactions/domain/usecases/add_transaction.dart';
 import 'features/transactions/domain/usecases/delete_transaction.dart';
 import 'features/transactions/domain/usecases/get_transactions.dart';
@@ -40,6 +41,9 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   //! Features - Transactions
+  // Services
+  sl.registerLazySingleton(() => RecurringSchedulerService(sl()));
+
   // Cubit
   sl.registerLazySingleton(
     () => TransactionCubit(
@@ -47,6 +51,7 @@ Future<void> init() async {
       addTransactionUseCase: sl(),
       deleteTransactionUseCase: sl(),
       updateTransactionUseCase: sl(),
+      schedulerService: sl(),
     ),
   );
 

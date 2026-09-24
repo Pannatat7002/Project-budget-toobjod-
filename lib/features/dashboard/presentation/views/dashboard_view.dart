@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../../features/settings/presentation/state/theme_cubit.dart';
 import '../../../accounts/presentation/state/account_cubit.dart';
@@ -24,6 +23,7 @@ import '../../../transactions/presentation/views/add_transaction_sheet.dart';
 import '../../../transactions/presentation/widgets/delete_transaction_dialog.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
 import '../widgets/dashboard_speed_dial.dart';
+import '../../../transactions/presentation/views/recurring_transactions_sheet.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -247,6 +247,8 @@ class _DashboardViewState extends State<DashboardView> {
                   _showRenameDogDialog(context);
                 } else if (val == 'security_settings') {
                   context.push('/security-settings');
+                } else if (val == 'recurring_transactions') {
+                  RecurringTransactionsSheet.show(context);
                 } else if (val == 'auto_sync') {
                   context.push('/auto-sync-settings');
                 } else if (val == 'reset') {
@@ -262,6 +264,23 @@ class _DashboardViewState extends State<DashboardView> {
               itemBuilder: (ctx) {
                 final currentMode = ctx.read<ThemeCubit>().state;
                 return [
+                  const PopupMenuItem(
+                    value: 'recurring_transactions',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.autorenew_rounded,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          'รายการประจำอัตโนมัติ ⏰',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'security_settings',
                     child: Row(
@@ -346,10 +365,34 @@ class _DashboardViewState extends State<DashboardView> {
                   prev.isEyeViewHidden != curr.isEyeViewHidden ||
                   prev.isLoading != curr.isLoading,
               builder: (context, accountState) {
-                return BlocBuilder<TransactionCubit, TransactionState>(
+                return BlocConsumer<TransactionCubit, TransactionState>(
+                  listenWhen: (previous, current) => current.newlyAutoPostedCount > 0,
+                  listener: (context, state) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Text('🐾', style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'ตูบจดบันทึกรายการประจำอัตโนมัติให้แล้ว ${state.newlyAutoPostedCount} รายการโฮ่ง!',
+                                style: GoogleFonts.prompt(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFFFF7A00),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                    context.read<TransactionCubit>().clearNewlyAutoPostedCount();
+                  },
                   buildWhen: (previous, current) =>
                       previous.transactions != current.transactions ||
-                      previous.status != current.status,
+                      previous.status != current.status ||
+                      previous.recurringRules != current.recurringRules,
                   builder: (context, txState) {
                     if (txState.status == TransactionStatus.loading &&
                         txState.transactions.isEmpty) {
@@ -432,8 +475,13 @@ class _DashboardViewState extends State<DashboardView> {
                               ),
                               const SizedBox(height: 10),
 
-                              // 2. วิเคราะห์ & ตั้งงบ (แสดงเล็กลง แบบ 2 Col)
-                              _buildAnalyticsAndBudgetRow(context, isDark),
+                              // 2. วิเคราะห์ & ตั้งงบ (2 Col กะทัดรัด พร้อม Safe-to-Spend ย่อ)
+                              _buildAnalyticsAndBudgetRow(
+                                context,
+                                isDark,
+                                txState.todayExpense,
+                                txState.totalBalance,
+                              ),
                               const SizedBox(height: 10),
 
                               // 3. Budget Health Preview Widget
@@ -654,7 +702,12 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildAnalyticsAndBudgetRow(BuildContext context, bool isDark) {
+  Widget _buildAnalyticsAndBudgetRow(
+    BuildContext context,
+    bool isDark,
+    double todaySpent, [
+    double? totalBalance,
+  ]) {
     return Row(
       children: [
         // ─── 1. ปุ่มวิเคราะห์ (Col 1) ───────────────────────────
@@ -678,18 +731,37 @@ class _DashboardViewState extends State<DashboardView> {
 
         // ─── 2. ปุ่มตั้งงบ (Col 2) ──────────────────────────────
         Expanded(
-          child: _buildCompactActionCard(
-            context: context,
-            isDark: isDark,
-            title: 'ตั้งงบ',
-            subtitle: 'คุมงบประมาณ 🐾',
-            imageAsset: 'assets/images/action_budget.png',
-            fallbackIcon: Icons.pie_chart_rounded,
-            accentColor: AppColors.darkTextMuted,
-            onTap: () {
-              _closeSpeedDialIfOpen();
-              HapticFeedback.lightImpact();
-              context.push('/budgets');
+          child: BlocBuilder<BudgetCubit, BudgetState>(
+            builder: (context, budgetState) {
+              final limit = budgetState.totalBudgetLimit;
+              final safeToday = budgetState.getSafeToSpendToday(
+                todaySpent.abs(),
+                totalBalance,
+              );
+
+              final String subtitle;
+              if (limit <= 0) {
+                subtitle = 'แตะเพื่อเริ่ม 🐾';
+              } else if (safeToday > 0) {
+                subtitle = 'วันนี้ได้ ฿${safeToday.toStringAsFixed(0)} 🟢';
+              } else {
+                subtitle = 'เกินงบ ฿${safeToday.abs().toStringAsFixed(0)} ⚠️';
+              }
+
+              return _buildCompactActionCard(
+                context: context,
+                isDark: isDark,
+                title: 'ตั้งงบ',
+                subtitle: subtitle,
+                imageAsset: 'assets/images/action_budget.png',
+                fallbackIcon: Icons.pie_chart_rounded,
+                accentColor: AppColors.darkTextMuted,
+                onTap: () {
+                  _closeSpeedDialIfOpen();
+                  HapticFeedback.lightImpact();
+                  context.push('/budgets');
+                },
+              );
             },
           ),
         ),
@@ -882,289 +954,6 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBudgetHealthPreview(BuildContext context, bool isDark) {
-    return BlocBuilder<BudgetCubit, BudgetState>(
-      // Only rebuild when budget totals or status changes
-      buildWhen: (prev, curr) =>
-          prev.status != curr.status ||
-          prev.totalBudgetLimit != curr.totalBudgetLimit ||
-          prev.totalBudgetSpent != curr.totalBudgetSpent,
-      builder: (context, budgetState) {
-        final totalLimit = budgetState.totalBudgetLimit;
-        final totalSpent = budgetState.totalBudgetSpent;
-        final progress = budgetState.totalProgressPercentage;
-
-        if (totalLimit == 0) {
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => context.push('/budgets'),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorderSubtle
-                        : AppColors.lightBorderSubtle,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.15 : 0.03,
-                      ),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDB813).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      padding: const EdgeInsets.all(7),
-                      child: Image.asset(
-                        'assets/images/action_budget.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.pie_chart_rounded,
-                          color: Color(0xFFD97706),
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ตั้งงบประมาณ',
-                            style: GoogleFonts.prompt(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13.5,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 1.5),
-                          Text(
-                            'วางแผนคุมงบประมาณรายหมวด 🐾',
-                            style: GoogleFonts.prompt(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        final percentage = (progress * 100).toInt();
-        Color statusColor = AppColors.income;
-        if (progress > 1.0) {
-          statusColor = AppColors.expense;
-        } else if (progress >= 0.8) {
-          statusColor = AppColors.warning;
-        }
-
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => context.push('/budgets'),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? AppColors.darkBorderSubtle
-                      : AppColors.lightBorderSubtle,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              'assets/images/action_budget.png',
-                              width: 20,
-                              height: 20,
-                              cacheWidth: 60,
-                              cacheHeight: 60,
-                              fit: BoxFit.contain,
-                            ),
-                            const SizedBox(width: 7),
-                            Flexible(
-                              child: Text(
-                                'สถานะงบประมาณรวม',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.prompt(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '$percentage%',
-                              style: GoogleFonts.prompt(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 16,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: LinearProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      backgroundColor: isDark
-                          ? AppColors.darkBackground
-                          : const Color(0xFFF1F5F9),
-                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                      minHeight: 6.5,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'ใช้ไป ${CurrencyFormatter.format(totalSpent)}',
-                        style: GoogleFonts.prompt(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                        ),
-                      ),
-                      Text(
-                        'จากงบ ${CurrencyFormatter.format(totalLimit)}',
-                        style: GoogleFonts.prompt(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 7),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(
-                        alpha: isDark ? 0.15 : 0.08,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: statusColor.withValues(alpha: 0.25),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            progress > 1.0
-                                ? '🛑 หงิง... เดือนนี้ใช้เกินงบแล้ว พักก่อนนะเจ้านาย'
-                                : (progress >= 0.8
-                                      ? '⚠️ โฮ่ง! งบใกล้หมดแล้วนะ ตูบเริ่มเฝ้าระวัง'
-                                      : '🐾 เงินเหลือสบายใจ ตูบยกสองเท้าหน้าให้เลยโฮ่ง! ✨'),
-                            style: GoogleFonts.prompt(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 

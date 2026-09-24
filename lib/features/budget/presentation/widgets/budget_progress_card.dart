@@ -23,27 +23,17 @@ class BudgetProgressCard extends StatelessWidget {
     final isOverBudget = budget.isExceeded;
     final percentage = (budget.progressPercentage * 100).toInt();
 
-    // Determine status color
-    Color statusColor = AppColors.income;
+    // Determine status color (Green for safe, Gold for 80%+, Amber for over - NO RED)
+    Color statusColor = const Color(0xFF10B981);
     if (isOverBudget) {
-      statusColor = AppColors.expense;
+      statusColor = const Color(0xFFF59E0B);
     } else if (budget.isWarning) {
-      statusColor = AppColors.warning;
+      statusColor = const Color(0xFFFBBF24);
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isOverBudget
-              ? AppColors.expense.withValues(alpha: 0.4)
-              : (isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle),
-          width: isOverBudget ? 1.5 : 1,
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      color: isDark ? AppColors.darkSurface : Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -56,11 +46,11 @@ class BudgetProgressCard extends StatelessWidget {
                   code: budget.categoryIconCode,
                 ),
                 color: Color(budget.categoryColorValue),
-                size: 44,
+                size: 42,
                 iconSize: 20,
                 categoryId: budget.categoryId,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,20 +58,24 @@ class BudgetProgressCard extends StatelessWidget {
                     Text(
                       budget.categoryName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            letterSpacing: -0.2,
-                          ),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        letterSpacing: -0.2,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       budget.isExceeded
-                          ? 'เกินงบ ${CurrencyFormatter.format(budget.spentAmount - budget.limitAmount)}'
+                          ? 'เกินงบ ${CurrencyFormatter.format((budget.spentAmount.abs() - budget.limitAmount).abs())}'
                           : 'เหลืองบ ${CurrencyFormatter.format(budget.remainingAmount)}',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: budget.isExceeded ? AppColors.expense : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        color: budget.isExceeded
+                            ? const Color(0xFFF59E0B)
+                            : (isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.lightTextMuted),
                       ),
                     ),
                   ],
@@ -106,10 +100,14 @@ class BudgetProgressCard extends StatelessWidget {
               PopupMenuButton<String>(
                 icon: Icon(
                   Icons.more_vert,
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
                   size: 18,
                 ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 onSelected: (val) {
                   if (val == 'edit') onEdit?.call();
                   if (val == 'delete') onDelete?.call();
@@ -129,7 +127,11 @@ class BudgetProgressCard extends StatelessWidget {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
+                        Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: AppColors.expense,
+                        ),
                         SizedBox(width: 8),
                         Text('ลบ', style: TextStyle(color: AppColors.expense)),
                       ],
@@ -147,7 +149,9 @@ class BudgetProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: budget.progressPercentage.clamp(0.0, 1.0),
               minHeight: 7,
-              backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFFF1F5F9),
+              backgroundColor: isDark
+                  ? AppColors.darkBackground
+                  : const Color(0xFFF1F5F9),
               valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
           ),
@@ -158,19 +162,23 @@ class BudgetProgressCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'ใช้ไป: ${CurrencyFormatter.format(budget.spentAmount)}',
+                'ใช้ไป: ${CurrencyFormatter.format(budget.spentAmount.abs())}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
                 ),
               ),
               Text(
-                'งบ: ${CurrencyFormatter.format(budget.limitAmount)}',
+                'งบ: ${CurrencyFormatter.format(budget.limitAmount)} (~${(budget.limitAmount / DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day).toStringAsFixed(0)} บ./วัน)',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                 ),
               ),
             ],
